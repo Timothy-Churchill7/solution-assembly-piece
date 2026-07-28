@@ -102,7 +102,7 @@
       if (!this.shift) { g.go('menu'); return; }
 
       S.hall(ctx, t, { mood: 0.4, lamps: 2, floorY: 560, still: g.frozen });
-      ctx.fillStyle = 'rgba(4,5,6,0.86)';
+      ctx.fillStyle = 'rgba(11,14,16,0.78)';
       ctx.fillRect(0, 0, W, H);
       Screens._headerRail(ctx, C.PLANT_NAME, 'SHIFT ' + this.shift.n + ' · CLOCKING OFF');
 
@@ -127,7 +127,7 @@
          Set as two single lines to begin with, they ran into each other in
          the middle of the card and neither could be read. */
       var bw = Math.floor((pw - 24) / 2);
-      var noteOpt = { size: 9.5, lineHeight: 15, color: 'rgba(74,82,89,0.95)' };
+      var noteOpt = { size: 9.5, lineHeight: 15, color: 'rgba(116,124,131,0.95)' };
       var noteLines = Math.max(
         D.wrap(ctx, C.TRASH_TIP_NOTE, bw, noteOpt).length,
         D.wrap(ctx, C.TRASH_SORT_NOTE, bw, noteOpt).length);
@@ -165,7 +165,7 @@
       D.para(ctx, C.TRASH_SORT_NOTE, px + bw + 24, ny2, bw, noteOpt);
       D.stencil(ctx, '-' + E.LATE_DEDUCTION + ' ' + C.SCRIP,
         px + pw, ny2 + noteLines * 15 + 6,
-        { size: 9, track: 2, color: 'rgba(74,82,89,0.95)', align: 'right' });
+        { size: 9, track: 2, color: 'rgba(116,124,131,0.95)', align: 'right' });
     },
 
     /* Whatever was under the swarf, read on the same card the line uses,

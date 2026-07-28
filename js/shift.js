@@ -44,17 +44,17 @@
     var legTop = LAY.housingY + 20;
     var legBot = LAY.apronY + 4;
     [LAY.zoneX0 - 30, LAY.zoneX1 + 4].forEach(function (lx) {
-      D.plate(ctx, lx, legTop, 26, legBot - legTop, { top: '#333b42', bot: '#0c0f11', r: 1 });
+      D.plate(ctx, lx, legTop, 26, legBot - legTop, { top: '#484d51', bot: '#1c1e20', r: 1 });
       ctx.fillStyle = 'rgba(214,228,238,0.12)';
       ctx.fillRect(lx + 1, legTop, 1.5, legBot - legTop);
       for (var ry = legTop + 22; ry < legBot - 10; ry += 58) D.rivet(ctx, lx + 13, ry, 2.6);
       // foot
-      D.plate(ctx, lx - 7, legBot - 10, 40, 12, { top: '#262d33', bot: '#0a0c0e', r: 1 });
+      D.plate(ctx, lx - 7, legBot - 10, 40, 12, { top: '#383d40', bot: '#191b1d', r: 1 });
     });
 
     // housing
     var hx = LAY.zoneX0 - 14, hw = (LAY.zoneX1 - LAY.zoneX0) + 28;
-    D.plate(ctx, hx, LAY.housingY, hw, LAY.housingH, { top: '#3d464e', bot: '#12161a', r: 2 });
+    D.plate(ctx, hx, LAY.housingY, hw, LAY.housingH, { top: '#52585c', bot: '#222528', r: 2 });
     ctx.fillStyle = 'rgba(214,228,238,0.18)';
     ctx.fillRect(hx + 2, LAY.housingY, hw - 4, 2);
     // cooling fins
@@ -70,7 +70,7 @@
     D.rivetsAround(ctx, hx, LAY.housingY, hw, LAY.housingH, 12, 3);
     // maker's plate
     D.plate(ctx, hx + hw - 96, LAY.housingY + LAY.housingH - 26, 82, 17,
-      { top: '#1b2126', bot: '#0d1013', r: 1 });
+      { top: '#2c2f32', bot: '#1c1e20', r: 1 });
     D.stencil(ctx, 'PRESS 4-C', hx + hw - 88, LAY.housingY + LAY.housingH - 13,
       { size: 8.5, track: 1.8, color: 'rgba(160,174,185,0.55)' });
 
@@ -83,7 +83,7 @@
     var headTop = LAY.ramRest + drop * LAY.ramTravel;
 
     // guide rods
-    ctx.fillStyle = '#090b0d';
+    ctx.fillStyle = '#181a1b';
     ctx.fillRect(500, LAY.housingY + LAY.housingH - 4, 7, headTop - LAY.housingY - LAY.housingH + 12);
     ctx.fillRect(653, LAY.housingY + LAY.housingH - 4, 7, headTop - LAY.housingY - LAY.housingH + 12);
     ctx.fillStyle = 'rgba(214,228,238,0.14)';
@@ -92,18 +92,18 @@
     // piston rod
     var rodTop = LAY.housingY + LAY.housingH - 6;
     var rg = ctx.createLinearGradient(560, 0, 600, 0);
-    rg.addColorStop(0, '#171c20');
-    rg.addColorStop(0.4, '#5a636b');
-    rg.addColorStop(1, '#121517');
+    rg.addColorStop(0, '#282b2e');
+    rg.addColorStop(0.4, '#6f7579');
+    rg.addColorStop(1, '#131516');
     ctx.fillStyle = rg;
     ctx.fillRect(560, rodTop, 40, Math.max(0, headTop - rodTop));
 
     // head
-    D.plate(ctx, 484, headTop, 192, 40, { top: '#4b545c', bot: '#12161a', r: 2 });
+    D.plate(ctx, 484, headTop, 192, 40, { top: '#60666a', bot: '#222528', r: 2 });
     ctx.fillStyle = 'rgba(226,238,246,0.24)';
     ctx.fillRect(486, headTop, 188, 2);
     // striking face
-    D.vgrad(ctx, 490, headTop + 40, 180, 9, '#1c2226', '#040506');
+    D.vgrad(ctx, 490, headTop + 40, 180, 9, '#2d3133', '#131516');
     D.rivet(ctx, 498, headTop + 20, 2.8);
     D.rivet(ctx, 662, headTop + 20, 2.8);
     D.stencil(ctx, 'R4', 580, headTop + 26,
@@ -216,8 +216,8 @@
     var faulty = r.faulty;
 
     S.widget(ctx, r.x, y, 1.05, r.form, faulty
-      ? { hi: '#7d868e', mid: '#464e55', lo: '#161a1d', rot: 0.32 }
-      : { hi: '#8a939b', mid: '#4e575e', lo: '#181c1f' });
+      ? { hi: '#81868a', mid: '#494e52', lo: '#181a1c', rot: 0.32 }
+      : { hi: '#8e9397', mid: '#52575b', lo: '#1a1c1e' });
 
     if (faulty) {
       // the split, raked by whatever light there is
@@ -263,14 +263,14 @@
   /* The operator's own station: the foreground band you stand behind. */
   function drawApron(ctx, sh) {
     var y = LAY.apronY;
-    D.vgrad(ctx, 0, y, W, H - y, '#1a1f23', '#070909');
-    D.hatch(ctx, 0, y, W, 11, { step: 13, a: '#2c3339', b: '#0c0f11' });
+    D.vgrad(ctx, 0, y, W, H - y, '#2a2e30', '#161818');
+    D.hatch(ctx, 0, y, W, 11, { step: 13, a: '#2f3336', b: '#1c1e20' });
     ctx.fillStyle = 'rgba(226,238,246,0.14)';
     ctx.fillRect(0, y, W, 1.5);
     D.seam(ctx, 0, y + 11, W, { alpha: 0.9 });
 
     // finished tray, left
-    D.plate(ctx, 60, y + 30, 240, 46, { top: '#0e1113', bot: '#080a0b', r: 2 });
+    D.plate(ctx, 60, y + 30, 240, 46, { top: '#1e2022', bot: '#171818', r: 2 });
     D.stencil(ctx, 'FINISHED STOCK', 76, y + 56, { size: 9.5, track: 2.6, color: P.faint });
 
     // station mark, centre
@@ -288,8 +288,8 @@
       ctx.lineTo(cx + 216, y + 78); ctx.lineTo(cx + 24, y + 78);
       ctx.closePath();
       var cg = ctx.createLinearGradient(0, y + 30, 0, y + 78);
-      cg.addColorStop(0, '#050708');
-      cg.addColorStop(1, '#0d1113');
+      cg.addColorStop(0, '#141617');
+      cg.addColorStop(1, '#0e1112');
       ctx.fillStyle = cg;
       ctx.fill();
       ctx.strokeStyle = 'rgba(226,238,246,0.16)';
@@ -324,7 +324,7 @@
     o = o || {};
     var thrown = !!o.thrown, hover = !!o.hover, dead = !!o.dead;
 
-    D.plate(ctx, r.x, r.y, r.w, r.h, { top: '#242b31', bot: '#0a0d0f', r: 2 });
+    D.plate(ctx, r.x, r.y, r.w, r.h, { top: '#363a3d', bot: '#181a1c', r: 2 });
     ctx.fillStyle = 'rgba(226,238,246,' + (hover && !dead ? 0.20 : 0.10) + ')';
     ctx.fillRect(r.x + 1, r.y, r.w - 2, 1.5);
     D.rivet(ctx, r.x + 7, r.y + 8, 2);
@@ -366,8 +366,8 @@
   function drawPart(ctx, p, t) {
     var lit = 1 - Math.min(1, Math.abs(p.x - ZONE_MID) / 420);
     var o = p.stamped
-      ? { hi: '#454e55', mid: '#272e34', lo: '#0d1012' }
-      : { hi: '#727c85', mid: '#414a51', lo: '#161a1d' };
+      ? { hi: '#494e52', mid: '#2a2e31', lo: '#0e1011' }
+      : { hi: '#767c81', mid: '#454a4e', lo: '#181a1c' };
     S.widget(ctx, p.x, LAY.partY + p.bob, 1.2, p.form, o);
 
     if (p.stamped && p.spoiled) {
@@ -430,7 +430,7 @@
 
   function drawDock(ctx, t, has, hover) {
     D.plate(ctx, DOCK.x - 8, DOCK.y - 8, DOCK.w + 16, DOCK.h + 32,
-      { top: '#252c32', bot: '#0c0f11', r: 2 });
+      { top: '#373c3f', bot: '#1c1e20', r: 2 });
     D.rivetsAround(ctx, DOCK.x - 8, DOCK.y - 8, DOCK.w + 16, DOCK.h + 32, 8, 2.2);
 
     ctx.save();
@@ -441,8 +441,8 @@
        picture is a silhouette against the one light, so a shape that is
        not usually there reads as a shape and never as an insignia. */
     var horizon = DOCK.y + DOCK.h * 0.46;
-    D.vgrad(ctx, DOCK.x, DOCK.y, DOCK.w, horizon - DOCK.y, '#0d1215', '#1b2329');
-    D.vgrad(ctx, DOCK.x, horizon, DOCK.w, DOCK.y + DOCK.h - horizon, '#161c21', '#080b0d');
+    D.vgrad(ctx, DOCK.x, DOCK.y, DOCK.w, horizon - DOCK.y, '#1d2021', '#2c2f32');
+    D.vgrad(ctx, DOCK.x, horizon, DOCK.w, DOCK.y + DOCK.h - horizon, '#272a2d', '#090b0c');
 
     // the lamp over the gate, and the pool it throws on the apron
     var lx = DOCK.x + DOCK.w * 0.74, ly = horizon - 30;
@@ -1016,12 +1016,9 @@
       var r = atX == null ? this.nearestReturn() : this.returnAt(atX);
       if (!r) { this.lastAction = 'noreturn'; return false; }
       this.returns = this.returns.filter(function (q) { return q !== r; });
-      /* The bill, and it is taken here rather than by locking your hands
-         for a second: the charge goes down by the length of the reach, so
-         the next strike is that much further off however cleverly the
-         reach was timed. The meter can go below empty, and it does. */
-      this.charge = Math.max(-4,
-        this.charge - E.pullCharge(this.run && this.run.ledger));
+      /* Nothing here touches the press cooldown. Taking a piece off costs
+         the second it takes and the part that may go by while you are up
+         there, and that is all it has ever needed to cost. */
       this.shift.pulled++;
       if (r.faulty) this.shift.pulledFaulty++; else this.shift.pulledSound++;
       this.flashes.push({
@@ -1033,9 +1030,8 @@
     },
 
     /* Turn a piece over and look at it properly, then put it back on the
-       belt. It costs more of the cycle than taking one off does, and it
-       does not do the job: a fault you looked at is still a fault going
-       past you, and you will have to reach for it again.
+       belt. It does not do the job: a fault you looked at is still a fault
+       going past you, and you will have to reach for it again.
 
        Almost every piece has nothing on it. That is the whole reason this
        is not a button to hold down, and the reason a player who finds
@@ -1044,8 +1040,6 @@
       if (this.open) { this.lastAction = 'reading'; return false; }
       var r = atX == null ? this.nearestReturn() : this.returnAt(atX);
       if (!r) { this.lastAction = 'nolook'; this.say(C.LOOK_EMPTY, 1.8, 'line5'); return false; }
-      this.charge = Math.max(-4,
-        this.charge - E.lookCharge(this.run && this.run.ledger));
       this.shift.looked++;
       this.lastAction = r.clue ? 'found' : 'nothing';
       if (r.clue) {
@@ -1308,9 +1302,9 @@
       ctx.fillStyle = 'rgba(4,6,7,0.62)';
       ctx.fillRect(0, y - 15, W, 22);
       D.stencil(ctx, C.RADIO_LABEL, 22, y,
-        { size: 8, track: 2, color: 'rgba(78,86,93,0.95)' });
+        { size: 8, track: 2, color: 'rgba(120,128,135,0.95)' });
       D.txt(ctx, text, 108, y,
-        { size: 11.5, color: 'rgba(140,152,162,0.92)' });
+        { size: 11.5, color: 'rgba(168,178,186,0.95)' });
     },
 
     /* The two station controls, and the one line the station ever says. */
@@ -1377,7 +1371,7 @@
       var o = this.open, clue = o.clue;
 
       // recede the hall and the press; leave the work visible
-      ctx.fillStyle = 'rgba(4,5,6,0.80)';
+      ctx.fillStyle = 'rgba(11,14,16,0.70)';
       ctx.fillRect(0, LAY.hudY + LAY.hudH, W, LAY.beltY - 8 - (LAY.hudY + LAY.hudH));
 
       var nx = 170, nw = W - 340, pw = nw - 88;
@@ -1433,7 +1427,7 @@
       if (!o.read) {
         // under the button, clear of the cost readout on the right
         D.stencil(ctx, C.INQUIRY_UNREAD, px - 14, by + 58,
-          { size: 8.5, track: 1.8, color: 'rgba(74,82,89,0.95)' });
+          { size: 8.5, track: 1.8, color: 'rgba(116,124,131,0.95)' });
       }
     },
 
@@ -1444,7 +1438,7 @@
 
       // console bar
       var y = LAY.hudY, h = LAY.hudH;
-      D.plate(ctx, 0, y, W, h, { top: '#171c20', bot: '#0b0e10', r: 0 });
+      D.plate(ctx, 0, y, W, h, { top: '#282b2e', bot: '#1b1d1e', r: 0 });
       D.seam(ctx, 0, y + h, W, { alpha: 0.9 });
 
       var pad = 26;
@@ -1477,16 +1471,7 @@
          read as an instrument sitting at zero, not as an instrument that
          is not there, and after a reach it sits at zero for a while. */
       D.meter(ctx, pad + 46, y + h + 10, 164, 8, this.charge,
-        { hi: this.charge >= 1 ? P.mid : P.faint, lo: P.dim, trough: '#161c21' });
-      /* A reach across line 5 takes the charge below empty, and the meter
-         reads empty for as long as the debt lasts. The one line the game
-         ever gives explaining the trade, and it only appears to a player
-         who has already made it. */
-      if (this.charge < 0) {
-        D.stencil(ctx, C.CYCLE_DEBT, pad, y + h + 34,
-          { size: 8.5, track: 2, color: 'rgba(120,132,142,0.95)' });
-      }
-
+        { hi: this.charge >= 1 ? P.mid : P.faint, lo: P.dim, trough: '#272a2d' });
       /* What line 5 has cost so far. It sits on the plant's console because
          the plant is the one keeping this number. */
       D.stencil(ctx, C.SENT_BACK + '  ' + sh.rejects, 280, y + h + 18,

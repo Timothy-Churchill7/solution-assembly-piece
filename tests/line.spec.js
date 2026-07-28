@@ -131,7 +131,8 @@ test.describe('stamping', () => {
       let stamps = 0;
       for (let i = 0; i < 60 * 40; i++) {
         g.tick(1 / 60);
-        if (sc.candidate()) { sc.stamp(null); stamps++; }
+        // only a stamp that lands counts; the press has a cooldown
+        if (sc.candidate() && sc.stamp(null)) stamps++;
         if (sc.shift.over) break;
       }
       return { stamps, stamped: sc.shift.stamped, missed: sc.shift.missed };
@@ -165,7 +166,7 @@ test.describe('scoring and the record', () => {
       // stamp only the first 5 parts, then let the rest run past
       for (let i = 0; i < 60 * 80; i++) {
         g.tick(1 / 60);
-        if (n < 5 && sc.candidate()) { sc.stamp(null); n++; }
+        if (n < 5 && sc.stamp(null)) n++;
         if (g.screen === 'trash') { window.__clearBin(); }
         if (g.screen === 'summary') break;
       }

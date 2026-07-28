@@ -1,6 +1,14 @@
-/* Palette — charcoal / graphite / soot.
+/* Palette — graphite and steel, no colour in it at all.
    One accent only: a low, lamp-coloured amber reserved for inquiry.
-   Nothing else in the build may use it. */
+   Nothing else in the build may use it.
+
+   The first cut of this was charcoal and soot, and it was too dark to work
+   in: the hall read as a black rectangle with instruments floating on it,
+   and by the sixth shift — where `mood` is lowest — the pieces on the belt
+   you are meant to be inspecting were very nearly gone. Every structural
+   grey below has been lifted, keeping the same ordering and the same cool
+   tint, so the room is legible without becoming bright. It is still a
+   night shift in a badly lit building; you can just see it now. */
 (function (root) {
   'use strict';
 
@@ -8,28 +16,31 @@
 
   SOL.P = {
     // structure
-    void:     '#050607',
-    bg:       '#0b0d0f',
-    bgHi:     '#131619',
-    floor:    '#0f1114',
-    plate:    '#15181b',
-    plateHi:  '#1b2024',
-    steel:    '#272d32',
-    steelHi:  '#343b41',
-    steelLo:  '#171b1e',
-    beltDark: '#101315',
-    belt:     '#1a1e22',
-    beltHi:   '#252b30',
-    edgeHi:   '#3b434a',
-    edgeLo:   '#040506',
+    void:     '#0e0f10',
+    bg:       '#181a1c',
+    bgHi:     '#272a2d',
+    floor:    '#1d1f21',
+    plate:    '#242729',
+    plateHi:  '#2e3134',
+    steel:    '#3c4145',
+    steelHi:  '#4e5357',
+    steelLo:  '#272a2d',
+    beltDark: '#1f2122',
+    belt:     '#2c2f32',
+    beltHi:   '#3a3e42',
+    edgeHi:   '#565c60',
+    edgeLo:   '#0c0d0d',
 
-    // type
-    faint:    '#464e55',
-    dim:      '#68727a',
-    mid:      '#8d969e',
-    text:     '#bfc7cd',
-    bright:   '#e6ebee',
-    white:    '#f4f7f9',
+    /* `faint` carries every low-priority label in the build — the console
+       sub-rail, the conveyor signage, the small print on the notices. On
+       the old charcoal it read as a whisper; on this palette it read as
+       nothing at all, so it is lifted furthest of any type colour. */
+    faint:    '#787d81',
+    dim:      '#8f9497',
+    mid:      '#a1a6aa',
+    text:     '#cfd3d5',
+    bright:   '#f0f2f3',
+    white:    '#f9fafa',
 
     // the one thing letting light in
     accent:   '#c8912e',
@@ -37,8 +48,8 @@
     accentLo: '#6a4d18',
 
     // alarm greys — used for failure states; deliberately NOT red
-    warnLo:   '#3a3f43',
-    warn:     '#9aa2a8'
+    warnLo:   '#4e5254',
+    warn:     '#adb2b5'
   };
 
   // Canonical stage size. Everything lays out against this.

@@ -19,6 +19,12 @@ host unchanged.
 | `F` | press depth — only if you have found out who the customer is |
 | `Q` | master stop — same condition, and from shift 5 |
 
+**The cooldown belongs to the press and to nothing else.** A stamp that
+lands puts it out for 1.72 seconds. Reaching across to line 5, turning a
+piece over, and pressing for a part that is not there all leave it exactly
+where it was. The foot pedal is the only thing in the game that changes
+it.
+
 ## What to check by hand
 
 These are the things the suite cannot judge.
@@ -26,7 +32,8 @@ These are the things the suite cannot judge.
 1. **Can you tell a fault from a sound piece on line 5 without the gauge?**
    It should take looking, and it should not take squinting. Shift 6 is the
    hard case: the hall is at its darkest there and the inspection bay is
-   deliberately lit at full regardless.
+   deliberately lit at full regardless. The whole palette was lifted once
+   already because the answer was no.
 2. **Does the first shift teach the job without a tutorial?** You get two
    lines at the station (the press waits; line 5 is yours too), a pencilled
    note on the brief, and nothing else.
@@ -41,41 +48,43 @@ These are the things the suite cannot judge.
 
 ## Measured balance
 
-Parts stamped against target, playing the whole job honestly — press *and*
-line 5, every fault taken off. `*` is a shift the number was not made.
+Parts stamped against target, playing the whole job — press *and* line 5,
+every fault taken off. `*` is a shift the number was not made.
 
 | bench | 1 | 2 | 3 | 4 | 5 | 6 |
 | --- | --- | --- | --- | --- | --- | --- |
-| nothing | 33/24 | 36/28 | 38/33 | 38/38 | 39/43 \* | 39/48 \* |
-| sorting arm (85) | 33/24 | 37/28 | 39/33 | 40/38 | 42/43 \* | 42/48 \* |
-| foot pedal (110) | 33/24 | 39/28 | 43/33 | 43/38 | 43/43 | 43/48 \* |
-| pedal + arm (195) | 33/24 | 39/28 | 43/33 | 44/38 | 46/43 | 47/48 \* |
-| auto-feeder (240) | 33/24 | 38/28 | 44/33 | 48/38 | 54/43 | 56/48 |
+| nothing | 33/24 | 35/28 | 38/33 | 39/38 | 41/44 \* | 42/48 \* |
+| sorting arm (40) | 33/24 | 35/28 | 38/33 | 39/38 | 41/44 \* | 42/48 \* |
+| foot pedal (110) | 33/24 | 39/28 | 45/33 | 46/38 | 48/44 | 49/48 |
+| auto-feeder (240) | 33/24 | 39/28 | 45/33 | 50/38 | 53/44 | 60/48 |
 
-And the same player ignoring line 5 entirely, which is the other way to
-play it:
+**Exactly two of the seven items change the count** — the foot pedal, which
+cuts the cooldown by 15%, and the auto-feeder, which stamps 45% of line 4
+without you. A test drives all seven and asserts that no other one moves
+the number by a single part. The price list says so in plain words.
+
+The sorting arm, the lamp, the gauge, the radio and the monitor buy sight,
+sound, fewer deductions and fewer clicks. None of them buys output, and the
+game no longer implies otherwise.
+
+**The shape this is meant to have.** Buy nothing and the schedule beats you
+on the fifth shift and again on the sixth. The pedal is the answer, the
+handbook says so outright, and the docket in the shift-2 bin says so again.
+Everything after that is what you do with the money you have left.
+
+## Ignoring line 5
+
+Same count either way — the cooldown does not care what your hands are
+doing — but the deductions are ruinous:
 
 | | 1 | 2 | 3 | 4 | 5 | 6 |
 | --- | --- | --- | --- | --- | --- | --- |
-| nothing, line 5 left to run | 33/24 | 37/28 | 40/33 | 42/38 | 43/43 | 44/48 \* |
+| pay, doing the whole job | 78 | 80 | 83 | 84 | 61 | 62 |
+| pay, line 5 left to run | 75 | 74 | 74 | 69 | 40 | 35 |
 
-**The shape this is meant to have.** Spend nothing and the schedule beats
-you at shift 5, whichever way you play. Ignore line 5 to keep the count up
-and the deductions take the money you would have bought the kit with. Only
-the auto-feeder carries the last shift outright, and it costs 240 against a
-best-case run of about 570 — so buying it is giving up the radio and the
-camera, which are the two things that would have told you what any of this
-was for.
-
-## Pay, unaided, doing the whole job
-
-Per shift, and cumulative:
-
-`78 (78) · 81 (159) · 83 (242) · 83 (325) · 59 (384) · 59 (443)`
-
-The two shifts where the number is missed cost the 25 bonus, which is why
-the last two are 59. Catalogue total is **705**; nobody finishes with all
-of it.
+Cumulative: **448** against **367**. Eighty-one scrip is three-quarters of a
+foot pedal, which is the thing that would have got the last two shifts
+back. The sorting arm at 40 is priced just under the ~42 it saves you.
 
 ## Line 5, per shift
 
@@ -93,8 +102,9 @@ fitted at the assembly works, found there, and docked at 3 scrip.
 Maximum awareness is **39**; the circular needs **8** and can only come out
 of the bin from shift 3. Four channels:
 
-- **a faulty piece on line 5** — free, costs a cycle, and turning it over
-  does *not* take it off the belt, so the fault still goes past you
+- **a faulty piece on line 5** — free. Turning it over does *not* take it
+  off the belt, so the fault still goes past you, and the parts on line 4
+  go past too while you read
 - **the bench radio (60)** — reads its item out over the ordinary
   programme, in the same voice, with no prompt
 - **the yard camera (95)** — a lorry is at the dock for 26 seconds and then
@@ -117,21 +127,20 @@ sheet and the stores between each. Call it twelve to fifteen minutes.
   player replaying to chase a different ending will feel it.
 - **The dock monitor covers one machine's asset number** on the right of
   the hall. Cosmetic; the monitor is a fitting on the wall and reads as one.
-- **`pedal + arm` finishes shift 6 one part short** at the cadence the test
-  harness plays at. A human with better rhythm may close it; I have not
-  confirmed that by hand, and it is the one balance number in the build I
-  would want a real playtester on.
+- **The pedal makes the whole run comfortable.** Once it is on the bench no
+  shift is in doubt, which is the price of making the cooldown legible and
+  the advice honest. The tension after that is money, not output.
 - **The radio is text only.** There is a blip when a line arrives and no
   voice under it. That is a deliberate limit of a build with no asset
   files, but it does mean the set is quieter than a real one would be.
 
 ## What the suite covers
 
-153 tests. The load-bearing ones, if you only read a few:
+156 tests. The load-bearing ones, if you only read a few:
 
 - `econ.spec.js` — the schedule outruns a pair of unaided hands
-- `returns.spec.js` — the catalogue is a ladder, and the reach off line 5
-  costs the same however it is timed
+- `returns.spec.js` — nothing but a stamp touches the cooldown, and exactly
+  two purchases change the count
 - `inquiry.spec.js` — every channel is reachable, costs something, and can
   be missed
 - `ending.spec.js` — the count, the bonus and the book decide nothing

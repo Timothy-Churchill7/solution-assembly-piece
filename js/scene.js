@@ -13,10 +13,10 @@
   function backwall(ctx, w, h, t, mood, floorY) {
     // wall: lighter where the lamps reach it, sooty at the extremes
     var g = ctx.createLinearGradient(0, 0, 0, floorY);
-    g.addColorStop(0, '#0a0d0f');
-    g.addColorStop(0.30, '#161b1f');
-    g.addColorStop(0.75, '#1a2024');
-    g.addColorStop(1, '#0d1013');
+    g.addColorStop(0, '#181a1c');
+    g.addColorStop(0.30, '#282b2e');
+    g.addColorStop(0.75, '#2d3134');
+    g.addColorStop(1, '#1c1e20');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, floorY);
 
@@ -39,8 +39,8 @@
       var x = 30 + i * pitch;
       var ww = pitch - 26;
       var wg = ctx.createLinearGradient(0, by, 0, by + bh);
-      wg.addColorStop(0, 'rgba(168,184,196,' + (0.20 * mood) + ')');
-      wg.addColorStop(0.6, 'rgba(132,148,160,' + (0.085 * mood) + ')');
+      wg.addColorStop(0, 'rgba(178,194,206,' + (0.30 * mood) + ')');
+      wg.addColorStop(0.6, 'rgba(142,158,170,' + (0.14 * mood) + ')');
       wg.addColorStop(1, 'rgba(110,124,136,' + (0.02 * mood) + ')');
       ctx.fillStyle = wg;
       ctx.fillRect(x, by, ww, bh);
@@ -57,7 +57,7 @@
       ctx.strokeRect(x - 3.5, by - 3.5, ww + 7, bh + 7);
       // spill onto the wall below each window
       var sg = ctx.createLinearGradient(0, by + bh, 0, by + bh + 130);
-      sg.addColorStop(0, 'rgba(176,192,204,' + (0.055 * mood) + ')');
+      sg.addColorStop(0, 'rgba(186,202,214,' + (0.09 * mood) + ')');
       sg.addColorStop(1, 'rgba(176,192,204,0)');
       ctx.fillStyle = sg;
       ctx.fillRect(x - 6, by + bh, ww + 12, 130);
@@ -88,8 +88,8 @@
   function truss(ctx, w, y, depth, alpha) {
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.strokeStyle = '#0b0e10';
-    ctx.fillStyle = '#0c0f11';
+    ctx.strokeStyle = '#1b1d1e';
+    ctx.fillStyle = '#1c1e20';
     ctx.lineWidth = 3;
     // chords
     ctx.fillRect(0, y, w, 8);
@@ -120,10 +120,10 @@
     ctx.save();
     ctx.globalAlpha = alpha;
     var g = ctx.createLinearGradient(0, y - r, 0, y + r);
-    g.addColorStop(0, '#12161a');
-    g.addColorStop(0.28, '#39424a');
-    g.addColorStop(0.55, '#20262b');
-    g.addColorStop(1, '#07090a');
+    g.addColorStop(0, '#222528');
+    g.addColorStop(0.28, '#50565a');
+    g.addColorStop(0.55, '#313538');
+    g.addColorStop(1, '#242628');
     ctx.fillStyle = g;
     ctx.fillRect(0, y - r, w, r * 2);
     // seam rings
@@ -149,7 +149,7 @@
     var i = intensity * flick;
     ctx.save();
     // stem
-    ctx.fillStyle = '#12161a';
+    ctx.fillStyle = '#222528';
     ctx.fillRect(x - 1.5, y - h, 3, h);
     // shade
     ctx.beginPath();
@@ -159,9 +159,9 @@
     ctx.lineTo(x - 17, y + 12);
     ctx.closePath();
     var sg = ctx.createLinearGradient(x - 17, y, x + 17, y + 12);
-    sg.addColorStop(0, '#252b30');
-    sg.addColorStop(0.45, '#343c42');
-    sg.addColorStop(1, '#141719');
+    sg.addColorStop(0, '#36393d');
+    sg.addColorStop(0.45, '#494e52');
+    sg.addColorStop(1, '#242628');
     ctx.fillStyle = sg;
     ctx.fill();
     ctx.strokeStyle = 'rgba(0,0,0,0.7)';
@@ -170,7 +170,7 @@
 
     // filament
     ctx.globalAlpha = 0.85 * i;
-    ctx.fillStyle = '#dfe6ea';
+    ctx.fillStyle = '#e2e6e8';
     ctx.beginPath(); ctx.arc(x, y + 12, 3.2, 0, Math.PI * 2); ctx.fill();
     ctx.globalAlpha = 0.28 * i;
     ctx.beginPath(); ctx.arc(x, y + 12, 9, 0, Math.PI * 2); ctx.fill();
@@ -179,8 +179,8 @@
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'lighter';
     var cg = ctx.createLinearGradient(0, y + 12, 0, floorY);
-    cg.addColorStop(0, 'rgba(190,205,216,' + (0.10 * i) + ')');
-    cg.addColorStop(0.55, 'rgba(170,186,198,' + (0.035 * i) + ')');
+    cg.addColorStop(0, 'rgba(198,213,224,' + (0.15 * i) + ')');
+    cg.addColorStop(0.55, 'rgba(178,194,206,' + (0.06 * i) + ')');
     cg.addColorStop(1, 'rgba(150,166,178,0)');
     ctx.fillStyle = cg;
     ctx.beginPath();
@@ -193,7 +193,7 @@
 
     // pool on the floor
     var pg = ctx.createRadialGradient(x, floorY, 2, x, floorY, spread * 1.25);
-    pg.addColorStop(0, 'rgba(180,196,208,' + (0.085 * i) + ')');
+    pg.addColorStop(0, 'rgba(188,204,216,' + (0.13 * i) + ')');
     pg.addColorStop(1, 'rgba(160,176,188,0)');
     ctx.fillStyle = pg;
     ctx.beginPath();
@@ -220,7 +220,7 @@
     ctx.restore();
 
     // body
-    D.plate(ctx, x, y, w, h, { top: '#2f373e', bot: '#0e1114', r: 2, gloss: 0.08 });
+    D.plate(ctx, x, y, w, h, { top: '#43484c', bot: '#1e2022', r: 2, gloss: 0.08 });
 
     // rim light along the top edge — the lamps are above
     ctx.fillStyle = 'rgba(206,220,230,0.20)';
@@ -232,8 +232,8 @@
     ctx.lineTo(x + w - 4, y - 14); ctx.lineTo(x + 4, y - 14);
     ctx.closePath();
     var hg = ctx.createLinearGradient(0, y - 14, 0, y);
-    hg.addColorStop(0, '#3b444b');
-    hg.addColorStop(1, '#181d21');
+    hg.addColorStop(0, '#51565a');
+    hg.addColorStop(1, '#292c2f');
     ctx.fillStyle = hg;
     ctx.fill();
     ctx.strokeStyle = 'rgba(0,0,0,0.75)'; ctx.lineWidth = 1; ctx.stroke();
@@ -241,9 +241,9 @@
     // vent grille
     var gx = x + 16, gy = y + 26, gw = w - 32, gh = Math.min(54, h * 0.30);
     ctx.save();
-    ctx.fillStyle = '#050708';
+    ctx.fillStyle = '#141617';
     ctx.fillRect(gx, gy, gw, gh);
-    ctx.fillStyle = '#39424a';
+    ctx.fillStyle = '#50565a';
     for (var i = 0; i < gh - 3; i += 6) ctx.fillRect(gx, gy + i + 1, gw, 2.5);
     ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = 2;
     ctx.strokeRect(gx - 1, gy - 1, gw + 2, gh + 2);
@@ -252,12 +252,12 @@
     // inspection window — dark glass with a single dull reflection
     var iw = Math.min(64, w * 0.3), ih = 30;
     var ix = x + w - iw - 18, iy = gy + gh + 20;
-    D.plate(ctx, ix, iy, iw, ih, { top: '#0c0f11', bot: '#050708', r: 1 });
+    D.plate(ctx, ix, iy, iw, ih, { top: '#1c1e20', bot: '#141617', r: 1 });
     ctx.fillStyle = 'rgba(196,212,224,0.07)';
     ctx.fillRect(ix + 4, iy + 4, iw - 8, 5);
 
     // legs
-    ctx.fillStyle = '#0a0c0e';
+    ctx.fillStyle = '#191b1d';
     ctx.fillRect(x + 14, floorY - 4, 16, 4);
     ctx.fillRect(x + w - 30, floorY - 4, 16, 4);
 
@@ -272,9 +272,9 @@
   /* Receding floor: converging seams toward a low vanishing point. */
   function floorPlane(ctx, w, h, floorY, mood) {
     var g = ctx.createLinearGradient(0, floorY, 0, h);
-    g.addColorStop(0, '#191e22');
-    g.addColorStop(0.35, '#111417');
-    g.addColorStop(1, '#07090a');
+    g.addColorStop(0, '#2b2e31');
+    g.addColorStop(0.35, '#202325');
+    g.addColorStop(1, '#242628');
     ctx.fillStyle = g;
     ctx.fillRect(0, floorY, w, h - floorY);
 
@@ -317,14 +317,14 @@
     o = o || {};
     ctx.save();
     // frame rails
-    D.vgrad(ctx, x, y - 9, w, 9, '#2a3136', '#12161a');
-    D.vgrad(ctx, x, y + h, w, 11, '#161a1e', '#080a0b');
+    D.vgrad(ctx, x, y - 9, w, 9, '#3b4043', '#222528');
+    D.vgrad(ctx, x, y + h, w, 11, '#36393d', '#171818');
 
     // belt surface
     var g = ctx.createLinearGradient(0, y, 0, y + h);
-    g.addColorStop(0, '#22282d');
-    g.addColorStop(0.35, '#171c20');
-    g.addColorStop(1, '#0d1013');
+    g.addColorStop(0, '#33373a');
+    g.addColorStop(0.35, '#282b2e');
+    g.addColorStop(1, '#1c1e20');
     ctx.fillStyle = g;
     ctx.fillRect(x, y, w, h);
 
@@ -348,7 +348,7 @@
     ctx.restore();
 
     // rollers under the lip
-    ctx.fillStyle = '#0a0c0e';
+    ctx.fillStyle = '#191b1d';
     for (var rx = x + 18; rx < x + w; rx += 62) {
       ctx.beginPath();
       ctx.ellipse(rx, y + h + 6, 11, 5, 0, 0, Math.PI * 2);
@@ -374,9 +374,9 @@
     if (o.rot) ctx.rotate(o.rot);
 
     var body = ctx.createLinearGradient(0, -18, 0, 18);
-    body.addColorStop(0, o.hi || '#4a525a');
-    body.addColorStop(0.42, o.mid || '#2e353b');
-    body.addColorStop(1, o.lo || '#141719');
+    body.addColorStop(0, o.hi || '#4e5256');
+    body.addColorStop(0.42, o.mid || '#313538');
+    body.addColorStop(1, o.lo || '#242628');
     ctx.fillStyle = body;
     ctx.strokeStyle = 'rgba(0,0,0,0.85)';
     ctx.lineWidth = 1.4;
@@ -387,17 +387,17 @@
       ctx.lineTo(-8, -2); ctx.lineTo(-8, 14); ctx.lineTo(-20, 14);
       ctx.closePath();
       ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#0a0c0d';
+      ctx.fillStyle = '#0b0c0c';
       ctx.beginPath(); ctx.arc(13, -7, 3, 0, 6.3); ctx.fill();
       ctx.beginPath(); ctx.arc(-14, 8, 3, 0, 6.3); ctx.fill();
     } else if (form === 'collar') {
       ctx.beginPath(); ctx.arc(0, 0, 17, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#0a0c0d';
+      ctx.fillStyle = '#0b0c0c';
       ctx.beginPath(); ctx.arc(0, 0, 7.5, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = 'rgba(255,255,255,0.07)';
       ctx.beginPath(); ctx.arc(0, 0, 12, 0.6, 3.4); ctx.stroke();
       // bolt lugs
-      ctx.fillStyle = '#20262a';
+      ctx.fillStyle = '#222628';
       for (var i = 0; i < 4; i++) {
         var a = i * Math.PI / 2 + Math.PI / 4;
         ctx.beginPath();
@@ -418,7 +418,7 @@
       ctx.lineTo(-22, 4);
       ctx.closePath();
       ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#0a0c0d';
+      ctx.fillStyle = '#0b0c0c';
       ctx.fillRect(-18, -2, 3, 4);
       ctx.fillRect(-11, -2, 3, 4);
     }
@@ -456,8 +456,8 @@
       // near crates sit below the lamp cones: darker body, harder top rim,
       // so they separate from the machine row behind them by value.
       D.plate(ctx, cx, y, s.w, s.h, o.near
-        ? { top: '#1b2126', bot: '#080a0c', r: 1, gloss: 0.03 }
-        : { top: '#2b3238', bot: '#12161a', r: 1, gloss: 0.06 });
+        ? { top: '#2c2f32', bot: '#171818', r: 1, gloss: 0.03 }
+        : { top: '#3d4246', bot: '#222528', r: 1, gloss: 0.06 });
       // banding straps
       ctx.fillStyle = 'rgba(0,0,0,0.55)';
       ctx.fillRect(cx + s.w * 0.24, y, 4, s.h);
@@ -481,8 +481,8 @@
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     var g = ctx.createLinearGradient(0, y - 26, 0, y + h + 14);
-    g.addColorStop(0, 'rgba(186,202,214,' + (0.10 * intensity) + ')');
-    g.addColorStop(0.45, 'rgba(176,192,204,' + (0.055 * intensity) + ')');
+    g.addColorStop(0, 'rgba(196,212,224,' + (0.15 * intensity) + ')');
+    g.addColorStop(0.45, 'rgba(186,202,214,' + (0.085 * intensity) + ')');
     g.addColorStop(1, 'rgba(160,176,188,0)');
     ctx.fillStyle = g;
     ctx.fillRect(x, y - 26, w, h + 40);
@@ -549,9 +549,9 @@
     // soot creeping in from the edges, gentle enough to keep the room legible
     ctx.save();
     var sg = ctx.createLinearGradient(0, 0, 0, h);
-    sg.addColorStop(0, 'rgba(0,0,0,0.34)');
+    sg.addColorStop(0, 'rgba(0,0,0,0.20)');
     sg.addColorStop(0.42, 'rgba(0,0,0,0)');
-    sg.addColorStop(1, 'rgba(0,0,0,0.22)');
+    sg.addColorStop(1, 'rgba(0,0,0,0.13)');
     ctx.fillStyle = sg;
     ctx.fillRect(0, 0, w, h);
     ctx.restore();

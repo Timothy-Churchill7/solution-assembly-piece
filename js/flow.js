@@ -10,7 +10,7 @@
 
   function dimHall(ctx, t, g, mood) {
     S.hall(ctx, t, { mood: mood, lamps: 3, floorY: 560, still: g.frozen });
-    ctx.fillStyle = 'rgba(4,5,6,0.80)';
+    ctx.fillStyle = 'rgba(11,14,16,0.72)';
     ctx.fillRect(0, 0, W, H);
   }
 
@@ -66,7 +66,7 @@
       y += 18;
 
       // the target, given the weight the plant gives it
-      D.plate(ctx, px - 14, y - 22, pw + 28, 58, { top: '#191e22', bot: '#0e1214', r: 2 });
+      D.plate(ctx, px - 14, y - 22, pw + 28, 58, { top: '#2b2e31', bot: '#1e2022', r: 2 });
       D.stencil(ctx, 'TARGET FOR THIS SHIFT', px, y - 2, { size: 9.5, track: 2.6, color: P.faint });
       D.txt(ctx, cfg.target + ' PARTS', px, y + 22,
         { size: 19, weight: 600, color: P.bright, track: 2.5 });

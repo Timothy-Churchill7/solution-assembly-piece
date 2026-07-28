@@ -63,10 +63,10 @@
      below is the order a player sees, and it is the order of price. */
 
   E.CATALOGUE = [
-    { id: 'lamp',   cost: 45 },
+    { id: 'arm',    cost: 40 },
+    { id: 'lamp',   cost: 50 },
     { id: 'radio',  cost: 60 },
     { id: 'gauge',  cost: 70 },
-    { id: 'arm',    cost: 85 },
     { id: 'camera', cost: 95 },
     { id: 'pedal',  cost: 110 },
     { id: 'feeder', cost: 240 }
@@ -144,14 +144,31 @@
      Nothing here is a metaphor: `capacity` is the ceiling the running game
      enforces, and a test asserts it drops below the schedule. */
 
-  E.CYCLE = 1.62;           // seconds between strikes, unaided
-  /* The pedal buys back roughly a shift's worth of reaching for the lever.
-     Set at 0.80 to begin with, which made it the only purchase in the
-     catalogue that mattered: it carried every shift on its own from the
-     second one, and the sorting arm cost more and did less. At 0.90 it
-     buys back the fifth shift and not the sixth, which is what leaves the
-     last one to be solved rather than bought. */
-  E.PEDAL_FACTOR = 0.90;
+  /* The cooldown is a fact about the press and about nothing else. It
+     starts when the ram strikes and it ends when the ram is back up, and
+     no other thing you do at this station touches it.
+
+     It used to. Reaching across to line 5 and turning a piece over both
+     came off the charge, which made the second duty provably expensive
+     against a test harness and completely baffling to play: the meter
+     moved for reasons that had nothing to do with the press, and pressing
+     for a part you could not have felt like being punished for trying.
+     Line 5 costs what it should have cost all along — the seconds and the
+     clicks you spend up there instead of at the press, and the parts that
+     go by while you are reading something. */
+
+  /* 1.72 rather than 1.70 because shift 1 spawns a part every 1.70s, and a
+     cooldown exactly equal to the arrival rate makes the first shift a
+     metronome — every part lands the instant the press frees up, which is
+     both dull to play and a degenerate case for anything measuring it. */
+  E.CYCLE = 1.72;           // seconds between strikes, unaided
+
+  /* The one purchase that changes the number above. Fifteen per cent is
+     not dramatic and it is the difference between finishing the quarter
+     and not: unaided, the schedule beats you on the fifth shift. */
+  E.PEDAL_FACTOR = 0.85;
+  E.PEDAL_CUT = Math.round((1 - E.PEDAL_FACTOR) * 100);
+
   E.FEEDER_SHARE = 0.45;    // share of arrivals the feeder takes unattended
 
   E.cycle = function (ledger) {
@@ -166,64 +183,35 @@
      Line 5 passes the station carrying finished work to packing, and you
      are the last pair of eyes on it. A piece that will not pass at the
      assembly works has to come off before it gets there; one that does not
-     is fitted, found, and sent back against your name.
+     is fitted, found, and sent back against your name at REJECT_PENALTY a
+     time. That deduction is the whole cost of ignoring it, and it is a
+     large one: it is the money you would have bought the foot pedal with. */
 
-     Reaching across costs PULL_TIME, and it is charged against the cycle
-     rather than run alongside it — a pull pushes the next strike back by
-     that long whenever it is made. The first cut of this ran the reach as
-     a separate window of busy hands, and a player who reached while the
-     ram was coming up anyway paid nothing at all: line 5 was free, and the
-     whole second duty was decoration. Taking it off the cycle is what
-     makes it a cost you cannot time your way out of.
-
-     That is the difficulty of the job. Neither duty is hard. There is one
-     pair of hands and the schedule is written as though there were two. */
-
-  E.PULL_TIME = 1.05;       // seconds a reach across puts the next strike back
-  E.ARM_SHARE = 0.75;       // faults the sorting arm takes before you see them
+  /* The arm sweeps its share whether or not you are watching, so what it
+     is really worth is the deductions it prevents on the nights you are
+     too busy at the press to reach for line 5: three in four faults across
+     a run comes to about forty scrip. It is priced just under what it
+     saves, measured by driving the real screen, so it pays for itself and
+     the reaching it spares you is the profit. */
+  E.ARM_SHARE = 0.75;
 
   E.armShare = function (ledger) {
     return E.owns(ledger, 'arm') ? E.ARM_SHARE : 0;
   };
 
-  /* The reach, as a fraction of a cycle — what a pull takes off the charge.
-     Absolute seconds, not a fixed share: the foot pedal buys a faster press,
-     never a faster arm. */
-  E.pullCharge = function (ledger) {
-    return E.PULL_TIME / E.cycle(ledger);
-  };
-
-  /* Turning a piece over and looking at it costs more than taking it off,
-     and does not take it off. Curiosity is not a cheaper way of doing the
-     job; it is a thing you do instead of the job. */
-  E.LOOK_TIME = 1.6;
-
-  E.lookCharge = function (ledger) {
-    return E.LOOK_TIME / E.cycle(ledger);
-  };
-
-  /* Seconds of a shift given to line 5, for a station that catches every
-     fault that reaches it. The arm takes its share first and for nothing. */
-  E.dutySeconds = function (faults, ledger) {
-    return (faults || 0) * E.PULL_TIME * (1 - E.armShare(ledger));
-  };
-
   /* Ceiling on stamped parts for one shift, given the kit on the bench.
-     `duties` is seconds the shift spends on something other than the press
-     — line 5, and later a look at the monitor. Zero for an operator who
-     lets line 5 run past, which is a strategy and has its own bill. */
-  E.capacity = function (cfg, ledger, duties) {
+     Two limits and no others: how many parts arrive, and how often the
+     press will answer. */
+  E.capacity = function (cfg, ledger) {
     if (!cfg) return 0;
     var arrivals = Math.floor(cfg.duration / cfg.spawn);
     var auto = Math.floor(arrivals * E.autoShare(ledger));
-    var open = Math.max(0, cfg.duration - (duties || 0));
-    var byHand = Math.floor(open / E.cycle(ledger));
-    return Math.min(arrivals, auto + byHand);
+    return Math.min(arrivals, auto + Math.floor(cfg.duration / E.cycle(ledger)));
   };
 
   /* Positive when the schedule cannot be met, however well it is played. */
-  E.shortfall = function (cfg, ledger, duties) {
-    return cfg.target - E.capacity(cfg, ledger, duties);
+  E.shortfall = function (cfg, ledger) {
+    return cfg.target - E.capacity(cfg, ledger);
   };
 
 })(typeof window !== 'undefined' ? window : globalThis);

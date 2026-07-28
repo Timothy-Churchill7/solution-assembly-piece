@@ -38,22 +38,31 @@ test.describe('posted notices fit between the rails', () => {
     expect(r.back.y + r.back.h).toBeLessThanOrEqual(r.card.y + r.card.h);
   });
 
-  /* The handbook prints each explanation on one unwrapped line, so a
-     sentence that outgrows the card runs off the side of it silently. */
-  test('no handbook explanation runs off the side of its plate', async ({ page }) => {
-    await boot(page);
-    const over = await page.evaluate(() => {
-      const D = window.SOL.D, C = window.SOL.content;
-      const ctx = document.getElementById('screen').getContext('2d');
-      const pw = window.SOL.screens.howto.card
-        ? window.SOL.screens.howto.card.w - 88
-        : window.SOL.W - 336 - 88;
-      return C.HOWTO
-        .map((row) => ({ k: row.k, w: Math.round(D.measure(ctx, row.v, { size: 12.5 })) }))
-        .filter((r) => r.w > pw);
+  /* The handbook wraps its explanations now that they say more than a
+     few words each. Before it did, a sentence that outgrew the card ran
+     off the side of it in silence. This checks the wrap is real and that
+     no row has grown into a paragraph. */
+  test('every handbook explanation wraps to its plate, in one or two lines',
+    async ({ page }) => {
+      await boot(page);
+      const r = await page.evaluate(() => {
+        const g = window.SOL.game, D = window.SOL.D, C = window.SOL.content;
+        const ctx = document.getElementById('screen').getContext('2d');
+        g.go('howto');
+        g.redraw();
+        const pw = window.SOL.screens.howto.card.w - 88;
+        const opt = { size: 12.5, lineHeight: 16 };
+        return C.HOWTO.map((row) => ({
+          k: row.k,
+          lines: D.wrap(ctx, row.v, pw, opt).length,
+          widest: Math.max.apply(null, D.wrap(ctx, row.v, pw, opt)
+            .map((l) => Math.round(D.measure(ctx, l, opt))))
+        }));
+      });
+      const pw = 1200 - 336 - 88;
+      expect(r.filter((x) => x.widest > pw)).toEqual([]);
+      expect(r.filter((x) => x.lines > 2)).toEqual([]);
     });
-    expect(over).toEqual([]);
-  });
 
   test('every shift brief, including the one with the addendum', async ({ page }) => {
     await boot(page);

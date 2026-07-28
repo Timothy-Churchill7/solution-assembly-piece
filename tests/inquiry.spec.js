@@ -261,7 +261,6 @@ test.describe('looking closely at line 5', () => {
         ok,
         action: sc.lastAction,
         charge: sc.charge,
-        cost: E.lookCharge(g.run.ledger),
         looked: sc.shift.looked,
         open: !!sc.open,
         // it went back on the belt: looking is not doing the job
@@ -273,24 +272,42 @@ test.describe('looking closely at line 5', () => {
     expect(r.action).toBe('nothing');
     expect(r.open).toBe(false);
     expect(r.looked).toBe(1);
-    expect(r.charge).toBeCloseTo(1 - r.cost, 5);
+    // and the press is exactly where it was
+    expect(r.charge).toBe(1);
     expect(r.stillOn).toBe(true);
   });
 
-  test('looking costs more of the cycle than doing the job does', async ({ page }) => {
-    await boot(page);
-    const r = await page.evaluate(() => {
-      const E = window.SOL.econ, led = E.newLedger();
-      return {
-        pull: E.pullCharge(led),
-        look: E.lookCharge(led),
-        pullT: E.PULL_TIME,
-        lookT: E.LOOK_TIME
-      };
+  test('what looking costs is the part that goes by while you read',
+    async ({ page }) => {
+      await boot(page);
+      await enterShift(page, 4);
+      const r = await page.evaluate(() => {
+        const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+        let guard = 0;
+        while (!(sc.nearestReturn() && sc.nearestReturn().clue) && guard++ < 60 * 200) {
+          g.tick(1 / 60);
+          sc.stamp(null);
+        }
+        const before = { missed: sc.shift.missed, stamped: sc.shift.stamped };
+        const clue = sc.nearestReturn().clue;
+        sc.look(null);
+        // the line runs the whole time the card is up, and you are not on it
+        for (let i = 0; i < Math.ceil((L.readTime(clue) + 0.5) * 60); i++) {
+          g.tick(1 / 60);
+          sc.stamp(null);
+        }
+        sc.closeInquiry();
+        return {
+          missedDelta: sc.shift.missed - before.missed,
+          stampedDelta: sc.shift.stamped - before.stamped,
+          lost: sc.shift.lostToInquiry
+        };
+      });
+      // not one part stamped while it was open, and several went past
+      expect(r.stampedDelta).toBe(0);
+      expect(r.missedDelta).toBeGreaterThan(0);
+      expect(r.lost).toBeGreaterThan(0);
     });
-    expect(r.lookT).toBeGreaterThan(r.pullT);
-    expect(r.look).toBeGreaterThan(r.pull);
-  });
 
   /* Reading it costs the piece as well: the belt does not stop, so the
      fault you were holding rides on and is sent back against your name. */

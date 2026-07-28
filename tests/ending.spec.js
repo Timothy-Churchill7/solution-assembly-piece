@@ -26,11 +26,20 @@ const build = (page, spec) => page.evaluate((spec) => {
   return { ending: L.resolveEnding(run), all: L.ENDINGS };
 }, spec);
 
+/* The schedule, read from the game rather than repeated here — these
+   fixtures used to carry their own copy of the targets and quietly stopped
+   matching the run the day one of them moved. */
+let TARGETS = [];
+test.beforeEach(async ({ page }) => {
+  await boot(page);
+  TARGETS = await page.evaluate(() => window.SOL.logic.SHIFTS.map((s) => s.target));
+});
+
 /* Six shifts of honest, competent work: every target met exactly. */
-const honest = () => [24, 28, 33, 38, 43, 48].map((t) => ({ stamped: t }));
+const honest = () => TARGETS.map((t) => ({ stamped: t }));
 
 /* The same, but everything after shift 3 comes off short-struck. */
-const wrecked = () => [24, 28, 33, 38, 43, 48].map((t, i) => (
+const wrecked = () => TARGETS.map((t, i) => (
   i >= 3 ? { stamped: t, spoiled: t } : { stamped: t }));
 
 test.describe('reading the run', () => {
@@ -106,7 +115,7 @@ test.describe('reading the run', () => {
       { shifts: wrecked(), revealed: true, revealedOn: 3, awareness: 20 });
     const slow = await build(page, {
       revealed: true, revealedOn: 3, awareness: 20,
-      shifts: [24, 28, 33, 38, 43, 48].map((t, i) => (
+      shifts: TARGETS.map((t, i) => (
         i >= 3 ? { stamped: 0 } : { stamped: t }))
     });
     expect(slow.ending.id).toBe(struck.ending.id);
@@ -118,7 +127,7 @@ test.describe('reading the run', () => {
     const r = await build(page, {
       revealed: true, revealedOn: 3, awareness: 20,
       // one bad night out of three, which is neither one thing nor the other
-      shifts: [24, 28, 33, 38, 43, 48].map((t, i) => (
+      shifts: TARGETS.map((t, i) => (
         i === 4 ? { stamped: t, spoiled: t } : { stamped: t }))
     });
     expect(r.ending.id).toBe('partial');
@@ -134,10 +143,10 @@ test.describe('what the ending does not depend on', () => {
     await boot(page);
     const spec = { revealed: true, revealedOn: 3, awareness: 20 };
     const met = await build(page, Object.assign({}, spec, {
-      shifts: [24, 28, 33, 38, 43, 48].map((t) => ({ stamped: t, spoiled: t }))
+      shifts: TARGETS.map((t) => ({ stamped: t, spoiled: t }))
     }));
     const over = await build(page, Object.assign({}, spec, {
-      shifts: [40, 44, 47, 53, 59, 65].map((t) => ({ stamped: t, spoiled: t }))
+      shifts: TARGETS.map((t) => ({ stamped: t + 16, spoiled: t + 16 }))
     }));
     expect(met.ending.id).toBe(over.ending.id);
     // and they really did differ on everything the sheet keeps
@@ -156,7 +165,7 @@ test.describe('what the ending does not depend on', () => {
       { shifts: honest(), revealed: true, revealedOn: 3, awareness: 20 },
       {
         revealed: true, revealedOn: 3, awareness: 20,
-        shifts: [24, 28, 33, 38, 43, 48].map((t, i) => (
+        shifts: TARGETS.map((t, i) => (
           i === 4 ? { stamped: t, spoiled: t } : { stamped: t }))
       },
       { shifts: wrecked(), revealed: true, revealedOn: 3, awareness: 20 },

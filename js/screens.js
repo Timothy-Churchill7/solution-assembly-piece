@@ -18,7 +18,7 @@
     D.stencil(ctx, left, 20, 22, { size: 10, color: P.faint, track: 2.6 });
     if (right) {
       D.stencil(ctx, right, W - 20, 22,
-        { size: 10, color: 'rgba(90,100,109,0.75)', track: 2.6, align: 'right' });
+        { size: 10, color: 'rgba(126,136,144,0.85)', track: 2.6, align: 'right' });
     }
     // corner fixings
     D.rivet(ctx, 9, 17, 2.2);
@@ -36,9 +36,9 @@
   /* A scrim so type stays legible over the hall. */
   function scrim(ctx, x, y, w, h, dir) {
     var g = ctx.createLinearGradient(x, y, dir === 'v' ? x : x + w, dir === 'v' ? y + h : y);
-    g.addColorStop(0, 'rgba(4,5,6,0.90)');
-    g.addColorStop(0.55, 'rgba(4,5,6,0.66)');
-    g.addColorStop(1, 'rgba(4,5,6,0)');
+    g.addColorStop(0, 'rgba(11,14,16,0.86)');
+    g.addColorStop(0.55, 'rgba(11,14,16,0.58)');
+    g.addColorStop(1, 'rgba(11,14,16,0)');
     ctx.fillStyle = g;
     ctx.fillRect(x, y, w, h);
   }
@@ -50,8 +50,8 @@
     o = o || {};
     var hot = state === 'hover' || state === 'active';
     D.plate(ctx, r.x, r.y, r.w, r.h, {
-      top: hot ? '#2a3238' : '#1b2024',
-      bot: hot ? '#151a1e' : '#0e1113',
+      top: hot ? '#3c4145' : '#2c2f32',
+      bot: hot ? '#262a2c' : '#1e2022',
       r: 2
     });
     if (state === 'active') {
@@ -75,11 +75,11 @@
     ctx.shadowColor = 'rgba(0,0,0,0.7)';
     ctx.shadowBlur = 26;
     ctx.shadowOffsetY = 10;
-    D.plate(ctx, x, y, w, h, { top: '#1a1f23', bot: '#101315', r: 3 });
+    D.plate(ctx, x, y, w, h, { top: '#2a2e30', bot: '#202224', r: 3 });
     ctx.restore();
     D.rivetsAround(ctx, x, y, w, h, 13, 3);
     if (title) {
-      D.hatch(ctx, x + 1, y + 1, w - 2, 26, { step: 11, a: '#242a2e', b: '#12161a' });
+      D.hatch(ctx, x + 1, y + 1, w - 2, 26, { step: 11, a: '#36393d', b: '#222528' });
       ctx.fillStyle = 'rgba(6,8,9,0.72)';
       ctx.fillRect(x + 1, y + 1, w - 2, 26);
       D.stencil(ctx, title, x + 26, y + 18, { size: 10.5, track: 3.4, color: P.mid });
@@ -113,7 +113,7 @@
       for (var i = 0; i < 9; i++) {
         var wx = ((t * 34 + i * 168) % (W + 240)) - 120;
         S.widget(ctx, wx, beltY + 29, 0.95, S.FORMS[i % 4], {
-          hi: '#5c656d', mid: '#343c43', lo: '#141719'
+          hi: '#71767a', mid: '#494e52', lo: '#242628'
         });
       }
 
@@ -153,7 +153,7 @@
       D.stencil(ctx, C.MENU_ITEMS[this.index].note, mx, py + 20,
         { size: 10.5, track: 2.6, color: P.dim });
       D.stencil(ctx, 'BUILD 1.0 · NO ACCOUNT IS KEPT OF WHAT YOU NOTICE', mx, py + 46,
-        { size: 9.5, track: 2.4, color: 'rgba(74,82,89,0.95)' });
+        { size: 9.5, track: 2.4, color: 'rgba(116,124,131,0.95)' });
 
       footerRail(ctx, C.MENU_FOOTER);
       D.crt(ctx, W, H, t);
@@ -195,8 +195,8 @@
     ctx.save();
     D.rrect(ctx, x, y, w, h, 2);
     var g2 = ctx.createLinearGradient(0, y, 0, y + h);
-    g2.addColorStop(0, '#070909');
-    g2.addColorStop(1, '#0e1214');
+    g2.addColorStop(0, '#161818');
+    g2.addColorStop(1, '#1e2022');
     ctx.fillStyle = g2;
     ctx.fill();
     ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = 1;
@@ -232,7 +232,7 @@
     draw: function (ctx, t, g) {
       this.hits = [];
       S.hall(ctx, t, { mood: 0.5, lamps: 3, floorY: H * 0.86, still: g.frozen });
-      ctx.fillStyle = 'rgba(4,5,6,0.78)';
+      ctx.fillStyle = 'rgba(11,14,16,0.70)';
       ctx.fillRect(0, 0, W, H);
 
       headerRail(ctx, C.PLANT_NAME, 'NOTICE BOARD');
@@ -311,7 +311,7 @@
      were off the bottom of the card and the BACK button was printed over
      them. Same treatment as the stores — a budget that adds up, with the
      card rect published for a test that checks it still does. */
-  var HOWTO = { x: 168, w: W - 336, top: 82, row: 52, button: 42 };
+  var HOWTO = { x: 168, w: W - 336, top: 78, line: 16, button: 42 };
 
   Screens.howto = {
     name: 'howto',
@@ -323,7 +323,7 @@
     draw: function (ctx, t, g) {
       this.hits = [];
       S.hall(ctx, t, { mood: 0.5, lamps: 3, floorY: H * 0.86, still: g.frozen });
-      ctx.fillStyle = 'rgba(4,5,6,0.78)';
+      ctx.fillStyle = 'rgba(11,14,16,0.70)';
       ctx.fillRect(0, 0, W, H);
 
       headerRail(ctx, C.PLANT_NAME, 'OPERATOR HANDBOOK');
@@ -331,8 +331,16 @@
       var nx = HOWTO.x, nw = HOWTO.w;
       var px = nx + 44, pw = nw - 88;
       var noteOpt = { size: 13, color: P.faint, lineHeight: 22 };
-      var noteLines = D.wrap(ctx, C.HOWTO_NOTE, pw, noteOpt).length;
-      var nh = HOWTO.top + C.HOWTO.length * HOWTO.row + 16 + noteLines * 22
+      /* Each explanation is wrapped to the plate it sits on. They used to
+         be printed as one unwrapped line each, which was fine while they
+         were terse and ran silently off the side of the card the moment
+         they started actually explaining anything. */
+      var vOpt = { size: 12.5, lineHeight: HOWTO.line };
+      var rows = C.HOWTO.map(function (r) { return D.wrap(ctx, r.v, pw, vOpt).length; });
+      var bodyH = rows.reduce(function (a, n) { return a + 22 + n * HOWTO.line + 12; }, 0);
+      var noteLines = D.wrap(ctx, C.HOWTO_BUY, pw, { size: 13 }).length
+        + D.wrap(ctx, C.HOWTO_NOTE, pw, noteOpt).length;
+      var nh = HOWTO.top + bodyH + 12 + noteLines * 22 + 12
              + 24 + HOWTO.button + 24;
       var ny = Math.round((H - nh) / 2);
       this.card = { x: nx, y: ny, w: nw, h: nh };
@@ -340,15 +348,22 @@
 
       var y = ny + HOWTO.top;
 
-      C.HOWTO.forEach(function (row) {
-        D.plate(ctx, px - 14, y - 18, pw + 28, 44, { top: '#171b1f', bot: '#0f1214', r: 2 });
+      C.HOWTO.forEach(function (row, i) {
+        var h = 22 + rows[i] * HOWTO.line;
+        D.plate(ctx, px - 14, y - 18, pw + 28, h, { top: '#272a2d', bot: '#1f2122', r: 2 });
         D.stencil(ctx, row.k, px, y - 2, { size: 11, track: 2.2, color: P.bright });
-        D.txt(ctx, row.v, px, y + 15, { size: 12.5, color: P.dim });
-        y += HOWTO.row;
+        D.para(ctx, row.v, px, y + 14, pw,
+          { size: 12.5, lineHeight: HOWTO.line, color: P.dim });
+        y += 22 + rows[i] * HOWTO.line + 12;
       });
 
       y += 10;
-      D.para(ctx, C.HOWTO_NOTE, px, y, pw, noteOpt);
+      /* The one piece of outright advice the handbook gives. It is here
+         rather than buried in a clue because a player who never finds a
+         clue still has to be able to finish the quarter. */
+      D.para(ctx, C.HOWTO_BUY, px, y, pw,
+        { size: 13, color: P.text, lineHeight: 22 });
+      D.para(ctx, C.HOWTO_NOTE, px, y + noteLines * 22 + 12, pw, noteOpt);
 
       var back = { x: px - 14, y: ny + nh - HOWTO.button - 24, w: 190, h: HOWTO.button, id: 'back' };
       control(ctx, back, 'BACK', g.hoverId === 'back' ? 'hover' : 'idle', { size: 12 });

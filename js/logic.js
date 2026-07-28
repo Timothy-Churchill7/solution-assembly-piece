@@ -23,7 +23,7 @@
     { n: 2, duration: 66, spawn: 1.58, speed: 106, target: 28, mood: 0.90, ret: 3.4, flaw: 0.18 },
     { n: 3, duration: 70, spawn: 1.46, speed: 116, target: 33, mood: 0.78, ret: 3.2, flaw: 0.22 },
     { n: 4, duration: 72, spawn: 1.34, speed: 126, target: 38, mood: 0.64, ret: 2.9, flaw: 0.28 },
-    { n: 5, duration: 74, spawn: 1.24, speed: 136, target: 43, mood: 0.50, ret: 2.7, flaw: 0.32 },
+    { n: 5, duration: 74, spawn: 1.24, speed: 136, target: 44, mood: 0.50, ret: 2.7, flaw: 0.32 },
     { n: 6, duration: 76, spawn: 1.16, speed: 146, target: 48, mood: 0.36, ret: 2.5, flaw: 0.36 }
   ];
 
@@ -60,14 +60,6 @@
      faults, not pieces. */
   L.armTakes = function (j, share) {
     return Math.floor((j + 1) * share) > Math.floor(j * share);
-  };
-
-  /* The ceiling for an operator who catches every fault line 5 brings —
-     which is the honest way to play, and the reason the schedule stops
-     being meetable two shifts before it otherwise would. */
-  L.capacityAttentive = function (n, ledger) {
-    var cfg = L.shiftConfig(n);
-    return E.capacity(cfg, ledger, E.dutySeconds(L.faultCount(cfg), ledger));
   };
 
   /* Scrapping a part is only available once the player has been given a

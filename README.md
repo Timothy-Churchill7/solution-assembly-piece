@@ -63,7 +63,7 @@ connecting the repo is the whole of it.
 npm install && npx playwright install chromium && npm test
 ```
 
-157 tests. They cover the pay arithmetic and the ceiling on a pair of
+156 tests. They cover the pay arithmetic and the ceiling on a pair of
 hands, both assembly lines, every inquiry channel, the layout budget of
 every posted notice, and the ending resolver — including the load-bearing
 claim that the count, the bonus and the balance on the book decide nothing

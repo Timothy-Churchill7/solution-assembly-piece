@@ -120,123 +120,71 @@ test.describe('the ceiling on a pair of hands', () => {
       return L.SHIFTS.map((cfg) => ({
         n: cfg.n,
         target: cfg.target,
-        capacity: E.capacity(cfg, bare, 0),
-        shortfall: E.shortfall(cfg, bare, 0)
+        capacity: E.capacity(cfg, bare),
+        shortfall: E.shortfall(cfg, bare)
       }));
     });
-    // the early shifts are winnable by hand, and comfortably
-    for (const s of r.slice(0, 5)) {
+    // the early shifts are winnable by hand
+    for (const s of r.slice(0, 4)) {
       expect(s.capacity, `shift ${s.n}`).toBeGreaterThanOrEqual(s.target);
     }
-    // the last one is not winnable by hand at all, however well it is played
-    const last = r[r.length - 1];
-    expect(last.capacity).toBeLessThan(last.target);
-    expect(last.shortfall).toBeGreaterThan(0);
-
-    // and it gets harder monotonically, rather than spiking at the end
+    // the last two are not, however well they are played
+    for (const s of r.slice(4)) {
+      expect(s.capacity, `shift ${s.n}`).toBeLessThan(s.target);
+      expect(s.shortfall, `shift ${s.n}`).toBeGreaterThan(0);
+    }
+    // and the slack closes shift by shift rather than falling off a cliff
     const slack = r.map((s) => s.capacity - s.target);
     for (let i = 2; i < slack.length; i++) {
       expect(slack[i], `shift ${i + 1} slack`).toBeLessThanOrEqual(slack[i - 1]);
     }
   });
 
-  test('the pedal buys the last shift back', async ({ page }) => {
+  /* The cooldown is the only thing the press is limited by, and exactly one
+     item in the catalogue changes it. If that stops being true the stores
+     have no load-bearing purchase in them at all. */
+  test('the foot pedal is the only thing that changes the cooldown',
+    async ({ page }) => {
+      await boot(page);
+      const r = await page.evaluate(() => {
+        const E = window.SOL.econ;
+        const bare = E.newLedger();
+        const out = { base: E.cycle(bare), cut: E.PEDAL_CUT, moved: [] };
+        E.CATALOGUE.forEach((it) => {
+          const led = E.newLedger();
+          led.owned = [it.id];
+          if (E.cycle(led) !== out.base) out.moved.push(it.id);
+        });
+        return out;
+      });
+      expect(r.base).toBeCloseTo(1.72, 5);
+      expect(r.moved).toEqual(['pedal']);
+      expect(r.cut).toBe(15);
+    });
+
+  test('the pedal buys back the shifts the schedule had taken', async ({ page }) => {
     await boot(page);
     const r = await page.evaluate(() => {
       const L = window.SOL.logic, E = window.SOL.econ;
       const bare = E.newLedger();
-      const kit = E.newLedger();
-      kit.owned = ['pedal'];
-      const last = L.SHIFTS[L.SHIFTS.length - 1];
-      return {
-        bare: E.capacity(last, bare, 0),
-        kit: E.capacity(last, kit, 0),
-        target: last.target
-      };
+      const kit = E.newLedger(); kit.owned = ['pedal'];
+      return L.SHIFTS.map((cfg) => ({
+        n: cfg.n, target: cfg.target,
+        bare: E.capacity(cfg, bare), kit: E.capacity(cfg, kit)
+      }));
     });
-    expect(r.bare).toBeLessThan(r.target);
-    expect(r.kit).toBeGreaterThanOrEqual(r.target);
+    for (const s of r) {
+      expect(s.kit, `shift ${s.n}`).toBeGreaterThanOrEqual(s.bare);
+      expect(s.kit, `shift ${s.n}`).toBeGreaterThanOrEqual(s.target);
+    }
+    // and it is the last two shifts it actually rescues
+    expect(r[4].bare).toBeLessThan(r[4].target);
+    expect(r[5].bare).toBeLessThan(r[5].target);
   });
-
-  test('seconds spent elsewhere come straight off the ceiling', async ({ page }) => {
-    await boot(page);
-    const r = await page.evaluate(() => {
-      const L = window.SOL.logic, E = window.SOL.econ;
-      const bare = E.newLedger();
-      const cfg = L.shiftConfig(4);
-      return {
-        idle: E.capacity(cfg, bare, 0),
-        busy: E.capacity(cfg, bare, 16.2),   // ten cycles' worth
-        cycle: E.cycle(bare)
-      };
-    });
-    expect(r.cycle).toBeCloseTo(1.62, 5);
-    expect(r.busy).toBe(r.idle - 10);
-  });
-
-  /* The second half of the trap. An operator who does the whole job — the
-     press and line 5 — runs out of hands two shifts before an operator who
-     lets line 5 go past, and the one who lets it go past is paying for it
-     in deductions instead. Neither way through is free. */
-  test('doing the whole job by hand fails earlier than doing half of it',
-    async ({ page }) => {
-      await boot(page);
-      const r = await page.evaluate(() => {
-        const L = window.SOL.logic, E = window.SOL.econ;
-        const bare = E.newLedger();
-        return L.SHIFTS.map((cfg) => ({
-          n: cfg.n,
-          target: cfg.target,
-          faults: L.faultCount(cfg),
-          ignoring: E.capacity(cfg, bare, 0),
-          attentive: L.capacityAttentive(cfg.n, bare)
-        }));
-      });
-
-      // every shift brings faults, and more of them as the run goes on
-      for (const s of r) expect(s.faults, `shift ${s.n}`).toBeGreaterThan(0);
-      for (let i = 1; i < r.length; i++) {
-        expect(r[i].faults).toBeGreaterThanOrEqual(r[i - 1].faults);
-      }
-
-      const attentiveFails = r.filter((s) => s.attentive < s.target).map((s) => s.n);
-      const ignoringFails = r.filter((s) => s.ignoring < s.target).map((s) => s.n);
-      expect(attentiveFails).toEqual([5, 6]);
-      expect(ignoringFails).toEqual([6]);
-
-      // and the slack closes shift by shift rather than falling off a cliff
-      const slack = r.map((s) => s.attentive - s.target);
-      for (let i = 1; i < slack.length; i++) {
-        expect(slack[i], `shift ${i + 1} slack`).toBeLessThan(slack[i - 1]);
-      }
-    });
-
-  test('the arm takes most of line 5 off your hands, but not all of it',
-    async ({ page }) => {
-      await boot(page);
-      const r = await page.evaluate(() => {
-        const L = window.SOL.logic, E = window.SOL.econ;
-        const bare = E.newLedger();
-        const armed = E.newLedger(); armed.owned = ['arm'];
-        const cfg = L.shiftConfig(5);
-        return {
-          share: E.ARM_SHARE,
-          bareDuty: E.dutySeconds(L.faultCount(cfg), bare),
-          armDuty: E.dutySeconds(L.faultCount(cfg), armed),
-          bare: L.capacityAttentive(5, bare),
-          armed: L.capacityAttentive(5, armed),
-          target: cfg.target
-        };
-      });
-      expect(r.armDuty).toBeGreaterThan(0);          // it has no opinion about the rest
-      expect(r.armDuty).toBeCloseTo(r.bareDuty * (1 - r.share), 5);
-      expect(r.armed).toBeGreaterThan(r.bare);
-      expect(r.bare).toBeLessThan(r.target);
-    });
 });
 
 /* `capacity` is an upper bound and nothing more: it assumes a part is
-   always in the zone at the moment the charge fills, which no run of the
+   always in the zone at the moment the cooldown ends, which no run of the
    real screen manages. Expect the running game to land a few parts under
    it — returns.spec.js is what actually holds the balance in place. */
 

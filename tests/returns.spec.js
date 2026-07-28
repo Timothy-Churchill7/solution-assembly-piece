@@ -67,82 +67,86 @@ test.describe('line 5', () => {
     expect(r.rec.rejects).toBe(0);
   });
 
-  /* The reach is charged against the cycle, not run alongside it, so it
-     costs the same whenever it is made. If this ever stops being true, a
-     player who reaches while the ram is coming up gets line 5 for free and
-     the second duty stops meaning anything. */
-  test('the reach costs a second and a bit however it is timed',
-    async ({ page }) => {
-      await boot(page);
-      const r = await page.evaluate(() => {
-        const g = window.SOL.game, sc = window.SOL.screens.shift, E = window.SOL.econ;
+  /* The cooldown belongs to the press. It used to be charged for reaching
+     across to line 5, which made the meter move for reasons that had
+     nothing to do with the press and made pressing for a part you could
+     not have feel like a punishment. Nothing but a stamp touches it now,
+     and this is what says so. */
+  test('nothing but stamping touches the cooldown', async ({ page }) => {
+    await boot(page);
+    const r = await page.evaluate(() => {
+      const g = window.SOL.game, sc = window.SOL.screens.shift, E = window.SOL.econ;
+      window.SOL.logic.resetRun(g.run);
+      g.run.shift = 6;
+      g.go('shift');
+      let guard = 0;
+      while (!sc.nearestReturn() && guard++ < 60 * 60) g.tick(1 / 60);
 
-        function reachAt(charge) {
-          window.SOL.logic.resetRun(g.run);
-          g.run.shift = 6;
-          g.go('shift');
-          let guard = 0;
-          while (!sc.nearestReturn() && guard++ < 60 * 60) g.tick(1 / 60);
-          if (!sc.nearestReturn()) return null;
-          sc.charge = charge;
-          sc.pull(null);
-          // frames from here until the press will answer again
-          let waited = 0;
-          while (sc.charge < 1 && waited++ < 60 * 30) g.tick(1 / 60);
-          return waited / 60;
-        }
-        const full = reachAt(1);        // reached with the ram ready
-        const empty = reachAt(0);       // reached the instant after a strike
-        const bare = (function () {
-          window.SOL.logic.resetRun(g.run);
-          g.run.shift = 6;
-          g.go('shift');
-          sc.charge = 0;
-          let waited = 0;
-          while (sc.charge < 1 && waited++ < 60 * 30) g.tick(1 / 60);
-          return waited / 60;
-        })();
-        return { full, empty, bare, pullTime: E.PULL_TIME, cycle: E.cycle(g.run.ledger) };
-      });
+      sc.charge = 1;
+      const pulled = sc.pull(null);
+      const afterPull = sc.charge;
 
-      // reaching with a full charge costs the whole reach and nothing else
-      expect(r.full).toBeCloseTo(r.pullTime, 1);
-      // reaching just after a strike costs a whole cycle plus the same reach
-      expect(r.empty).toBeCloseTo(r.cycle + r.pullTime, 1);
-      // which is the plain cycle plus the reach: the timing bought nothing
-      expect(r.empty - r.bare).toBeCloseTo(r.pullTime, 1);
+      while (!sc.nearestReturn() && guard++ < 60 * 60) g.tick(1 / 60);
+      sc.charge = 1;
+      const looked = sc.look(null);
+      const afterLook = sc.charge;
+
+      // and pressing for a part while it is coming up costs nothing either
+      sc.charge = 0.4;
+      for (let i = 0; i < 30; i++) sc.stamp(null);
+      const afterMashing = sc.charge;
+      const why = sc.lastAction;
+
+      // only a stamp that actually lands puts it back to zero
+      sc.charge = 1;
+      const struck = sc.stamp(null);
+      return {
+        pulled, afterPull, looked, afterLook, afterMashing, why,
+        struck, afterStamp: sc.charge, cycle: E.cycle(g.run.ledger)
+      };
     });
+    expect(r.pulled).toBe(true);
+    expect(r.afterPull).toBe(1);
+    expect(r.looked).toBe(true);
+    expect(r.afterLook).toBe(1);
+    // thirty presses during the wait, and the wait is exactly where it was
+    expect(r.afterMashing).toBeCloseTo(0.4, 5);
+    expect(r.why).toBe('charging');
+    expect(r.struck).toBe(true);
+    expect(r.afterStamp).toBe(0);
+    expect(r.cycle).toBeCloseTo(1.72, 5);
+  });
 
-  test('taking off good stock costs the same second and buys nothing',
-    async ({ page }) => {
-      await boot(page);
-      const r = await playShift(page, 3, 'everything');
-      expect(r.rec.pulled).toBe(r.due);
-      expect(r.rec.pulledSound).toBe(r.due - r.faults);
-      expect(r.rec.pulledSound).toBeGreaterThan(0);
-      expect(r.rec.rejects).toBe(0);
-      // and a shift spent grabbing at everything does not make the number
-      expect(r.rec.stamped).toBeLessThan(r.target);
-    });
+  test('taking off good stock buys nothing', async ({ page }) => {
+    await boot(page);
+    const r = await playShift(page, 3, 'everything');
+    expect(r.rec.pulled).toBe(r.due);
+    expect(r.rec.pulledSound).toBe(r.due - r.faults);
+    expect(r.rec.pulledSound).toBeGreaterThan(0);
+    // the faults were caught, so nothing was sent back — but the shift was
+    // spent grabbing at sound stock for no return whatever
+    expect(r.rec.rejects).toBe(0);
+  });
 });
 
 test.describe('doing the whole job', () => {
-  /* The trade, in the running game rather than on paper. */
-  test('by the fifth shift the honest operator cannot make the number',
-    async ({ page }) => {
-      await boot(page);
-      const attentive = await playShift(page, 5, 'both');
-      const heedless = await playShift(page, 5, 'press');
+  /* The trade, in the running game rather than on paper. Attending line 5
+     and ignoring it produce the same count — the cooldown does not care
+     what else your hands are doing — and the whole difference lands on the
+     pay stub, which is the money the foot pedal would have come out of. */
+  test('the fifth shift beats both ways of playing it', async ({ page }) => {
+    await boot(page);
+    const attentive = await playShift(page, 5, 'both');
+    const heedless = await playShift(page, 5, 'press');
 
-      expect(heedless.rec.stamped).toBeGreaterThan(attentive.rec.stamped);
-      expect(attentive.rec.stamped).toBeLessThan(attentive.target);
-      expect(heedless.rec.stamped).toBeGreaterThanOrEqual(heedless.target);
+    expect(attentive.rec.stamped).toBeLessThan(attentive.target);
+    expect(heedless.rec.stamped).toBeLessThan(heedless.target);
 
-      // and the one who made the number is docked for how they made it
-      expect(heedless.rec.rejects).toBe(heedless.faults);
-      expect(attentive.rec.rejects).toBe(0);
-      expect(heedless.rec.pay.rejects).toBeLessThan(0);
-    });
+    // and only one of them is docked on top of it
+    expect(attentive.rec.rejects).toBe(0);
+    expect(heedless.rec.rejects).toBe(heedless.faults);
+    expect(heedless.rec.pay.total).toBeLessThan(attentive.rec.pay.total);
+  });
 
   test('shifts one to four are winnable while doing the whole job',
     async ({ page }) => {
@@ -153,6 +157,51 @@ test.describe('doing the whole job', () => {
         expect(r.rec.stamped, `shift ${n}`).toBeGreaterThanOrEqual(r.target);
       }
     });
+
+  /* What ignoring line 5 actually costs, over a whole run: the deductions
+     come to most of a foot pedal, which is the item that would have got
+     the last two shifts back. */
+  test('ignoring line 5 costs about what the pedal costs', async ({ page }) => {
+    await boot(page);
+    const r = await page.evaluate(() => {
+      const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+      const E = window.SOL.econ;
+      function run(policy, kit) {
+        L.resetRun(g.run);
+        for (let n = 1; n <= L.SHIFT_COUNT; n++) {
+          g.run.ledger.owned = kit.slice();
+          g.run.shift = n;
+          g.go('shift');
+          for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
+            g.tick(1 / 60);
+            if (g.screen !== 'shift') break;
+            if (policy === 'both') {
+              const w = sc.returns.filter((q) => sc.inRetZone(q) && q.faulty);
+              if (w.length) { sc.pull(w[0].x); continue; }
+            }
+            sc.stamp(null);
+          }
+          window.__clearBin();
+        }
+        return { earned: g.run.ledger.earned, rejects: g.run.rejects };
+      }
+      const attentive = run('both', []);
+      const heedless = run('press', []);
+      const armed = run('press', ['arm']);
+      return { attentive, heedless, armed,
+               pedal: E.item('pedal').cost, arm: E.item('arm').cost };
+    });
+    const lost = r.attentive.earned - r.heedless.earned;
+    expect(r.heedless.rejects).toBeGreaterThan(20);
+    expect(lost).toBeGreaterThan(r.pedal * 0.6);
+
+    /* And the sorting arm is exactly the insurance against that: bought,
+       it takes three faults in four off the line for you whether you are
+       looking or not, so it costs less than it saves. */
+    expect(r.armed.rejects).toBeLessThan(r.heedless.rejects);
+    const saved = r.armed.earned - r.heedless.earned;
+    expect(saved).toBeGreaterThan(r.arm);
+  });
 });
 
 test.describe('what the kit actually does', () => {
@@ -167,78 +216,44 @@ test.describe('what the kit actually does', () => {
       // rest, so there is always something left that is yours to notice
       expect(armed.rec.sweptByArm).toBeLessThan(armed.faults);
       expect(armed.rec.pulledFaulty - armed.rec.sweptByArm).toBeGreaterThan(0);
-      // the ones it took never reached you, so they cost you no cycles
-      expect(armed.rec.stamped).toBeGreaterThan(bare.rec.stamped);
+      /* It buys no output at all — the cooldown does not care what your
+         hands are doing — so what it buys is the reaching itself, and the
+         deductions on the nights you cannot get to line 5 in time. */
+      expect(armed.rec.stamped).toBe(bare.rec.stamped);
       expect(armed.rec.rejects).toBe(0);
     });
 
-  /* The catalogue has to be a ladder: pay more, get more. It was not, to
-     begin with — the sorting arm cost forty more than the foot pedal and
-     did a third as much, so a player reading the list top to bottom and
-     buying what they could afford was buying the worse thing. Prices are
-     set against these numbers now, and this is where they are checked. */
-  test('the catalogue is a ladder, and only the top of it carries shift six',
+  /* Two of the seven items move the count. The other five buy sight, or
+     sound, or fewer deductions, or fewer clicks — and the game now says so
+     in plain words on the price list, so this checks the words are true. */
+  test('exactly two purchases change what the press can produce',
     async ({ page }) => {
       await boot(page);
-      const at = async (kit) => ({
-        five: await playShift(page, 5, 'both', kit),
-        six: await playShift(page, 6, 'both', kit)
-      });
-      const bare = await at([]);
-      const arm = await at(['arm']);
-      const pedal = await at(['pedal']);
-      const feeder = await at(['feeder']);
-      const cost = await page.evaluate(() => {
-        const E = window.SOL.econ;
-        const c = {};
-        E.CATALOGUE.forEach((it) => { c[it.id] = it.cost; });
-        return c;
-      });
-
-      // more scrip, never fewer parts — at both shifts that are in doubt
-      expect(cost.arm).toBeLessThan(cost.pedal);
-      expect(cost.pedal).toBeLessThan(cost.feeder);
-      for (const n of ['five', 'six']) {
-        expect(arm[n].rec.stamped, `arm ${n}`).toBeGreaterThan(bare[n].rec.stamped);
-        expect(pedal[n].rec.stamped, `pedal ${n}`).toBeGreaterThanOrEqual(arm[n].rec.stamped);
-        expect(feeder[n].rec.stamped, `feeder ${n}`).toBeGreaterThan(pedal[n].rec.stamped);
+      const bare = await playShift(page, 5, 'both');
+      const moved = [];
+      const ids = await page.evaluate(() =>
+        window.SOL.econ.CATALOGUE.map((i) => i.id));
+      for (const id of ids) {
+        const r = await playShift(page, 5, 'both', [id]);
+        if (r.rec.stamped !== bare.rec.stamped) moved.push(id);
       }
-      // and strictly more somewhere, so the dearer item is never a tie
-      expect(pedal.five.rec.stamped).toBeGreaterThan(arm.five.rec.stamped);
-
-      // the pedal buys back the fifth shift; nothing but the feeder buys the sixth
-      expect(bare.five.rec.stamped).toBeLessThan(bare.five.target);
-      expect(pedal.five.rec.stamped).toBeGreaterThanOrEqual(pedal.five.target);
-      expect(pedal.six.rec.stamped).toBeLessThan(pedal.six.target);
-      expect(feeder.six.rec.stamped).toBeGreaterThanOrEqual(feeder.six.target);
+      expect(moved.sort()).toEqual(['feeder', 'pedal']);
     });
 
-  test('the feeder works line 4 on its own account', async ({ page }) => {
-    await boot(page);
-    const r = await page.evaluate(() => {
-      const g = window.SOL.game, sc = window.SOL.screens.shift;
-      window.SOL.logic.resetRun(g.run);
-      g.run.ledger.owned = ['feeder'];
-      g.run.shift = 4;
-      g.go('shift');
-      // nobody at the press at all: every part stamped is the feeder's
-      for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) g.tick(1 / 60);
-      window.__clearBin();
-      return g.run.shiftLog[g.run.shiftLog.length - 1];
+  test('the pedal carries the last two shifts and the run is lost without it',
+    async ({ page }) => {
+      await boot(page);
+      for (const n of [5, 6]) {
+        const bare = await playShift(page, n, 'both');
+        const pedal = await playShift(page, n, 'both', ['pedal']);
+        const feeder = await playShift(page, n, 'both', ['feeder']);
+        expect(bare.rec.stamped, `bare ${n}`).toBeLessThan(bare.target);
+        expect(pedal.rec.stamped, `pedal ${n}`).toBeGreaterThanOrEqual(pedal.target);
+        expect(feeder.rec.stamped, `feeder ${n}`).toBeGreaterThanOrEqual(feeder.target);
+        // and the dearer of the two really is the stronger of the two
+        expect(feeder.rec.stamped, `feeder vs pedal ${n}`)
+          .toBeGreaterThan(pedal.rec.stamped);
+      }
     });
-    expect(r.autoStamped).toBeGreaterThan(0);
-    expect(r.stamped).toBe(r.autoStamped);
-    // it runs the ordinary work and no more; the number is still yours to make
-    expect(r.stamped).toBeLessThan(r.target);
-  });
 
-  test('the lamp and the gauge buy sight, never output', async ({ page }) => {
-    await boot(page);
-    const bare = await playShift(page, 4, 'both');
-    const seeing = await playShift(page, 4, 'both', ['lamp', 'gauge']);
-    /* Both are visibility. If either ever starts moving the count, the
-       catalogue has quietly become pay-to-win and this will say so. */
-    expect(seeing.rec.stamped).toBe(bare.rec.stamped);
-    expect(seeing.rec.rejects).toBe(bare.rec.rejects);
-  });
 });

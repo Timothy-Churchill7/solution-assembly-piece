@@ -54,15 +54,19 @@
   C.MENU_FOOTER = 'ARROWS / MOUSE TO SELECT · ENTER TO CONFIRM';
 
   C.HOWTO = [
-    { k: 'CLICK a part in the press zone', v: 'Stamps it. A stamped part counts toward quota.' },
-    { k: 'SPACE', v: 'Stamps the part nearest the press. Same as clicking it.' },
-    { k: 'THE CYCLE', v: 'The ram must come back up before it strikes again. The charge bar shows how long that takes.' },
-    { k: 'A, or CLICK on line 5', v: 'Takes a piece off the return line. One that will not pass and is left on is sent back and docked.' },
-    { k: 'E on a piece in the bay', v: 'Turns it over and looks at it properly. Costs a cycle, the same as taking one off.' },
-    { k: 'X on a part in the zone', v: 'Scraps it. Costs quota. Available from shift 3.' },
-    { k: 'ESC', v: 'Closes whatever you are reading and returns you to the line.' },
-    { k: 'BETWEEN SHIFTS', v: 'You are paid, and the works stores are open. The schedule rises every shift; your hands do not.' }
+    { k: 'SPACE, or CLICK the belt', v: 'Stamps the part in the press zone. Stamped parts are your quota; nothing else counts.' },
+    { k: 'THE COOLDOWN', v: 'A stamp puts the press out for 1.7 seconds. Nothing else on the screen changes that.' },
+    { k: 'A, or CLICK line 5', v: 'Takes a piece off the return line. Every faulty one you leave on costs you 3 scrip.' },
+    { k: 'SPOTTING A FAULT', v: 'A faulty piece sits crooked, with a bright split across it. A few carry something else.' },
+    { k: 'E', v: 'Turns over the piece in the inspection bay. Most have nothing on them. It stays on the belt.' },
+    { k: 'X', v: 'Scraps the part in the press zone. It counts as a miss. Available from shift 3.' },
+    { k: 'ESC', v: 'Puts down whatever you are reading. Nothing stops while you read it.' },
+    { k: 'BETWEEN SHIFTS', v: 'Pay, then the stores, then the bin. The target rises every shift; your hands do not.' }
   ];
+
+  C.HOWTO_BUY =
+    'Buy the foot pedal first. It cuts the press cooldown, and without it ' +
+    'the target on the fifth shift cannot be met however well you play.';
 
   C.HOWTO_NOTE =
     "Quota is the only number the plant records. Everything else you do is " +
@@ -133,13 +137,14 @@
           at: 0.30,
           weight: 1,
           kind: 'CHALK ON THE SEAT',
-          source: 'A faulty piece, and somebody has been at it before you.',
+          source: 'A faulty piece. Somebody has been at it before you.',
           lines: [
-            "The split is there, corner to corner across the seat. Beside it " +
-            "somebody has chalked the same line and gone over it twice.",
-            "A fitter marking up what to look for, for whoever came next. " +
-            "They always run that way, and the chalk is there because the " +
-            "split itself only shows when the light is on it."
+            "A fitter has chalked over the split so the next man can see it. " +
+            "Every fault runs the same way: a bright line corner to corner, " +
+            "and the piece sits crooked in its seat.",
+            "That is the whole of it. If it is straight and unmarked it is " +
+            "sound, and taking a sound piece off the line wastes your time " +
+            "and does nothing at all."
           ]
         },
         {
@@ -150,11 +155,12 @@
           kind: 'WORKS BULLETIN',
           source: 'Torn in half and put in the bin, which is where bulletins go.',
           lines: [
-            "Terms of the schedule bonus, restated for the quarter. It is " +
-            "paid against the count at the end of the shift.",
-            "Not against the work. Against the count. The office reads the " +
-            "sheet and the sheet says a number, and there is no line on it " +
-            "for what the number is made of."
+            "Terms of the schedule bonus: twenty-five scrip if the count " +
+            "meets the target, nothing if it is one short. It is far and away " +
+            "the largest part of a night's pay, so make the number.",
+            "It is paid against the count, not against the work. The office " +
+            "reads the sheet, the sheet says a number, and there is no line " +
+            "on it for what the number is made of."
           ]
         }
       ]
@@ -174,15 +180,16 @@
           at: 0,
           weight: 1,
           kind: 'STORES DOCKET',
-          source: 'Somebody costed the catalogue out on the back of it and threw it away.',
+          source: 'Somebody costed the whole catalogue out on the back of it and binned it.',
           lines: [
-            "Pencil, in a hand that has done this before. Every item in the " +
-            "stores, and beside each one the number of shifts it pays for " +
-            "itself in.",
-            "The pedal and the arm are circled. The auto-feeder has a line " +
-            "through it and the word LATER.",
-            "At the foot: nobody on this floor has ever got to the bottom of " +
-            "that list. Buy in the order you will be glad of."
+            "Pencil, in a hand that has done this before. BUY THE FOOT PEDAL " +
+            "FIRST is written across the top and underlined twice.",
+            "Under that: it cuts the press cooldown, which is the only thing " +
+            "stopping you. Without it the fifth shift's target cannot be met " +
+            "however fast you work.",
+            "Then the sorting arm, which takes most of line 5 off your hands. " +
+            "The auto-feeder is crossed out with LATER beside it — it costs " +
+            "more than two shifts' pay. Nobody here has ever bought the lot."
           ]
         },
         {
@@ -193,12 +200,13 @@
           kind: 'ON THE BENCH SET',
           source: 'Between the weather and an advertisement for hair tonic.',
           lines: [
-            "A works notice, read out flat by somebody who has read out " +
-            "forty of them today.",
+            "A works notice, read out flat by somebody who has read out forty " +
+            "of them today.",
             "Plant 7 has been moved to the priority list. Leave is suspended " +
-            "for the quarter. Applications will not be considered.",
-            "Then the tonic advertisement again, and then the weather, which " +
-            "is the same as yesterday."
+            "for the quarter and applications will not be considered.",
+            "Nobody suspends leave at a plant making machine tools. Somebody " +
+            "upstairs has decided this quarter's output matters more than the " +
+            "people producing it, and has not said to whom."
           ]
         }
       ]
@@ -226,13 +234,14 @@
           kind: 'INSPECTION TAPE',
           source: 'Wrapped round the seat of a piece you were going to pull anyway.',
           lines: [
-            "The split is under a strip of linen tape, gone brown at the " +
-            "edges, stuck down over it by somebody who wanted it to pass.",
-            "Under it, an acceptance stamp: a date from the spring, a serial, " +
-            "and a name with an office abbreviated after it. LEEB. HWA.",
-            "Somebody in an office signed for this piece personally, by hand, " +
-            "before it was made. Nobody on this floor has ever been told who " +
-            "buys what we turn out."
+            "The split has been taped over. Linen tape, gone brown at the " +
+            "edges, stuck down by somebody who wanted this piece to pass.",
+            "Printed on the tape is an acceptance stamp: a date from the " +
+            "spring, a serial, and a signature with an office after it. " +
+            "LEEB. HWA.",
+            "A named officer signed for this batch personally, before it was " +
+            "made. Nobody on this floor has ever been told who buys what we " +
+            "turn out, and now there is a name on it."
           ]
         },
         {
@@ -247,12 +256,13 @@
           kind: 'ACCEPTANCE FORM',
           source: 'Folded once and pushed into the seat of a piece coming back.',
           lines: [
-            "Printed in a language nobody on this floor reads, countersigned " +
-            "twice, dated this month.",
-            "The letterhead is a state one. There is a department number on it " +
-            "and no department name.",
-            "The parts are not being bought. They are being requisitioned, at " +
-            "a rate the office has set for itself."
+            "A state letterhead, countersigned twice, dated this month. There " +
+            "is a department number on it and no department name.",
+            "The parts are not being bought. They are being requisitioned — " +
+            "taken, at a price the customer has set for itself, with no order " +
+            "for the works to accept or refuse.",
+            "Only a government does that, and only to a supplier it does not " +
+            "consider a supplier."
           ]
         }
       ]
@@ -274,11 +284,12 @@
           kind: 'RETURNED ASSEMBLY',
           source: 'A piece that came back down line 5 with its mating part still on it.',
           lines: [
-            "Your collar, seated on a shaft, the shaft keyed to a drive far " +
-            "heavier than anything this line was tooled for.",
-            "It is not a machine tool. It is fixed plant — bolted down " +
-            "somewhere and meant to run without stopping.",
-            "The wear on the collar says it has already run a long time."
+            "Your collar, still seated on its shaft, and the shaft is keyed " +
+            "to a drive far heavier than anything this line was tooled for.",
+            "This is not part of a machine tool. It is fixed plant: bolted " +
+            "down somewhere and built to run continuously.",
+            "The wear on the collar says whatever it is has already been " +
+            "running for months without being switched off."
           ]
         },
         /* The yard, seen from the bench, on a set nobody bought for this.
@@ -292,13 +303,14 @@
           kind: 'ON THE YARD CAMERA',
           source: 'The dock, from the bench, in the small hours of the shift.',
           lines: [
-            "A lorry backed up to the loading dock with a tarpaulin over the " +
-            "bed and two men working the straps.",
-            "It is not one of ours. There is a pennant clipped to the wing, " +
-            "stiff with the wind, and the device on it is a dark shape behind " +
-            "a fold of the tarpaulin the whole time it is in frame.",
-            "The men load it without paperwork and one of them keeps looking " +
-            "back at the gate. Then the lorry is gone and the yard is a yard."
+            "A lorry at the loading dock with a tarpaulin roped over the bed " +
+            "and two men working the straps. It is not one of the works " +
+            "lorries and it has no company markings.",
+            "There is a pennant clipped to the wing — the kind only a state " +
+            "vehicle carries. The device on it stays behind a fold of the " +
+            "tarpaulin the entire time it is in frame.",
+            "They load it without paperwork and one of them keeps watching " +
+            "the gate. Then it is gone and the yard is a yard again."
           ]
         }
       ]
@@ -321,10 +333,12 @@
           kind: 'ROUTING SCHEDULE',
           source: 'The consolidated sheet, folded twice and dropped in with the swarf.',
           lines: [
-            "Freight for the quarter on one page. Four destinations.",
-            "Three are works whose names are painted on the lorries in the yard.",
-            "The fourth is a site code and a rail spur with no town printed " +
-            "beside it, and it takes the largest share by a long way."
+            "Freight for the whole quarter on one page. Four destinations.",
+            "Three are ordinary works, named, with towns beside them. The " +
+            "fourth is a site code and a rail spur and no town at all.",
+            "The fourth takes more than the other three put together. " +
+            "Wherever it is, it is the reason this plant is on the priority " +
+            "list, and it is not on any map the works keeps."
           ]
         },
         {
@@ -335,13 +349,13 @@
           kind: 'ON THE BENCH SET',
           source: 'Two men in the works office, close enough to the set to be picked up.',
           lines: [
-            "Somebody has left a microphone open somewhere in the building " +
-            "and the bench set is picking it up under the music.",
-            "One of them is saying that consignments to the fourth " +
-            "destination are not to be discussed beyond the premises, and " +
-            "that this has been said before.",
-            "The other says he knows. He says it in the voice of a man who " +
-            "has decided not to ask a question."
+            "Somebody has left a microphone open in the works office and the " +
+            "bench set is picking it up under the music.",
+            "Consignments to the fourth destination are not to be discussed " +
+            "outside the premises. It is an instruction, and from the way he " +
+            "says it, not the first time he has given it.",
+            "The other man says he knows. He says it in the voice of somebody " +
+            "who decided a while ago not to ask."
           ]
         }
       ]
@@ -364,12 +378,13 @@
           kind: 'WITHDRAWAL ORDER',
           source: 'In the bin, torn across once, which is not how orders are destroyed.',
           lines: [
-            "From the works office: quarterly records to be consolidated, " +
-            "originals destroyed.",
-            "The list of what is to be withdrawn is attached. The routing " +
-            "schedule is on it. The acceptance forms are on it. The delivery " +
-            "schedule is on it.",
-            "Production figures are to be retained in full."
+            "From the works office: all quarterly records to be consolidated " +
+            "and the originals destroyed.",
+            "The list of what is to be destroyed is attached. The routing " +
+            "schedule is on it. The acceptance forms are on it. Every piece " +
+            "of paper that says where any of this went is on it.",
+            "Production figures are to be retained in full. They are keeping " +
+            "the count and burning everything that says what the count was."
           ]
         },
         {
@@ -380,11 +395,13 @@
           kind: 'MAINTENANCE RETURN',
           source: 'Folded into the seat of a piece, by somebody who wanted it found.',
           lines: [
-            "It logs running hours for the fixed plant at the fourth " +
-            "destination, and the parts consumed keeping it turning.",
-            "Your collars are on it by the thousand, month after month.",
-            "The hours do not fall to zero anywhere on the page. Whatever it " +
-            "is, it has not been switched off since they installed it."
+            "A maintenance log for the fixed plant at the fourth destination, " +
+            "and the parts consumed keeping it running.",
+            "Your collars are on it by the thousand, every month since the " +
+            "spring. This is where all of it has been going.",
+            "The running hours never fall to zero. Not one night, not one " +
+            "Sunday, in nine months. Whatever they built out there has not " +
+            "been switched off since the day it was installed."
           ]
         }
       ]
@@ -499,6 +516,7 @@
      nudging toward looking the build does while the belt is running. */
   C.LOOK_ROUND = 'THE PRESS WILL WAIT. IT ALWAYS DOES.';
   C.CHARGE_LABEL = 'CYCLE';
+  C.CHARGE_READY = 'READY';
 
   /* ---------- line 5 ----------
      The second duty. Everything here is written the way a works handbook
@@ -512,7 +530,6 @@
   C.SENT_BACK = 'SENT BACK';
   C.PULLED_OK = 'OFF THE LINE';
   C.PULLED_GOOD = 'THAT ONE WAS SOUND';
-  C.CYCLE_DEBT = 'CHARGED TO THE CYCLE';
   /* Said once, at the start of the first shift, beside the line it is
      about. It states the job and nothing else — no warning, no emphasis. */
   C.LINE_FIVE = 'LINE 5 IS YOURS AS WELL.';
@@ -582,38 +599,38 @@
   C.STORE_ITEMS = {
     lamp: {
       name: 'BENCH LAMP',
-      note: 'A second lamp, set over the station.',
-      blurb: 'The hall lighting is set for the hall. This one is set for you, and line 5 stops being a row of silhouettes.'
+      note: 'Lights line 5. Faults become easier to see.',
+      blurb: 'The split across a faulty piece is drawn brighter. It does not find them for you; it stops you squinting.'
     },
     radio: {
       name: 'BENCH RADIO',
-      note: 'Mains set, one band, permitted at the station.',
-      blurb: 'Provided it does not carry over the noise. Most of the floor has one.'
+      note: 'Plays while you work. No effect on output.',
+      blurb: 'Weather, adverts, works notices. Two of the notices this quarter are worth hearing. It will not tell you which.'
     },
     gauge: {
       name: 'GAUGE BLOCK',
-      note: 'Bench comparator for seat depth.',
-      blurb: 'Shows up a part that will not pass at the assembly works. One caught here is one not sent back.'
+      note: 'Marks faulty pieces on line 5 outright.',
+      blurb: 'Puts a small caret over anything that will not pass. You still have to take it off; you no longer have to decide.'
     },
     camera: {
       name: 'DOCK MONITOR',
-      note: 'Feed from the yard camera, wired to the bench.',
-      blurb: 'Fitted so loaders can be called without walking the length of the building.'
+      note: 'Shows the loading yard. No effect on output.',
+      blurb: 'Mostly an empty yard. Press D to look at it properly when something is in it.'
     },
     pedal: {
       name: 'FOOT PEDAL',
-      note: 'Trips the ram without the hand.',
-      blurb: 'Your hands stay on the work, so the cycle comes round sooner than you can reach for it.'
+      note: 'Cuts the press cooldown by 15%.',
+      blurb: 'The single most useful thing on this list. Unaided, the target on the fifth shift cannot be met at all.'
     },
     arm: {
       name: 'SORTING ARM',
-      note: 'Sweeps the obvious rejects off the return.',
-      blurb: 'It takes the ones anybody would catch. It has no opinion about the rest.'
+      note: 'Takes three faults in four off line 5 for you.',
+      blurb: 'It roughly pays for itself in deductions you never incur. What you actually buy is not having to reach for line 5 all night.'
     },
     feeder: {
       name: 'AUTO-FEEDER',
-      note: 'Presents and strikes sound stock unattended.',
-      blurb: 'It will run the ordinary work all shift. It stops for anything it has not seen before, which is what you are for.'
+      note: 'Stamps 45% of line 4 on its own.',
+      blurb: 'The whole answer to the press, and it costs more than two shifts of pay. It does line 4 and nothing else.'
     }
   };
 

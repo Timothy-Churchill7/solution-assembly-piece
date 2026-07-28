@@ -195,9 +195,9 @@
   function rivet(ctx, x, y, r) {
     r = r || 3;
     var g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, 0.4, x, y, r);
-    g.addColorStop(0, '#525a61');
-    g.addColorStop(0.55, '#2b3237');
-    g.addColorStop(1, '#0d1012');
+    g.addColorStop(0, '#555a5e');
+    g.addColorStop(0.55, '#2e3234');
+    g.addColorStop(1, '#0e1011');
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 1;
@@ -218,8 +218,8 @@
   function hatch(ctx, x, y, w, h, o) {
     o = o || {};
     var step = o.step || 14;
-    var a = o.a || '#22272b';
-    var b = o.b || '#121618';
+    var a = o.a || '#242729';
+    var b = o.b || '#141617';
     ctx.save();
     ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
     ctx.fillStyle = b; ctx.fillRect(x, y, w, h);
@@ -272,7 +272,7 @@
     frac = Math.max(0, Math.min(1, frac));
     ctx.save();
     rrect(ctx, x, y, w, h, 1.5);
-    ctx.fillStyle = o.trough || '#0a0c0e';
+    ctx.fillStyle = o.trough || '#191b1d';
     ctx.fill();
     ctx.strokeStyle = 'rgba(0,0,0,0.8)';
     ctx.lineWidth = 1;
@@ -331,9 +331,12 @@
     ctx.fillRect(0, 0, w + 128, h + 128);
     ctx.restore();
 
-    // scanlines
+    /* Scanlines and the vignette below were set for a much darker palette
+       and were doing a lot of the darkening themselves. Both are eased:
+       the tube is still visibly a tube, and the room underneath survives
+       it. */
     ctx.globalCompositeOperation = 'source-over';
-    ctx.globalAlpha = 0.11;
+    ctx.globalAlpha = 0.07;
     ctx.fillStyle = '#000';
     for (var y = 0; y < h; y += 3) ctx.fillRect(0, y, w, 1);
 
@@ -349,9 +352,9 @@
 
     // vignette
     ctx.globalAlpha = 1;
-    var vg = ctx.createRadialGradient(w / 2, h / 2, h * 0.40, w / 2, h / 2, h * 1.02);
+    var vg = ctx.createRadialGradient(w / 2, h / 2, h * 0.52, w / 2, h / 2, h * 1.06);
     vg.addColorStop(0, 'rgba(0,0,0,0)');
-    vg.addColorStop(1, 'rgba(0,0,0,0.50)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.32)');
     ctx.fillStyle = vg;
     ctx.fillRect(0, 0, w, h);
 

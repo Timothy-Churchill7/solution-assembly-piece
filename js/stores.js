@@ -74,7 +74,7 @@
       var rec = this.rec;
 
       S.hall(ctx, t, { mood: 0.5, lamps: 3, floorY: 560, still: g.frozen });
-      ctx.fillStyle = 'rgba(4,5,6,0.86)';
+      ctx.fillStyle = 'rgba(11,14,16,0.78)';
       ctx.fillRect(0, 0, W, H);
 
       Screens._headerRail(ctx, C.PLANT_NAME,
@@ -108,11 +108,11 @@
       var broke = !items.some(function (it) { return E.canBuy(led, it.id) === true; })
         && items.some(function (it) { return !E.owns(led, it.id); });
       D.stencil(ctx, broke ? C.STORE_EMPTY : C.STORE_NOTE, px, y + 4,
-        { size: 9.5, track: 1.8, color: 'rgba(74,82,89,0.95)' });
+        { size: 9.5, track: 1.8, color: 'rgba(118,126,133,0.95)' });
       /* The one editorial line on the screen, kept down here with the rest
          of the signage rather than printed next to the figure it is about. */
       D.para(ctx, C.PAY_BONUS_NOTE, px, y + 22, Math.floor(pw * 0.72),
-        { size: 9.5, color: 'rgba(66,74,80,0.95)', lineHeight: 15 });
+        { size: 9.5, color: 'rgba(104,112,119,0.95)', lineHeight: 15 });
 
       var b = { x: px - 14, y: ny + nh - BUTTON_H - 22, w: 240, h: BUTTON_H, id: 'leave' };
       Screens._control(ctx, b, C.STORE_LEAVE,
@@ -204,10 +204,14 @@
         ctx.fillRect(px - 14, y - 4, pw + 28, ROW_H - 6);
       }
 
-      var nameCol = owned ? P.dim : (short ? 'rgba(104,114,122,0.85)' : P.text);
+      /* The note is the whole reason the row is worth reading — it is where
+         the list says what the thing actually does — so it is set at the
+         same weight whether you own it or cannot afford it. It used to fade
+         out with the row and became unreadable on the lighter palette. */
+      var nameCol = owned ? P.dim : (short ? 'rgba(126,136,143,0.9)' : P.text);
       D.stencil(ctx, it.name, px, y + 13, { size: 12, track: 2.6, color: nameCol });
       D.stencil(ctx, it.note, px, y + 29,
-        { size: 9.5, track: 1.4, color: owned || short ? 'rgba(70,78,85,0.9)' : P.faint });
+        { size: 9.5, track: 1.4, color: owned || short ? 'rgba(112,120,127,0.95)' : P.dim });
 
       var rx = px + pw;
       if (owned) {
@@ -216,10 +220,10 @@
       } else {
         D.txt(ctx, String(it.cost), rx, y + 19,
           { size: 17, weight: 600, align: 'right',
-            color: short ? 'rgba(90,99,107,0.9)' : P.bright });
+            color: short ? 'rgba(126,136,143,0.9)' : P.bright });
         if (short) {
           D.stencil(ctx, C.STORE_SHORT, rx, y + 33,
-            { size: 8.5, track: 2, color: 'rgba(74,82,89,0.95)', align: 'right' });
+            { size: 8.5, track: 2, color: 'rgba(112,120,127,0.95)', align: 'right' });
         }
       }
 

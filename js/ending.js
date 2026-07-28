@@ -61,7 +61,7 @@
       /* The hall, nearly out. The lamps are the plant's and the plant has
          finished with you for the quarter. */
       S.hall(ctx, t, { mood: 0.22, lamps: 2, floorY: 580, still: g.frozen });
-      ctx.fillStyle = 'rgba(4,5,6,0.88)';
+      ctx.fillStyle = 'rgba(11,14,16,0.80)';
       ctx.fillRect(0, 0, W, H);
       Screens._headerRail(ctx, C.PLANT_NAME, C.ENDING_HEADING);
 
@@ -70,7 +70,7 @@
 
       var bodyOpt = { size: 13.5, color: P.text, lineHeight: 23 };
       var bodyLines = D.wrap(ctx, copy.body, pw, bodyOpt).length;
-      var noteOpt = { size: 10.5, color: 'rgba(74,82,89,0.95)', lineHeight: 18 };
+      var noteOpt = { size: 10.5, color: 'rgba(116,124,131,0.95)', lineHeight: 18 };
       var noteLines = D.wrap(ctx, C.ENDING_NOTE, pw, noteOpt).length;
       var figs = this.figures(res);
       var rows = Math.max(figs.left.length, figs.right.length);
