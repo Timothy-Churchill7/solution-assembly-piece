@@ -1,0 +1,14 @@
+{
+  "name": "solution",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Solution — a fan-made moral-complicity factory game (vanilla HTML/CSS/JS canvas).",
+  "scripts": {
+    "test": "playwright test",
+    "shots": "playwright test tests/visual.spec.js",
+    "serve": "npx --yes http-server -p 8080 -c-1 ."
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.0"
+  }
+}

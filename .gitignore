@@ -1,0 +1,11 @@
+node_modules/
+test-results/
+playwright-report/
+.DS_Store
+
+# Regenerable review artefacts: `npm run shots` rebuilds every one of them.
+shots/
+
+# The brief this was built to, kept out of the published result on purpose.
+goal.md
+prompt.md
