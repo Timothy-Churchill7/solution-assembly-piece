@@ -25,7 +25,7 @@
      published for a test that checks it still does. */
   var ROW_H = 44;
   var CARD = { x: 140, y: 44, w: 920 };
-  var TOP_BLOCK = 96;    // title bar, then the sub-heading
+  var TOP_BLOCK = 74;    // the title bar, and nothing under it
   var BOOK_H = 92;       // the pay stub
   var NOTES_H = 48;      // the two lines of stores signage
   var BUTTON_H = 46;
@@ -88,9 +88,7 @@
       this.card = { x: nx, y: ny, w: nw, h: nh };
       Screens._notice(ctx, nx, ny, nw, nh, C.STORE_HEADING);
 
-      var y = ny + 62;
-      D.stencil(ctx, C.STORE_SUB, px, y, { size: 9, track: 2.4, color: P.faint });
-      y = ny + TOP_BLOCK;
+      var y = ny + TOP_BLOCK;
 
       this.drawBook(ctx, px, y, pw, rec, led);
       y += BOOK_H + 20;
@@ -102,12 +100,7 @@
       }
 
       y += 18;
-      /* When there is nothing on the book that reaches the cheapest thing
-         on the list, saying how scrip works is no use to anybody. The
-         stores say the other thing instead, and say it without sympathy. */
-      var broke = !items.some(function (it) { return E.canBuy(led, it.id) === true; })
-        && items.some(function (it) { return !E.owns(led, it.id); });
-      D.stencil(ctx, broke ? C.STORE_EMPTY : C.STORE_NOTE, px, y + 4,
+      D.stencil(ctx, C.STORE_NOTE, px, y + 4,
         { size: 9.5, track: 1.8, color: 'rgba(118,126,133,0.95)' });
       /* The one editorial line on the screen, kept down here with the rest
          of the signage rather than printed next to the figure it is about. */

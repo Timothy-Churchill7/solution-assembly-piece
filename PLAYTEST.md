@@ -12,12 +12,11 @@ host unchanged.
 | key | at the station |
 | --- | --- |
 | `SPACE` / click the belt | stamp the part in the press zone |
-| `A` / click line 5 | take a piece off the return line |
+| `X` / click line 5 | take a piece off the return line |
 | `E` | turn over the piece in the inspection bay and look at it |
 | `D` | look at the yard camera (only if you bought one) |
-| `X` | scrap a part (from shift 3) |
-| `F` | press depth — only if you have found out who the customer is |
-| `Q` | master stop — same condition, and from shift 5 |
+| `S` | scrap a part (from shift 3) |
+| `Q` | master stop — only once you have found out, and from shift 5 |
 
 **The cooldown belongs to the press and to nothing else.** A stamp that
 lands puts it out for 1.72 seconds. Reaching across to line 5, turning a
@@ -34,9 +33,10 @@ These are the things the suite cannot judge.
    hard case: the hall is at its darkest there and the inspection bay is
    deliberately lit at full regardless. The whole palette was lifted once
    already because the answer was no.
-2. **Does the first shift teach the job without a tutorial?** You get two
-   lines at the station (the press waits; line 5 is yours too), a pencilled
-   note on the brief, and nothing else.
+2. **Does the first shift teach the job without a tutorial?** You get the
+   brief, two lines said at the station — the press waits, line 5 is yours
+   too — and nothing else. The pencilled welcome that used to sit under the
+   first brief is gone; check the shift still lands without it.
 3. **Is the bin genuinely tempting to skip?** `TIP IT OUT` is first, free,
    and recommended by a man on his way out. If sorting ever feels like the
    obvious choice, the channel has stopped working.

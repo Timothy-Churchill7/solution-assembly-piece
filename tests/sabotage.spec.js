@@ -144,14 +144,15 @@ test.describe('being told what can be withheld', () => {
           before, drawn,
           after: g.run.refusalTold,
           note: C.REFUSAL_NOTE,
-          // shift 4 has no welcome of its own, so this is the only addendum
-          fourthHasWelcome: !!C.shift(4).welcome
+          /* No brief carries a welcome any more — the addendum slot exists
+             for this line alone, so nothing competes with it. */
+          anyWelcome: window.SOL.logic.SHIFTS.some((x) => !!C.shift(x.n).welcome)
         };
       });
       expect(r.before).toBe(false);
       expect(r.drawn).toBe(false);
       expect(r.after).toBe(true);
-      expect(r.fourthHasWelcome).toBe(false);
+      expect(r.anyWelcome).toBe(false);
       // it names all three levers and says what it costs
       expect(r.note).toMatch(/do not stamp/i);
       expect(r.note).toMatch(/faulty piece you let go past/i);

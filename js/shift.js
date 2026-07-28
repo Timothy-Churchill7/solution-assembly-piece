@@ -1190,9 +1190,12 @@
       }
       if (e.key === 'e' || e.key === 'E') { this.look(null); return; }
       if (e.key === 'd' || e.key === 'D') { this.lookDock(); return; }
-      if (e.key === 'a' || e.key === 'A') { this.pull(null); return; }
+      /* X takes a piece off line 5. Scrapping moved to S when it did: the
+         two were both on X and one of them had to move, and taking a piece
+         off the return line is the far commoner act. */
+      if (e.key === 'x' || e.key === 'X') { this.pull(null); return; }
+      if (e.key === 's' || e.key === 'S') { this.scrap(null); return; }
       if (e.key === ' ') { this.stamp(null); return; }
-      if (e.key === 'x' || e.key === 'X') { this.scrap(null); return; }
       if (e.key === 'q' || e.key === 'Q') { this.stopLine(g); return; }
     },
 
@@ -1341,7 +1344,7 @@
          sentences that is a wall of text across the bottom of a factory;
          an operator's card would be terse, so this is. */
       var keys = ['SPACE STAMP', C.PULL_HINT, C.LOOK_HINT];
-      if (this.shift && this.shift.n >= L.SCRAP_FROM_SHIFT) keys.push('X SCRAP');
+      if (this.shift && this.shift.n >= L.SCRAP_FROM_SHIFT) keys.push('S SCRAP');
       /* The camera is listed only once it is on the bench, and then always
          — not when there happens to be something in it. A prompt that came
          and went would be the amber crate again, in words. */

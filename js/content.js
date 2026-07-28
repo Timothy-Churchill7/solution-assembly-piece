@@ -65,10 +65,10 @@
   C.HOWTO = [
     { k: 'SPACE, or CLICK the belt', v: 'Stamps the part in the press zone. Stamped parts are your quota; nothing else counts.' },
     { k: 'THE COOLDOWN', v: 'A stamp puts the press out for 1.7 seconds. Nothing else on the screen changes that.' },
-    { k: 'A, or CLICK line 5', v: 'Takes a piece off the return line. Every faulty one you leave on costs you 3 scrip.' },
+    { k: 'X, or CLICK line 5', v: 'Takes a piece off the return line. Every faulty one you leave on costs you 3 scrip.' },
     { k: 'SPOTTING A FAULT', v: 'A faulty piece sits crooked, with a bright split across it. A few carry something else.' },
     { k: 'E', v: 'Turns over the piece in the inspection bay. Most have nothing on them. It stays on the belt.' },
-    { k: 'X', v: 'Scraps the part in the press zone. It counts as a miss. Available from shift 3.' },
+    { k: 'S', v: 'Scraps the part in the press zone. It counts as a miss. Available from shift 3.' },
     { k: 'ESC', v: 'Puts down whatever you are reading. Nothing stops while you read it.' },
     { k: 'BETWEEN SHIFTS', v: 'Pay, then the stores, then the bin. The target rises every shift; your hands do not.' }
   ];
@@ -138,16 +138,7 @@
         "you are the last pair of eyes on it. Anything that will not pass at " +
         "the assembly works comes off before it gets there. Anything that " +
         "does not come off is fitted, found, and charged to this station.",
-      note: 'The count is taken at the end of the shift. Nothing else is taken.',
-      /* The on-ramp, and the only place in the build that tells the player
-         looking is a thing they may do. It is in pencil, from a person, and
-         it does not say what there is to find — because there is nothing to
-         find yet, and a first shift spent wandering is meant to come back
-         empty. */
-      welcome:
-        "Added at the foot in pencil, not by the office: first shift is the " +
-        "slow one. Get acquainted with the place while you have the chance. " +
-        "Nobody minds you looking and nobody will offer.",
+      note: 'The count is taken at the end of the shift.',
       clues: [
         {
           id: 'c1-tell',
@@ -189,7 +180,7 @@
       brief:
         "Tolerances have been tightened by the customer. The parts are the " +
         "same parts. You are not being asked to work differently, only to " +
-        "work more of it, and to leave the specification questions upstairs.",
+        "work more of it.",
       note: 'Target raised. No change to the rate of pay.',
       clues: [
         {
@@ -553,7 +544,7 @@
   C.RET_LINE = 'LINE 5 · OUT TO PACKING';
   C.RET_ZONE = 'INSPECTION';
   C.RET_PULL = 'TAKE IT OFF';
-  C.PULL_HINT = 'A TAKE OFF LINE 5';
+  C.PULL_HINT = 'X TAKE OFF LINE 5';
   C.SENT_BACK = 'SENT BACK';
   C.PULLED_OK = 'OFF THE LINE';
   C.PULLED_GOOD = 'THAT ONE WAS SOUND';
@@ -627,12 +618,10 @@
     'cannot tell the difference and neither can the office.';
 
   C.STORE_HEADING = 'WORKS STORES';
-  C.STORE_SUB = 'DEDUCTED AT SOURCE · NO CASH HANDLED ON THE PREMISES';
   C.STORE_BALANCE = 'ON YOUR BOOK';
   C.STORE_OWNED = 'ON THE BENCH';
   C.STORE_SHORT = 'SHORT';
   C.STORE_LEAVE = 'CLOCK ON';
-  C.STORE_EMPTY = 'NOTHING ON THE BOOK. THE STORES WILL STILL BE HERE.';
   C.STORE_NOTE =
     'Scrip is paid against your book and spends here. It does not spend ' +
     'anywhere else.';
@@ -645,7 +634,7 @@
     },
     radio: {
       name: 'BENCH RADIO',
-      note: 'Plays while you work. No effect on output.',
+      note: 'Plays while you work.',
       blurb: 'Weather, adverts, works notices. Two of the notices this quarter are worth hearing. It will not tell you which.'
     },
     gauge: {
@@ -655,7 +644,7 @@
     },
     camera: {
       name: 'DOCK MONITOR',
-      note: 'Shows the loading yard. No effect on output.',
+      note: 'Shows the loading yard.',
       blurb: 'Mostly an empty yard. Press D to look at it properly when something is in it.'
     },
     pedal: {

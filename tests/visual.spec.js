@@ -349,17 +349,22 @@ test('shots: the stores after a docked shift', async ({ page }) => {
   await shot(page, '23-stores-docked');
 });
 
-/* The first brief, carrying the pencilled addendum that is the only
-   permission the build ever gives to go and look at things. */
-test('shots: the first brief and its addendum', async ({ page }) => {
+/* The brief the first time you clock on knowing. The pencilled addendum
+   slot used to carry a welcome on shift 1 and now carries only this: the
+   one piece of advice the game ever gives about refusing, and what it
+   costs. Every other brief is the office talking and nothing else. */
+test('shots: the brief that says what refusing costs', async ({ page }) => {
   await boot(page);
   await page.evaluate(() => {
     const g = window.SOL.game;
-    g.run.shift = 1;
+    g.run.revealed = true;
+    g.run.revealedOn = 3;
+    g.run.refusalTold = false;
+    g.run.shift = 4;
     g.go('brief');
   });
   await still(page, 9);
-  await shot(page, '21-brief-welcome');
+  await shot(page, '21-brief-refusal');
 });
 
 /* The console with the cycle meter part charged: the ram is down and the
