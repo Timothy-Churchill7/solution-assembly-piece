@@ -88,7 +88,7 @@ test.describe('posted notices fit between the rails', () => {
       L.resetRun(g.run);
       const sh = L.newShift(6);
       sh.stamped = 44; sh.missed = 9; sh.scrapped = 4;
-      sh.rejects = 5; sh.late = true; sh.lostToInquiry = 7; sh.marksPassed = 2;
+      sh.rejects = 5; sh.late = true; sh.readSecs = 41; sh.marksPassed = 2;
       sh.pulled = 11; sh.pulledFaulty = 8; sh.pulledSound = 3; sh.autoStamped = 19;
       L.closeShift(g.run, sh);
       g.go('summary');

@@ -199,6 +199,13 @@
   /* Reading is not instantaneous. Lines surface one at a time, and an item
      only counts as read once the last one has. This is what makes looking
      cost something: the belt runs the whole time. */
+  /* What the line drops to while an item is open. Dramatic on purpose: at
+     full speed the text was genuinely hard to read and the player was
+     being charged for legibility rather than for choosing to look. The
+     shift clock is untouched, so looking still costs — it costs the parts
+     you would have made in the time it took. */
+  L.READ_SLOWDOWN = 0.12;
+
   L.CLUE_LEAD = 0.45;   // before the first line appears
   L.CLUE_LINE = 1.35;   // between lines
   L.CLUE_TAIL = 0.90;   // after the last line, before it counts as read
@@ -308,6 +315,7 @@
       spawned: 0,
       opened: [],        // clue ids read to the end during this shift
       lostToInquiry: 0,  // parts that passed unfinished while an item was open
+      readSecs: 0,       // seconds of the shift spent with something open
       marksSeen: 0,      // items this shift put within reach, on any channel
       marksPassed: 0,    // of those, the ones that went by unfound
       looked: 0,         // pieces turned over on line 5, finding or not
@@ -395,6 +403,7 @@
       rating: L.rateShift(shift),
       opened: shift.opened.slice(),
       lostToInquiry: shift.lostToInquiry,
+      readSecs: shift.readSecs,
       marksPassed: shift.marksPassed,
       looked: shift.looked,
       trashSorted: shift.trashSorted,

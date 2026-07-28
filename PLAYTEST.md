@@ -45,7 +45,10 @@ These are the things the suite cannot judge.
    say whether the composition is pointing anywhere.
 5. **Read the eight endings back to back.** None may read as praise or as a
    scolding.
-6. **Read the closing letter cold, after a run that delivered.** It is the
+6. **Read a clue with the shift running.** The line should slow enough to
+   take the text in without hurrying, and the seconds ticking up in the
+   corner should feel like the thing it is costing you.
+7. **Read the closing letter cold, after a run that delivered.** It is the
    only screen that names the thing, and the only one with a seal, a real
    signature or any colour on it. It should read as a form somebody worked
    through in a stack — if it reads as gloating, it has let the player off.
@@ -107,8 +110,7 @@ Maximum awareness is **39**; the circular needs **8** and can only come out
 of the bin from shift 3. Four channels:
 
 - **a faulty piece on line 5** — free. Turning it over does *not* take it
-  off the belt, so the fault still goes past you, and the parts on line 4
-  go past too while you read
+  off the belt, so you still have to reach for it afterwards
 - **the bench radio (60)** — reads its item out over the ordinary
   programme, in the same voice, with no prompt
 - **the yard camera (95)** — a lorry is at the dock for 26 seconds and then
@@ -118,6 +120,25 @@ of the bin from shift 3. Four channels:
 The two free channels used diligently reach the circular on shift 3 with
 nothing bought — a test holds that, because the reveal must never sit
 behind a price. One channel alone never reaches it.
+
+### What reading costs
+
+**Opening an item throttles the line to 12%** so the text can actually be
+read. It eases in and out over about a fifth of a second rather than
+snapping. This is not a fiction — no factory slows for a man reading a
+docket — it is the game giving you room.
+
+The shift clock is deliberately *not* slowed, and that is where the cost
+now lives: the clock burns at full speed while the line is barely turning,
+so a minute spent reading is a minute of parts you never got the chance to
+stamp. The card shows it live in seconds, and the summary carries it as
+`SECONDS SPENT READING`.
+
+Before this the belt ran at full speed behind the card and the text was
+genuinely hard to read. The cost was real, but the player was being charged
+for legibility rather than for choosing to look. One consequence worth
+knowing: a faulty piece you read is still in the bay when you look up, so
+reading a carrier no longer forfeits the fault it rode in on.
 
 ## Run length
 

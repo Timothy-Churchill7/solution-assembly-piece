@@ -158,7 +158,7 @@
      second job, not a discovery, and it has to compete with the press for
      the player's eye on nothing but its own movement. */
 
-  function drawReturnLine(ctx, t, cfg, lit) {
+  function drawReturnLine(ctx, t, cfg, lit, phase) {
     var y = LAY.retY, h = LAY.retH;
 
     /* Hangers only. The first cut slung the conveyor from a solid band of
@@ -173,7 +173,7 @@
     }
 
     // travel is right to left, so the slats scroll the other way
-    S.belt(ctx, 0, y, W, h, -t * LAY.retSpeed);
+    S.belt(ctx, 0, y, W, h, -phase);
     /* Lit at full whatever the hall is doing. This is a working area and
        the job is to see a difference in a shape; a shift 6 that hides the
        stock is not atmosphere, it is a broken control. */
@@ -558,6 +558,9 @@
     parts: [],
     nextId: 0,
     spawnT: 0,
+    lineRate: 1,     // 0..1, how fast the whole line is running just now
+    beltPhase: 0,    // travelled distance, so the belt can slow with it
+    retPhase: 0,
     ram: 0,          // 0 = up, 1 = struck
     ramPhase: null,  // 'down' | 'hold' | 'up' | null
     ramT: 0,
@@ -592,6 +595,9 @@
       this.parts = [];
       this.nextId = 0;
       this.spawnT = 0.6;
+      this.lineRate = 1;
+      this.beltPhase = 0;
+      this.retPhase = 0;
       this.returns = [];
       this.retSpawnT = 1.0;
       this.retIdx = 0;
@@ -657,7 +663,24 @@
       var cfg = sh.cfg;
       var reading = !!this.open;
 
+      /* Reading throttles the line down to a crawl. It is not a fiction —
+         no factory slows for a man reading a docket — it is the game giving
+         you room, and it is eased in and out rather than snapped so it
+         reads as deliberate rather than as a stall.
+
+         The clock is deliberately *not* slowed, and that is where the cost
+         of looking now lives: the shift burns at full speed while the line
+         is barely moving, so a minute spent reading is a minute of parts
+         you never got the chance to stamp. Before this the belt ran at
+         full speed and the text was genuinely hard to read; the cost was
+         real but it was being charged for the wrong thing. */
+      var want = reading ? L.READ_SLOWDOWN : 1;
+      this.lineRate += (want - this.lineRate) * Math.min(1, dt / 0.22);
+      var rate = this.lineRate;
+      var ldt = dt * rate;
+
       sh.timeLeft -= dt;
+      if (reading) sh.readSecs += dt;
       if (sh.timeLeft <= 0) {
         sh.timeLeft = 0;
         this.endShift(g);
@@ -666,7 +689,7 @@
       var elapsed = cfg.duration - sh.timeLeft;
 
       // arrivals
-      this.spawnT -= dt;
+      this.spawnT -= ldt;
       while (this.spawnT <= 0) {
         this.spawn();
         this.spawnT += cfg.spawn;
@@ -680,12 +703,12 @@
         this.carry = this.carryQ.shift().clue;
       }
 
-      // travel. Nothing slows down because you are reading — that is the
-      // entire cost of the mechanic, so it is charged here.
+      this.beltPhase += cfg.speed * ldt;
+
       var keep = [];
       for (var i = 0; i < this.parts.length; i++) {
         var p = this.parts[i];
-        p.x += cfg.speed * dt;
+        p.x += cfg.speed * ldt;
         // A part is lost the moment it clears the press, not when it
         // finally leaves the frame — so the cost of reading is charged
         // while you are still reading, which is the whole point of it.
@@ -704,9 +727,10 @@
       /* Line 5. Nothing is released inside L.RETURN_LEAD of the hooter, so
          every piece a shift brings is one you either took off or did not —
          there is no stock left in front of you when the clock stops. */
+      this.retPhase += LAY.retSpeed * ldt;
       var due = L.returnCount(cfg);
       if (this.retIdx < due) {
-        this.retSpawnT -= dt;
+        this.retSpawnT -= ldt;
         while (this.retSpawnT <= 0 && this.retIdx < due) {
           this.spawnReturn(cfg);
           this.retSpawnT += cfg.ret;
@@ -716,7 +740,7 @@
       var rkeep = [];
       for (var k = 0; k < this.returns.length; k++) {
         var r = this.returns[k];
-        r.x -= LAY.retSpeed * dt;
+        r.x -= LAY.retSpeed * ldt;
         /* The arm reaches in at the head of the zone and takes the ones
            anybody would catch, before they are yours to miss. It costs you
            nothing, which is what a hundred and fifty scrip is for. */
@@ -1204,7 +1228,7 @@
       });
 
       // line 5 first: it is upstage, so everything else is drawn over it
-      drawReturnLine(ctx, t, cfg, this.kit && this.kit.lamp);
+      drawReturnLine(ctx, t, cfg, this.kit && this.kit.lamp, this.retPhase);
       for (var r = 0; r < this.returns.length; r++) {
         drawReturn(ctx, this.returns[r], t, this.kit || {});
       }
@@ -1212,8 +1236,7 @@
       drawPressFrame(ctx);
 
       // belt
-      var phase = t * cfg.speed;
-      S.belt(ctx, 0, LAY.beltY, W, LAY.beltH, phase);
+      S.belt(ctx, 0, LAY.beltY, W, LAY.beltH, this.beltPhase);
       S.beltLight(ctx, LAY.zoneX0 - 150, LAY.beltY, (LAY.zoneX1 - LAY.zoneX0) + 300,
         LAY.beltH, 0.7 + 0.5 * cfg.mood);
       drawZone(ctx, t);
@@ -1376,9 +1399,12 @@
       // what it is costing, in the plant's own units, updated live
       var by = ny + nh - 82;
       D.seam(ctx, px, by - 12, pw);
+      /* What it is costing, live, in the only unit that still moves while
+         you read: the clock. Parts passing was the old figure and it now
+         reads zero almost always, because the line is barely turning. */
       D.stencil(ctx, C.INQUIRY_COST, px + pw, by + 14,
         { size: 9.5, track: 2.4, color: P.faint, align: 'right' });
-      D.txt(ctx, String(this.shift.lostToInquiry), px + pw, by + 38,
+      D.txt(ctx, Math.floor(this.shift.readSecs) + 's', px + pw, by + 38,
         { size: 20, weight: 600, color: P.mid, align: 'right' });
 
       var b = { x: px - 14, y: by, w: 268, h: 42, id: 'close' };

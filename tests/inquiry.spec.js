@@ -277,56 +277,83 @@ test.describe('looking closely at line 5', () => {
     expect(r.stillOn).toBe(true);
   });
 
-  test('what looking costs is the part that goes by while you read',
-    async ({ page }) => {
-      await boot(page);
-      await enterShift(page, 4);
-      const r = await page.evaluate(() => {
-        const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
-        let guard = 0;
-        while (!(sc.nearestReturn() && sc.nearestReturn().clue) && guard++ < 60 * 200) {
-          g.tick(1 / 60);
-          sc.stamp(null);
-        }
-        const before = { missed: sc.shift.missed, stamped: sc.shift.stamped };
-        const clue = sc.nearestReturn().clue;
-        sc.look(null);
-        // the line runs the whole time the card is up, and you are not on it
-        for (let i = 0; i < Math.ceil((L.readTime(clue) + 0.5) * 60); i++) {
-          g.tick(1 / 60);
-          sc.stamp(null);
-        }
-        sc.closeInquiry();
-        return {
-          missedDelta: sc.shift.missed - before.missed,
-          stampedDelta: sc.shift.stamped - before.stamped,
-          lost: sc.shift.lostToInquiry
-        };
-      });
-      // not one part stamped while it was open, and several went past
-      expect(r.stampedDelta).toBe(0);
-      expect(r.missedDelta).toBeGreaterThan(0);
-      expect(r.lost).toBeGreaterThan(0);
-    });
-
-  /* Reading it costs the piece as well: the belt does not stop, so the
-     fault you were holding rides on and is sent back against your name. */
-  test('reading a carrier lets the fault it was on go past', async ({ page }) => {
+  /* The line throttles to a crawl while an item is open, so almost nothing
+     slips the press any more. What reading costs is the clock: the shift
+     burns at full speed while the line is barely turning, and the parts you
+     never got the chance to make are the bill. */
+  test('the clock runs at full speed while the line does not', async ({ page }) => {
     await boot(page);
-    await enterShift(page, 3);
-    expect(await runToCarrier(page)).toBe(true);
+    await enterShift(page, 4);
     const r = await page.evaluate(() => {
       const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
-      const before = sc.shift.rejects;
-      const clue = sc.nearestReturn().clue;
+      let guard = 0;
+      while (!(sc.nearestReturn() && sc.nearestReturn().clue) && guard++ < 60 * 200) {
+        g.tick(1 / 60);
+        sc.stamp(null);
+      }
+      const before = {
+        clock: sc.shift.timeLeft,
+        stamped: sc.shift.stamped,
+        spawned: sc.shift.spawned
+      };
       sc.look(null);
-      for (let i = 0; i < Math.ceil((L.readTime(clue) + 1) * 60); i++) g.tick(1 / 60);
+      for (let i = 0; i < 6 * 60; i++) {
+        g.tick(1 / 60);
+        sc.stamp(null);          // refused the whole time: you are reading
+      }
+      const during = {
+        clock: sc.shift.timeLeft,
+        stamped: sc.shift.stamped,
+        spawned: sc.shift.spawned,
+        readSecs: sc.shift.readSecs,
+        rate: sc.lineRate
+      };
       sc.closeInquiry();
-      return { before, after: sc.shift.rejects, awareness: g.run.awareness };
+      for (let i = 0; i < 40; i++) g.tick(1 / 60);   // it eases back up
+      return { before, during, after: sc.lineRate, slow: L.READ_SLOWDOWN };
     });
-    expect(r.awareness).toBeGreaterThan(0);
-    expect(r.after).toBe(r.before + 1);
+
+    // the clock does not care that you are reading
+    expect(r.before.clock - r.during.clock).toBeCloseTo(6, 0);
+    expect(r.during.readSecs).toBeCloseTo(6, 0);
+    // the line very nearly stops
+    expect(r.during.rate).toBeCloseTo(r.slow, 2);
+    // nothing stamped in those six seconds, and barely anything arrived
+    expect(r.during.stamped).toBe(r.before.stamped);
+    expect(r.during.spawned - r.before.spawned).toBeLessThanOrEqual(1);
+    expect(r.after).toBeGreaterThan(0.9);
   });
+
+  /* Reading a carrier used to cost you the fault it was on: the belt ran at
+     full speed and the piece was long gone by the time you looked up. It is
+     still in the bay now, and you can take it off. Looking costs the clock
+     and nothing else. */
+  test('the fault a carrier was on is still there when you look up',
+    async ({ page }) => {
+      await boot(page);
+      await enterShift(page, 3);
+      expect(await runToCarrier(page)).toBe(true);
+      const r = await page.evaluate(() => {
+        const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+        const before = sc.shift.rejects;
+        const clue = sc.nearestReturn().clue;
+        sc.look(null);
+        for (let i = 0; i < Math.ceil((L.readTime(clue) + 1) * 60); i++) g.tick(1 / 60);
+        sc.closeInquiry();
+        const stillThere = !!sc.nearestReturn();
+        const pulled = sc.pull(null);
+        return {
+          before, stillThere, pulled,
+          after: sc.shift.rejects,
+          awareness: g.run.awareness
+        };
+      });
+      expect(r.awareness).toBeGreaterThan(0);
+      expect(r.stillThere).toBe(true);
+      expect(r.pulled).toBe(true);
+      // read it and still caught it: the piece never reached the works
+      expect(r.after).toBe(r.before);
+    });
 
   test('a carrier pulled instead of looked at takes what it carried with it',
     async ({ page }) => {

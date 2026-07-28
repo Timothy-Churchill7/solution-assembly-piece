@@ -467,8 +467,11 @@
      The only place in the build that gets colour. */
 
   C.INQUIRY_HEADING = 'ITEM OPENED';
-  C.INQUIRY_COST = 'PASSED WHILE THIS WAS OPEN';
-  C.INQUIRY_RUNNING = 'THE LINE DOES NOT STOP FOR THIS';
+  C.INQUIRY_COST = 'SHIFT SPENT READING';
+  /* It used to read THE LINE DOES NOT STOP FOR THIS, which stopped being
+     true the day the line started crawling while you read. The clock never
+     did and never will, and that is where the cost of looking now sits. */
+  C.INQUIRY_RUNNING = 'THE CLOCK DOES NOT STOP FOR THIS';
   C.INQUIRY_CLOSE_EARLY = 'PUT IT BACK';
   C.INQUIRY_CLOSE_DONE = 'RETURN TO THE PRESS';
   C.INQUIRY_UNREAD = 'PUT BACK UNREAD. IT DOES NOT COUNT AS HAVING LOOKED.';
@@ -682,6 +685,7 @@
     scrapped: 'SCRAPPED',
     rating: 'RECORDED AS',
     lostToInquiry: 'PASSED WHILE YOU WERE READING',
+    readSecs: 'SECONDS SPENT READING',
     marksPassed: 'WENT BY WITHOUT A LOOK',
     looked: 'PIECES TURNED OVER',
     usable: 'PARTS THAT WILL WORK',
