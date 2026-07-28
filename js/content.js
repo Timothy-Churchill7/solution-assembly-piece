@@ -780,8 +780,7 @@
         "something else is a question for the works and not for this " +
         "office.\n\n" +
         "The operator's notation has been altered and the quarter's bonus " +
-        "is not payable. That is the whole of it. Nobody will call at the " +
-        "house and nobody was ever going to."
+        "is not payable."
     }
   };
 
