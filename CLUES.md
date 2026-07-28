@@ -4,6 +4,8 @@ Edit this file freely: the prose, the tiers, the weights, which shift a
 thing lands on, which channel carries it. Once you're happy I'll implement
 it against `js/content.js` and rebalance the arithmetic.
 
+To claude: use my words exactly, save for typos or small fixes, except when I surround them with (). That is a note to you to explain any special instructions or how I want the clue to look visually.
+
 ## How the player meets each channel
 
 | channel | how it is encountered | free? |
@@ -87,7 +89,7 @@ buys nothing can never reach the reveal. Currently that path gives exactly 8.
 
 | id | tier | channel | wt | what it says |
 | --- | --- | --- | --- | --- |
-| `reveal-circular` | REVEAL | trash | 6 | A third carbon of a priority schedule from the customer's office, pencilled with a rough translation. Every programme listed with its share of the quarter. The programme above yours is written in the margin as **the final solution**. Nothing says what it is. It takes what it needs before anybody else is served. |
+| `reveal-circular` | REVEAL | trash | 6 |  (type: ripped letter showing a table with factory assignments.) Factory 5: The Eastern Front. Factory 6: The Western Front. Factory 7 (circled): **The Final Solution**. Factory 8: Algeria. |
 
 ---
 

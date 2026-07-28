@@ -23,6 +23,16 @@
   E.TARGET_BONUS = 25;
   E.REJECT_PENALTY = 3;    // per part the assembly works sent back
   E.LATE_DEDUCTION = 6;    // still on the floor after the hooter
+  E.BIN_SCRIP = 2;         // for emptying the basket, as the foreman said
+
+  /* The heavier line the works office offers on the fourth shift. It was
+     written as more stock arriving and nothing else, which paid the player
+     exactly nothing: the press cooldown is the ceiling, not the belt, so
+     extra stock simply went by unstamped. The trade is real only if it
+     touches the book, so it does — the rate goes up on every part from
+     there to the end of the quarter, and the money is what buys output,
+     through the stores. */
+  E.UPGRADE_PIECE_RATE = 1.5;
 
   /* Walking off the line is not free. Half a day is what the plant docks
      for a station that stood idle, and it does not ask why it stood idle. */
@@ -34,17 +44,20 @@
     var day = rec.stopped
       ? Math.round(E.DAY_RATE * E.STOPPED_DAY_FACTOR)
       : E.DAY_RATE;
-    var piece = E.PIECE_RATE * stamped;
+    var piece = Math.round(
+      (rec.upgraded ? E.UPGRADE_PIECE_RATE : E.PIECE_RATE) * stamped);
     var bonus = stamped >= (rec.target || 0) ? E.TARGET_BONUS : 0;
     var rejects = -E.REJECT_PENALTY * (rec.rejects || 0);
     var late = rec.late ? -E.LATE_DEDUCTION : 0;
-    var gross = day + piece + bonus;
+    var bin = rec.binScrip || 0;
+    var gross = day + piece + bonus + bin;
     return {
       day: day,
       piece: piece,
       bonus: bonus,
       rejects: rejects,
       late: late,
+      bin: bin,
       // the book is never allowed to go backwards; it simply pays nothing
       total: Math.max(0, gross + rejects + late)
     };

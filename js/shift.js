@@ -242,6 +242,27 @@
         ctx.fill();
       }
     }
+
+    /* Something on it. A strip of red tape wrapped round the seat, which is
+       how anybody marks a piece they want somebody else to look at, and the
+       only red on a working screen. Click it and you read what is on it;
+       click it again and it comes off the line like anything else. */
+    if (r.clue) {
+      /* Wrapped round the seat at an angle, the way tape goes on by hand.
+         Drawn square to begin with, which read as a redaction bar — the
+         wrong idea entirely, since nothing here is being hidden from the
+         player. */
+      ctx.save();
+      ctx.translate(r.x, y);
+      ctx.rotate(-0.42);
+      ctx.fillStyle = P.markLo;
+      ctx.fillRect(-3.5, -12, 7, 24);
+      ctx.fillStyle = P.mark;
+      ctx.fillRect(-3.5, -12, 5, 24);
+      ctx.fillStyle = 'rgba(240,150,138,0.5)';
+      ctx.fillRect(-3.5, -12, 1.4, 24);
+      ctx.restore();
+    }
   }
 
   /* The bay's own readout: one line, under the belt, on a seat dark enough
@@ -259,6 +280,78 @@
     D.stencil(ctx, text, RET_MID, y + 15,
       { size: 9.5, track: 3, align: 'center', color: color, alpha: alpha });
   }
+
+  /* ---------- the bin ----------
+     A wire basket at the end of the bench. It is on screen from the first
+     shift, it is never highlighted, and the only thing that ever tells the
+     player it matters is the foreman's line on the first brief: empty it
+     before you clock off and there are a couple of scrip in it.
+
+     It used to be a screen of its own after the hooter, with a man
+     explaining that sorting it was pointless. That explained the joke
+     before the player had heard it. Now it is a bin in the corner, and
+     what is in it is what is in it. */
+  /* Between the finished-stock tray and the station plate. It sat at x=92
+     to begin with, directly on top of the tray, and read as a basket
+     balanced on a shelf. */
+  var BIN = { x: 330, w: 112, y: LAY.apronY + 26, h: 54 };
+
+  function drawBin(ctx, sorted, hover) {
+    var x = BIN.x, y = BIN.y, w = BIN.w, h = BIN.h;
+    // the basket: a tapered wire thing, seen from slightly above
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + w, y);
+    ctx.lineTo(x + w - 13, y + h);
+    ctx.lineTo(x + 13, y + h);
+    ctx.closePath();
+    var bg = ctx.createLinearGradient(0, y, 0, y + h);
+    bg.addColorStop(0, hover ? '#2a2f33' : '#20252a');
+    bg.addColorStop(1, '#0f1214');
+    ctx.fillStyle = bg;
+    ctx.fill();
+    ctx.strokeStyle = hover ? 'rgba(206,220,230,0.34)' : 'rgba(206,220,230,0.16)';
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+    // mesh
+    ctx.save();
+    ctx.clip();
+    ctx.strokeStyle = 'rgba(206,220,230,0.10)';
+    ctx.lineWidth = 1;
+    for (var i = 0; i < 7; i++) {
+      ctx.beginPath();
+      ctx.moveTo(x + 8 + i * 16, y);
+      ctx.lineTo(x + 16 + i * 14, y + h);
+      ctx.stroke();
+    }
+    for (var j = 1; j < 3; j++) {
+      ctx.beginPath();
+      ctx.moveTo(x + j * 3, y + j * (h / 3));
+      ctx.lineTo(x + w - j * 3, y + j * (h / 3));
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    if (!sorted) {
+      // what is in it: paper, and the swarf underneath
+      ctx.fillStyle = 'rgba(150,146,136,0.30)';
+      ctx.beginPath(); ctx.arc(x + 34, y + 12, 9, 0, 6.3); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + 58, y + 8, 11, 0, 6.3); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + 82, y + 13, 8, 0, 6.3); ctx.fill();
+      ctx.fillStyle = 'rgba(120,128,134,0.35)';
+      ctx.fillRect(x + 22, y + 20, 70, 5);
+    }
+    ctx.restore();
+
+    D.stencil(ctx, sorted ? C.BIN_DONE : C.BIN_LABEL, x, y + h + 15,
+      { size: 8.5, track: 2, color: sorted ? 'rgba(104,112,119,0.9)' : P.faint });
+  }
+
+  /* The sorting window. Six things in the basket; each goes in one of two
+     places and it does not matter which, because they both go to the same
+     skip. One of them has a red mark on it. */
+  var SORT = { x: 268, w: W - 536, top: 100, row: 118 };
 
   /* The operator's own station: the foreground band you stand behind. */
   function drawApron(ctx, sh) {
@@ -587,10 +680,12 @@
     retIdx: 0,       // how many have been released this shift
     faultIdx: 0,     // how many of those were faults, for the arm's share
     kit: null,       // what is on the bench this shift, resolved once
+    bin: null,       // the sorting window, while it is open
+    binDone: false,  // the basket has been emptied this shift
 
     enter: function (opts, g) {
       var n = (g.run && g.run.shift) || 1;
-      this.shift = L.newShift(n);
+      this.shift = L.newShift(n, g.run);
       this.run = g.run;
       this.parts = [];
       this.nextId = 0;
@@ -602,6 +697,8 @@
       this.retSpawnT = 1.0;
       this.retIdx = 0;
       this.faultIdx = 0;
+      this.bin = null;
+      this.binDone = false;
       /* Resolved once per shift rather than looked up per frame: what you
          walked onto the floor with is what you have for the next hour. */
       var led = g.run && g.run.ledger;
@@ -646,7 +743,10 @@
          asks logic for it then. */
       this.shift.marksSeen =
         this.carryQ.length + this.dockQ.length + this.radioQ.length
-        + (L.trashFor(g.run, this.shift) ? 1 : 0);
+        + L.trashFor(g.run, this.shift).length;
+      /* Whatever is in the basket and never looked at is written off at the
+         hooter, exactly as an unread piece on line 5 is. */
+      this.binLeft = L.trashFor(g.run, this.shift).length;
       SOL.audio.lineOn && SOL.audio.lineOn();
     },
 
@@ -661,7 +761,7 @@
       if (!sh || sh.over) return;
 
       var cfg = sh.cfg;
-      var reading = !!this.open;
+      var reading = !!this.open || !!this.bin;
 
       /* Reading throttles the line down to a crawl. It is not a fiction —
          no factory slows for a man reading a docket — it is the game giving
@@ -680,9 +780,11 @@
       var ldt = dt * rate;
 
       sh.timeLeft -= dt;
-      if (reading) sh.readSecs += dt;
+      if (this.open) sh.readSecs += dt;
       if (sh.timeLeft <= 0) {
         sh.timeLeft = 0;
+        // a basket nobody got to is a thing nobody found
+        if (!this.binDone) sh.marksPassed += this.binLeft;
         this.endShift(g);
         return;
       }
@@ -818,7 +920,10 @@
         this.pendingSay = { text: C.LOOK_ROUND, secs: 6.0, at: 'stop' };
       }
 
-      if (reading) this.updateReading(dt, g);
+      /* `reading` also covers the basket being open, which throttles the
+         line the same way — but there is nothing to page through in a
+         basket, and updateReading walks this.open unguarded. */
+      if (this.open) this.updateReading(dt, g);
 
       /* What a player can do about it once they know is said on the brief
          when they clock on, not at the station — see flow.js. There is
@@ -948,14 +1053,20 @@
         this.faultIdx++;
         this.shift.faulty++;
       }
-      /* Anything to be found rides in on a fault. It has to: a piece with
-         nothing wrong with it is a piece you have no reason to touch, and
-         the whole mechanic is that finding things and doing the job are
-         the same reach made two different ways. The arm never takes a
-         carrier — a machine that sorts by the obvious would have thrown
-         this one straight in the skip. */
+      /* A piece with something on it carries red tape, and that is the
+         whole signal — it does not have to be faulty as well.
+
+         It used to require a fault to ride on, back when there was one
+         part-borne item a shift. With the tips in, shift 1 has two of them
+         and exactly one fault on the whole line, so the second could never
+         appear at all. Tape and fault are separate things now: crooked and
+         split means it will not pass, red tape means somebody wants it
+         looked at, and a piece can be either, both or neither.
+
+         The arm never takes a taped piece. A machine that sorts by the
+         obvious would have put it straight in the skip. */
       var clue = null;
-      if (faulty && this.carry) {
+      if (this.carry) {
         clue = this.carry;
         this.carry = null;
         armable = false;
@@ -1010,6 +1121,84 @@
       return wasRead;
     },
 
+    /* ----- the bin ----- */
+
+    /* Six things, in the order they are lying in the basket. Which one has
+       the mark on it is settled here rather than on the click, so it cannot
+       depend on where the player happened to reach first. */
+    openBin: function (g) {
+      if (this.bin || this.binDone || this.open) return false;
+      /* Everything the basket has for this shift, not just the first thing
+         in it. A shift can put two papers in there — a tip and something
+         else — and handing over only one meant the second was unreachable
+         for the whole run. */
+      var found = L.trashFor(g.run, this.shift);
+      var n = C.BIN_ITEMS.length;
+      var items = [];
+      for (var i = 0; i < n; i++) {
+        items.push({
+          i: i,
+          kind: C.BIN_ITEMS[i].kind,
+          label: C.BIN_ITEMS[i].label,
+          marked: false,
+          clue: null,
+          gone: false
+        });
+      }
+      // spread the marks over the paper, starting from a per-shift offset
+      var paper = items.filter(function (it) { return it.kind === 'paper'; });
+      found.forEach(function (clue, k) {
+        var slot = paper[(this.shift.n + k) % paper.length];
+        if (!slot || slot.marked) slot = paper[k % paper.length];
+        slot.marked = true;
+        slot.clue = clue;
+      }, this);
+      this.bin = { items: items, found: found.slice(), left: n };
+      SOL.audio.paper && SOL.audio.paper();
+      return true;
+    },
+
+    /* One item into one of the two bins. Both are the same skip and the
+       game never says which was right, because there is no right. */
+    sortItem: function (idx, g) {
+      var b = this.bin;
+      if (!b) return false;
+      var it = b.items[idx];
+      if (!it || it.gone) return false;
+      if (it.clue) {
+        var clue = it.clue;
+        it.clue = null;
+        it.gone = true;
+        b.left--;
+        b.found = b.found.filter(function (c) { return c !== clue; });
+        this.shift.looked++;
+        this.read_(clue);
+        if (b.left <= 0) this.closeBin(g);
+        return true;
+      }
+      it.gone = true;
+      b.left--;
+      SOL.audio.turn && SOL.audio.turn();
+      if (b.left <= 0) this.closeBin(g);
+      return true;
+    },
+
+    closeBin: function (g) {
+      if (!this.bin) return false;
+      var cleared = this.bin.left <= 0;
+      /* Whatever was in it and was not looked at goes in the skip with
+         everything else, and nothing anywhere records that it was there. */
+      this.shift.marksPassed += this.bin.found.length;
+      this.bin = null;
+      if (cleared) {
+        this.binDone = true;
+        this.shift.trashSorted = true;
+        this.shift.binScrip = E.BIN_SCRIP;
+        SOL.audio.lever && SOL.audio.lever();
+      }
+      return cleared;
+    },
+
     /* ----- line 5 ----- */
 
     inRetZone: function (r) {
@@ -1022,6 +1211,18 @@
         if (this.inRetZone(r) && Math.abs(r.x - x) <= 42) return r;
       }
       return null;
+    },
+
+    /* The nearest piece in the bay that has something on it. Only used by
+       the keyboard fallback; the mark is meant to be clicked. */
+    nearestCarrier: function () {
+      var best = null, bd = Infinity, self = this;
+      this.returns.forEach(function (r) {
+        if (!r.clue || !self.inRetZone(r)) return;
+        var d = Math.abs(r.x - RET_MID);
+        if (d < bd) { bd = d; best = r; }
+      });
+      return best;
     },
 
     nearestReturn: function () {
@@ -1064,8 +1265,15 @@
        something has actually found it. */
     look: function (atX) {
       if (this.open) { this.lastAction = 'reading'; return false; }
-      var r = atX == null ? this.nearestReturn() : this.returnAt(atX);
-      if (!r) { this.lastAction = 'nolook'; this.say(C.LOOK_EMPTY, 1.8, 'line5'); return false; }
+      var r = atX == null ? this.nearestCarrier() : this.returnAt(atX);
+      /* Only a taped piece can be investigated. There is nothing to turn
+         over on an ordinary one — the tape is the whole signal, and a look
+         that found nothing would just be a worse way of pulling. */
+      if (!r || !r.clue) {
+        this.lastAction = 'nolook';
+        this.say(C.LOOK_EMPTY, 1.8, 'line5');
+        return false;
+      }
       this.shift.looked++;
       this.lastAction = r.clue ? 'found' : 'nothing';
       if (r.clue) {
@@ -1171,14 +1379,11 @@
     endShift: function (g) {
       var sh = this.shift;
       if (sh.over) return;
-      /* A shift that was walked off does not end at the bin. You are not
-         tidying up on your way out of a line you just stopped. */
-      if (sh.stopped || !SOL.screens.trash) {
-        L.closeShift(g.run, sh);
-        g.go('summary', { shift: sh });
-        return;
-      }
-      g.go('trash', { shift: sh });
+      /* The bin is emptied during the shift now, not after it, so the
+         hooter goes straight to the sheet. There used to be a screen here
+         with a man explaining that sorting the rubbish was pointless. */
+      L.closeShift(g.run, sh);
+      g.go('summary', { shift: sh });
     },
 
     /* ----- input ----- */
@@ -1188,11 +1393,14 @@
         if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') this.closeInquiry();
         return;
       }
-      if (e.key === 'e' || e.key === 'E') { this.look(null); return; }
       if (e.key === 'd' || e.key === 'D') { this.lookDock(); return; }
-      /* X takes a piece off line 5. Scrapping moved to S when it did: the
-         two were both on X and one of them had to move, and taking a piece
-         off the return line is the far commoner act. */
+      /* X takes a piece off line 5, S scraps at the press. There is no key
+         for investigating: a marked piece is clicked, which is the whole of
+         how that channel is discovered. */
+      if (this.bin) {
+        if (e.key === 'Escape' || e.key === 'Enter') this.closeBin(g);
+        return;
+      }
       if (e.key === 'x' || e.key === 'X') { this.pull(null); return; }
       if (e.key === 's' || e.key === 'S') { this.scrap(null); return; }
       if (e.key === ' ') { this.stamp(null); return; }
@@ -1211,10 +1419,26 @@
         if (hit && hit.id === 'close') this.closeInquiry();
         return;
       }
+      if (this.bin) {
+        if (hit && hit.id === 'binclose') { this.closeBin(g); return; }
+        if (hit && hit.id.indexOf('sort:') === 0) {
+          this.sortItem(parseInt(hit.id.slice(5), 10), g);
+        }
+        return;
+      }
+      if (hit && hit.id === 'bin') { this.openBin(g); return; }
       if (hit && hit.id === 'stop') { this.stopLine(g); return; }
       if (hit && hit.id === 'dock') { this.lookDock(); return; }
-      // line 5 is its own band of the screen, well clear of the press
-      if (y >= LAY.retY - 44 && y <= LAY.retY + LAY.retH + 16) { this.pull(x); return; }
+      /* Line 5. A piece with red tape on it is read; anything else is
+         taken off. Reading it consumes the tape, so a second click on the
+         same piece does the job instead — which is how a player learns
+         that the two are the same reach made two different ways. */
+      if (y >= LAY.retY - 44 && y <= LAY.retY + LAY.retH + 16) {
+        var got = this.returnAt(x);
+        if (got && got.clue) this.look(x);
+        else this.pull(x);
+        return;
+      }
       // the whole belt band is a stamping surface
       if (y >= LAY.beltY - 40 && y <= LAY.beltY + LAY.beltH + 20) this.stamp(x);
     },
@@ -1281,6 +1505,10 @@
       }
 
       drawApron(ctx, sh);
+      drawBin(ctx, this.binDone, g.hoverId === 'bin');
+      if (!this.open && !this.bin) {
+        this.hits.push({ x: BIN.x, y: BIN.y, w: BIN.w, h: BIN.h + 18, id: 'bin' });
+      }
       this.drawStation(ctx, t, g);
       this.drawHud(ctx, t, g);
       if (this.kit && this.kit.dock) {
@@ -1288,9 +1516,111 @@
         this.hits.push({ x: DOCK.x, y: DOCK.y, w: DOCK.w, h: DOCK.h, id: 'dock' });
       }
       if (this.open) this.drawInquiry(ctx, t, g);
+      else if (this.bin) this.drawSort(ctx, t, g);
       else this.drawRadio(ctx, t);
       Screens._footerRail(ctx, this.footerHint());
       D.crt(ctx, W, H, t);
+    },
+
+    /* The sorting window. Two labelled bins and the things in the basket
+       between them; click a thing and it goes. Which bin you send it to is
+       not asked, because both of them are the same skip and the game is not
+       going to pretend otherwise by scoring it.
+
+       One of the six has red tape on it. That is the only thing on this
+       screen that is not grey, and it is the whole reason the chore is in
+       the game. */
+    drawSort: function (ctx, t, g) {
+      var b = this.bin;
+      var nx = SORT.x, nw = SORT.w, px = nx + 44, pw = nw - 88;
+      var rows = Math.ceil(b.items.length / 3);
+      var nh = SORT.top + rows * SORT.row + 26 + 46 + 26;
+      var ny = Math.round((H - nh) / 2) + 8;
+      this.card = { x: nx, y: ny, w: nw, h: nh };
+
+      ctx.fillStyle = 'rgba(11,14,16,0.72)';
+      ctx.fillRect(0, 0, W, H);
+      Screens._notice(ctx, nx, ny, nw, nh, C.BIN_HEADING);
+
+      /* The title and the reminder used to share a line, which fitted the
+         wide card this started as and ran straight through it once the card
+         was narrowed. The reminder sits under the title now, where it can
+         be as long as it needs to be. */
+      var y = ny + 58;
+      D.txt(ctx, C.BIN_TITLE, px, y,
+        { size: 20, weight: 600, family: 'sans', color: P.bright, track: 3.4 });
+      y += 20;
+      D.stencil(ctx, C.BIN_SUB, px, y,
+        { size: 9.5, track: 2.2, color: P.faint });
+      y += 12;
+      D.seam(ctx, px, y, pw);
+
+      var cw = Math.floor(pw / 3);
+      b.items.forEach(function (it, i) {
+        if (it.gone) return;
+        var cx = px + (i % 3) * cw + cw / 2;
+        var cy = ny + SORT.top + Math.floor(i / 3) * SORT.row + 44;
+        var hot = g.hoverId === 'sort:' + i;
+
+        // the thing itself: a ball of paper, or a curl of swarf
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate((D.rnd(i * 3.7) - 0.5) * 0.5);
+        if (it.kind === 'paper') {
+          ctx.fillStyle = hot ? 'rgba(196,190,178,0.62)' : 'rgba(168,163,152,0.48)';
+          ctx.beginPath();
+          for (var k = 0; k < 9; k++) {
+            var a = (k / 9) * 6.28;
+            var rr = 24 + D.rnd(i * 5.1 + k) * 9;
+            ctx[k ? 'lineTo' : 'moveTo'](Math.cos(a) * rr, Math.sin(a) * rr);
+          }
+          ctx.closePath(); ctx.fill();
+          // the creases
+          ctx.strokeStyle = 'rgba(90,86,78,0.45)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(-14, -6); ctx.lineTo(4, 3); ctx.lineTo(-6, 14);
+          ctx.moveTo(10, -12); ctx.lineTo(2, 2);
+          ctx.stroke();
+        } else {
+          ctx.strokeStyle = hot ? 'rgba(176,186,194,0.7)' : 'rgba(140,150,158,0.5)';
+          ctx.lineWidth = 2.4;
+          ctx.beginPath();
+          for (var q = 0; q < 30; q++) {
+            var aa = q * 0.42, rr2 = 4 + q * 0.8;
+            ctx[q ? 'lineTo' : 'moveTo'](Math.cos(aa) * rr2, Math.sin(aa) * rr2 * 0.7);
+          }
+          ctx.stroke();
+        }
+
+        /* The mark. A strip of red tape on one of the balls of paper, and
+           the only colour on the screen. */
+        if (it.marked) {
+          ctx.save();
+          ctx.rotate(0.38);
+          ctx.fillStyle = P.markLo;
+          ctx.fillRect(-5.5, -26, 11, 52);
+          ctx.fillStyle = P.mark;
+          ctx.fillRect(-5.5, -26, 8, 52);
+          ctx.fillStyle = 'rgba(240,150,138,0.45)';
+          ctx.fillRect(-5.5, -26, 2, 52);
+          ctx.restore();
+        }
+        ctx.restore();
+
+        D.stencil(ctx, it.label, cx, cy + 44,
+          { size: 8.5, track: 1.8, align: 'center',
+            color: hot ? P.text : 'rgba(112,120,127,0.95)' });
+
+        this.hits.push({ x: cx - 42, y: cy - 42, w: 84, h: 92, id: 'sort:' + i });
+      }, this);
+
+      var b2 = { x: px - 14, y: ny + nh - 46 - 26, w: 250, h: 46, id: 'binclose' };
+      Screens._control(ctx, b2, b.left > 0 ? C.BIN_LEAVE : C.BIN_DONE_BTN,
+        g.hoverId === 'binclose' ? 'hover' : 'idle', { size: 12 });
+      this.hits.push(b2);
+      D.stencil(ctx, C.BIN_NOTE, px + pw, ny + nh - 46,
+        { size: 9, track: 1.6, color: 'rgba(112,120,127,0.95)', align: 'right' });
     },
 
     /* The bench set. One line, low on the screen, in the plant's own grey
@@ -1340,10 +1670,12 @@
       if (this.open) {
         return this.open.read ? 'ENTER OR ESC TO GO BACK' : C.INQUIRY_RUNNING;
       }
+      if (this.bin) return C.BIN_FOOTER;
       /* By the last shifts there are five controls. Spelled out in
          sentences that is a wall of text across the bottom of a factory;
          an operator's card would be terse, so this is. */
-      var keys = ['SPACE STAMP', C.PULL_HINT, C.LOOK_HINT];
+      var keys = ['SPACE STAMP', C.PULL_HINT];
+      if (!this.binDone) keys.push(C.BIN_HINT);
       if (this.shift && this.shift.n >= L.SCRAP_FROM_SHIFT) keys.push('S SCRAP');
       /* The camera is listed only once it is on the bench, and then always
          — not when there happens to be something in it. A prompt that came

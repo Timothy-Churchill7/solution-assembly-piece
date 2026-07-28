@@ -30,7 +30,6 @@ const playShift = (page, n, policy, kit = []) =>
       }
       sc.stamp(null);
     }
-    window.__clearBin();
     const rec = g.run.shiftLog[g.run.shiftLog.length - 1];
     const cfg = L.shiftConfig(n);
     return {
@@ -86,12 +85,14 @@ test.describe('line 5', () => {
       const pulled = sc.pull(null);
       const afterPull = sc.charge;
 
-      while (!sc.nearestReturn() && guard++ < 60 * 60) g.tick(1 / 60);
+      // a taped piece, since that is the only kind that can be looked at
+      while (!sc.nearestCarrier() && guard++ < 60 * 200) g.tick(1 / 60);
       sc.charge = 1;
       const looked = sc.look(null);
       const afterLook = sc.charge;
 
       // and pressing for a part while it is coming up costs nothing either
+      sc.closeInquiry();
       sc.charge = 0.4;
       for (let i = 0; i < 30; i++) sc.stamp(null);
       const afterMashing = sc.charge;
@@ -181,7 +182,6 @@ test.describe('doing the whole job', () => {
             }
             sc.stamp(null);
           }
-          window.__clearBin();
         }
         return { earned: g.run.ledger.earned, rejects: g.run.rejects };
       }

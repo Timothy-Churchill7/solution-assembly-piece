@@ -13,7 +13,8 @@ host unchanged.
 | --- | --- |
 | `SPACE` / click the belt | stamp the part in the press zone |
 | `X` / click line 5 | take a piece off the return line |
-| `E` | turn over the piece in the inspection bay and look at it |
+| click a taped piece | turn it over and read it |
+| click the basket | empty it, and sort what is in it |
 | `D` | look at the yard camera (only if you bought one) |
 | `S` | scrap a part (from shift 3) |
 | `Q` | master stop — only once you have found out, and from shift 5 |
@@ -37,12 +38,17 @@ These are the things the suite cannot judge.
    brief, two lines said at the station — the press waits, line 5 is yours
    too — and nothing else. The pencilled welcome that used to sit under the
    first brief is gone; check the shift still lands without it.
-3. **Is the bin genuinely tempting to skip?** `TIP IT OUT` is first, free,
-   and recommended by a man on his way out. If sorting ever feels like the
-   obvious choice, the channel has stopped working.
-4. **Does anything on the shift screen look like it wants clicking?** It
-   must not. A test asserts there is no colour on it; only your own eye can
-   say whether the composition is pointing anywhere.
+3. **Is the basket genuinely tempting to skip?** It is a chore, mid-shift,
+   while the line is running and the clock is not slowed for it. It pays 2
+   scrip and the foreman mentions it once. If emptying it ever feels
+   automatic rather than like a decision to stop working, the channel has
+   stopped working.
+4. **Does the red tape read as tape, and only as tape?** It is the one
+   marker on a working shift: a strip on a piece coming down line 5, and a
+   strip on one thing in the basket. It has to be findable without being a
+   quest icon, and it must not look like a button. It has twice been too
+   big — once wide and square enough to read as a redaction bar, once
+   nearly the size of the part it was stuck to.
 5. **Read the eight endings back to back.** None may read as praise or as a
    scolding.
 6. **Read a clue with the shift running.** The line should slow enough to
@@ -76,8 +82,9 @@ game no longer implies otherwise.
 
 **The shape this is meant to have.** Buy nothing and the schedule beats you
 on the fifth shift and again on the sixth. The pedal is the answer, the
-handbook says so outright, and the docket in the shift-2 bin says so again.
-Everything after that is what you do with the money you have left.
+handbook says so outright, and the tips in the basket say so again in
+figures — the pedal's 15% on the second shift, the feeder's 45% on the
+third. Everything after that is what you do with the money you have left.
 
 ## Ignoring line 5
 
@@ -106,20 +113,53 @@ fitted at the assembly works, found there, and docked at 3 scrip.
 
 ## Finding things out
 
-Maximum awareness is **39**; the circular needs **8** and can only come out
-of the bin from shift 3. Four channels:
+Twenty-two things can be read across a run. Eight of them are worth nothing
+at all — they are playing tips, mostly early, and they say plainly which
+purchase pays and how the press works. The other fourteen carry weight:
+**47** in total, and the circular needs only **3**, because what the
+circular costs is not curiosity but the habit of looking at all.
 
-- **a faulty piece on line 5** — free. Turning it over does *not* take it
-  off the belt, so you still have to reach for it afterwards
+Anything worth reading is marked with a strip of red tape. That is the
+whole of the signposting, and it is the only colour on a working shift.
+
+Five channels:
+
+- **a taped piece on line 5** — free. Clicking it turns it over; it does
+  *not* take it off the belt, so you still have to reach for it afterwards
+- **the basket at the station** — free, and it pays 2 scrip. Emptying it
+  opens a sorting window mid-shift; one item in it is taped
 - **the bench radio (60)** — reads its item out over the ordinary
   programme, in the same voice, with no prompt
 - **the yard camera (95)** — a lorry is at the dock for 26 seconds and then
   is not
-- **the bin by the door** — every shift, sorting it costs 6 scrip
+- **the man from the works office** — once, before the fourth shift, and
+  only if you turn down the money
 
 The two free channels used diligently reach the circular on shift 3 with
 nothing bought — a test holds that, because the reveal must never sit
-behind a price. One channel alone never reaches it.
+behind a price. The basket alone reaches it on shift 5. Line 5 alone never
+reaches it, because the circular is in the basket and nowhere else.
+
+### The one question asked out loud
+
+Before the fourth shift a man from the works office offers one of two
+things and will not be drawn on the other. Measured over the last three
+shifts:
+
+| | pay, shifts 4–6 | run total |
+| --- | --- | --- |
+| take the heavier line | 104 · 82 · 83 | 510 |
+| ask him where it goes | 84 · 61 · 62 | 448 |
+
+Sixty-two scrip is a lamp and a gauge, or most of a camera. It is a real
+offer and the screen states both sides of it in figures before you choose.
+
+This was broken when it was first built and is worth recording. The upgrade
+was written purely as more stock arriving — and the press cooldown, not the
+belt, is what caps output, so the extra stock went by unstamped and the
+offer paid **nothing whatever**. The trade only became a trade when it was
+moved onto the piece rate, which goes 1 → 1.5 for the rest of the quarter.
+A test now asserts the gap.
 
 ### What reading costs
 
@@ -142,8 +182,10 @@ reading a carrier no longer forfeits the fault it rode in on.
 
 ## Run length
 
-420 seconds of line time across six shifts, plus the brief, the bin, the
-sheet and the stores between each. Call it twelve to fifteen minutes.
+420 seconds of line time across six shifts, plus the brief, the sheet and
+the stores between each, and the works office once. The basket is emptied
+during a shift now rather than after one, so there is one screen fewer
+between shifts than there used to be. Call it twelve to fifteen minutes.
 
 ## Refusal, and what it costs
 
@@ -193,7 +235,7 @@ the whole run:
 | under 55% | reprimanded; the work was held up while replacements were found |
 
 It carries the office's seal — an eagle over a wreathed swastika, the
-swastika in red and the only colour anywhere in the build — and is signed
+swastika in red — and is signed
 Heinrich Himmler, Reichsführer-SS. The seal is vector artwork inlined into
 `js/seal.js` as Path2D data rather than kept as a file, so the build stays
 what it has always been: a folder of text with no assets in it. Every document
@@ -204,9 +246,11 @@ is the only acknowledgement the piece ever offers.
 
 ## Known rough edges
 
-- **The bin is four clicks' worth of interstitial per shift** (bin → sheet
-  → stores → brief). Each earns its place, but the sequence is long, and a
-  player replaying to chase a different ending will feel it.
+- **The basket can be missed entirely.** It is mentioned once, by the
+  foreman, before the first shift, and listed on the key card at the foot
+  of the screen while it still has anything in it. A player who ignores
+  both will finish the run without the circular and get the blind ending,
+  which is a legitimate outcome but not one they chose.
 - **The dock monitor covers one machine's asset number** on the right of
   the hall. Cosmetic; the monitor is a fitting on the wall and reads as one.
 - **The pedal makes the whole run comfortable.** Once it is on the bench no
@@ -222,14 +266,15 @@ is the only acknowledgement the piece ever offers.
 
 ## What the suite covers
 
-168 tests. The load-bearing ones, if you only read a few:
+167 tests. The load-bearing ones, if you only read a few:
 
 - `econ.spec.js` — the schedule outruns a pair of unaided hands
 - `returns.spec.js` — nothing but a stamp touches the cooldown, and exactly
   two purchases change the count
-- `inquiry.spec.js` — every channel is reachable, costs something, and can
-  be missed
+- `inquiry.spec.js` — all five channels are reachable, cost something, and
+  can be missed; nothing carries tape that cannot be read
 - `ending.spec.js` — the count, the bonus and the book decide nothing
 - `layout.spec.js` — every posted notice fits between the rails
-- `shell.spec.js` — no colour on a working shift; the seal, the real name
-  and the colour red appear on exactly one screen; nothing from the novel
+- `shell.spec.js` — the only red on a working shift is tape on something
+  readable; the seal and the real name appear on exactly one screen;
+  nothing from the novel

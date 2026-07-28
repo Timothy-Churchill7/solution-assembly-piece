@@ -131,6 +131,7 @@
         if (pay.bonus > 0) cols.push([C.PAY_ROWS.bonus, pay.bonus, false]);
         if (pay.rejects < 0) cols.push([C.PAY_ROWS.rejects, pay.rejects, false]);
         if (pay.late < 0) cols.push([C.PAY_ROWS.late, pay.late, false]);
+        if (pay.bin > 0) cols.push([C.PAY_ROWS.bin, pay.bin, false]);
         cols.push([C.PAY_ROWS.total, pay.total, true]);
       }
 

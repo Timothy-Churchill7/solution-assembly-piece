@@ -215,32 +215,44 @@ test('shots: the circular, read through', async ({ page }) => {
   await boot(page);
   await page.evaluate(() => {
     const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
-    const tr = window.SOL.screens.trash;
     L.resetRun(g.run);
     for (let n = 1; n <= 3; n++) {
       g.run.shift = n;
       g.go('shift');
       for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
-        const car = sc.nearestReturn();
-        if (car && car.clue && !sc.open) sc.look(null);
+        const car = sc.nearestCarrier();
+        if (car && !sc.open) sc.look(car.x);
+        if (!sc.binDone && !sc.bin && !sc.open) {
+          // the basket, on the last third of the shift, as the foreman asked
+          if (sc.openBin(g)) {
+            for (let k = 0; k < 20 && sc.bin; k++) {
+              const next = sc.bin.items.findIndex((x) => !x.gone);
+              if (next < 0) break;
+              const wasReveal = sc.bin.items[next].clue &&
+                sc.bin.items[next].clue.reveal;
+              sc.sortItem(next, g);
+              if (sc.open && wasReveal) {
+                // hold it open, fully surfaced, and stop here
+                const need = Math.ceil((L.readTime(sc.open.clue) + 0.5) * 60);
+                for (let q = 0; q < need; q++) g.tick(1 / 60);
+                g.step(0.02);
+                return;
+              }
+              if (sc.open) {
+                const need = Math.ceil((L.readTime(sc.open.clue) + 0.3) * 60);
+                for (let q = 0; q < need; q++) g.tick(1 / 60);
+                sc.closeInquiry();
+              }
+            }
+            if (sc.bin) sc.closeBin(g);
+          }
+        }
         g.tick(1 / 60);
         if (sc.open && sc.open.read) sc.closeInquiry();
         if (g.screen === 'shift' && !sc.open) sc.stamp(null);
       }
-      tr.sort(g);
-      if (tr.open && tr.open.clue.reveal) {
-        // hold it open, fully surfaced, and stop here
-        const need = Math.ceil((L.readTime(tr.open.clue) + 0.5) * 60);
-        for (let k = 0; k < need; k++) g.tick(1 / 60);
-        g.step(0.02);
-        return;
-      }
-      if (tr.open) {
-        const need = Math.ceil((L.readTime(tr.open.clue) + 0.3) * 60);
-        for (let k = 0; k < need; k++) g.tick(1 / 60);
-      }
-      tr.close_(g);
       window.SOL.screens.summary.advance(g);
+      if (g.screen === 'officer') window.__clearOfficer();
       if (g.screen === 'stores') window.SOL.screens.stores.leave_(g);
     }
   });
@@ -507,47 +519,91 @@ test('shots: the handbook with line 5 in it', async ({ page }) => {
 /* ---------- the quiet channels ----------
    None of these may look like a game pointing at itself. */
 
-test('shots: the bin by the door, first time', async ({ page }) => {
+test('shots: the basket at the station', async ({ page }) => {
   await boot(page);
   await page.evaluate(() => {
-    const g = window.SOL.game, L = window.SOL.logic;
+    const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
     L.resetRun(g.run);
-    const sh = L.newShift(1);
-    sh.stamped = 31;
-    g.go('trash', { shift: sh });
+    g.run.shift = 1;
+    g.go('shift');
+    for (let i = 0; i < 60 * 20; i++) {
+      g.tick(1 / 60);
+      if (i % 3 === 0) sc.stamp(null);
+    }
+    g.step(0.02);
   });
-  await still(page, 9);
-  await shot(page, '29-the-bin');
+  await still(page);
+  await shot(page, '29-the-basket');
 });
 
-test('shots: the bin on a later shift, nobody explaining it', async ({ page }) => {
+test('shots: sorting it, with one paper marked', async ({ page }) => {
   await boot(page);
   await page.evaluate(() => {
-    const g = window.SOL.game, L = window.SOL.logic;
+    const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
     L.resetRun(g.run);
-    const sh = L.newShift(5);
-    sh.stamped = 41;
-    g.go('trash', { shift: sh });
+    g.run.shift = 3;
+    g.go('shift');
+    for (let i = 0; i < 60 * 20; i++) {
+      g.tick(1 / 60);
+      if (i % 3 === 0) sc.stamp(null);
+    }
+    sc.openBin(g);
+    // two things already sorted, so the window is caught part way through
+    sc.sortItem(sc.bin.items.findIndex((x) => !x.gone && !x.clue), g);
+    sc.sortItem(sc.bin.items.findIndex((x) => !x.gone && !x.clue), g);
+    g.step(0.02);
   });
-  await still(page, 9);
-  await shot(page, '30-the-bin-later');
+  await still(page);
+  await shot(page, '30-sorting-the-basket');
 });
 
 test('shots: something under the swarf', async ({ page }) => {
   await boot(page);
   await page.evaluate(() => {
-    const g = window.SOL.game, L = window.SOL.logic;
-    const tr = window.SOL.screens.trash;
+    const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
     L.resetRun(g.run);
-    const sh = L.newShift(5);
-    sh.stamped = 41;
-    g.go('trash', { shift: sh });
-    tr.sort(g);
-    for (let i = 0; i < Math.ceil(L.readTime(tr.open.clue) * 60) + 6; i++) g.tick(1 / 60);
+    g.run.shift = 3;
+    g.go('shift');
+    for (let i = 0; i < 60 * 20; i++) {
+      g.tick(1 / 60);
+      if (i % 3 === 0) sc.stamp(null);
+    }
+    sc.openBin(g);
+    sc.sortItem(sc.bin.items.findIndex((x) => x.clue), g);
+    for (let i = 0; i < Math.ceil(L.readTime(sc.open.clue) * 60) + 6; i++) g.tick(1 / 60);
     g.step(0.02);
   });
+  await still(page);
+  await shot(page, '31-basket-found');
+});
+
+/* The man from the works office, and the only question the game asks out
+   loud. Two plates, the same size, in the same grey. */
+test('shots: the officer', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => {
+    const g = window.SOL.game, L = window.SOL.logic;
+    L.resetRun(g.run);
+    g.run.shift = L.OFFICER_SHIFT;
+    g.go('officer');
+  });
   await still(page, 9);
-  await shot(page, '31-bin-found');
+  await shot(page, '41-the-officer');
+});
+
+test('shots: what he tells you', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => {
+    const g = window.SOL.game, L = window.SOL.logic;
+    L.resetRun(g.run);
+    g.run.shift = L.OFFICER_SHIFT;
+    g.go('officer');
+    const sc = window.SOL.screens.officer;
+    sc.askAnswer(g);
+    for (let i = 0; i < Math.ceil(L.readTime(sc.open.clue) * 60) + 6; i++) g.tick(1 / 60);
+  });
+  await still(page, 9);
+  await shot(page, '42-the-answer');
 });
 
 /* The bench set, mid-sentence, over a line that has not stopped. */

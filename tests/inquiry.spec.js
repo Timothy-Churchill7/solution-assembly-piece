@@ -80,6 +80,27 @@ test.describe('clue data', () => {
     for (const v of r.channels) expect(r.used[v], v).toBeGreaterThan(0);
   });
 
+  /* The camera holds a scene for a fixed window and then the lorry is
+     gone. One that arrives too late to close before the hooter can be
+     neither found nor written off, and simply goes missing from the
+     accounting — which is exactly how it went unnoticed for a build. */
+  test('every yard-camera item closes before the hooter', async ({ page }) => {
+    await boot(page);
+    const bad = await page.evaluate(() => {
+      const L = window.SOL.logic, out = [];
+      L.SHIFTS.forEach((s) => {
+        L.cluesVia(s.n, 'dock').forEach((c) => {
+          var closes = c.at * s.duration + L.DOCK_WINDOW;
+          if (closes > s.duration - 2) {
+            out.push(c.id + ' closes at ' + closes.toFixed(1) + ' of ' + s.duration);
+          }
+        });
+      });
+      return out;
+    });
+    expect(bad).toEqual([]);
+  });
+
   test('timed clues schedule inside their own shift', async ({ page }) => {
     await boot(page);
     const bad = await page.evaluate(() => {
@@ -214,7 +235,7 @@ test.describe('looking closely at line 5', () => {
      in on a piece you already had a reason to touch, so the decision is
      never "go and look for the story", it is "take this off, or turn it
      over first". If a carrier ever fails to appear the channel is dead. */
-  test('every part-borne item reaches the bay on a faulty piece', async ({ page }) => {
+  test('every part-borne item reaches the bay with tape on it', async ({ page }) => {
     await boot(page);
     for (const n of [1, 3, 4, 6]) {
       const r = await page.evaluate((n) => {
@@ -230,8 +251,10 @@ test.describe('looking closely at line 5', () => {
           sc.returns.forEach((r) => {
             if (r.clue && carried.indexOf(r.clue.id) < 0) {
               carried.push(r.clue.id);
-              // and it is a fault, so the arm never quietly binned it
-              if (!r.faulty) carried.push('NOT A FAULT: ' + r.clue.id);
+              /* Tape and fault are separate signals. A taped piece may or
+                 may not also be faulty, but the arm must never take one:
+                 a machine that sorts by the obvious would have binned it. */
+              if (r.armable) carried.push('ARM WOULD TAKE: ' + r.clue.id);
             }
           });
         }
@@ -241,40 +264,36 @@ test.describe('looking closely at line 5', () => {
     }
   });
 
-  test('a piece with nothing on it costs the same look', async ({ page }) => {
+  /* Investigating is not a thing you do to a piece; it is a thing you do
+     to a piece with red tape on it. Everything else on line 5 is work. */
+  test('only a taped piece can be investigated', async ({ page }) => {
     await boot(page);
     await enterShift(page, 5);
     const r = await page.evaluate(() => {
-      const g = window.SOL.game, sc = window.SOL.screens.shift, E = window.SOL.econ;
-      // find an ordinary piece in the bay, with nothing on it
+      const g = window.SOL.game, sc = window.SOL.screens.shift;
       let guard = 0;
       while (guard++ < 60 * 120) {
-        const r = sc.nearestReturn();
-        if (r && !r.clue) break;
+        const q = sc.nearestReturn();
+        if (q && !q.clue) break;
         g.tick(1 / 60);
       }
-      const found = sc.nearestReturn();
-      sc.charge = 1;
-      const ok = sc.look(null);
+      const plain = sc.nearestReturn();
+      const looked = sc.look(plain.x);
+      const why = sc.lastAction;
+      // clicking it on the belt takes it off instead, which is the job
+      const before = sc.shift.pulled;
+      sc.pointer(plain.x, window.SOL.LAY.retY + 20, 'down', g);
       return {
-        found: !!found,
-        ok,
-        action: sc.lastAction,
-        charge: sc.charge,
-        looked: sc.shift.looked,
-        open: !!sc.open,
-        // it went back on the belt: looking is not doing the job
-        stillOn: sc.returns.indexOf(found) >= 0
+        found: !!plain, looked, why, open: !!sc.open,
+        pulledDelta: sc.shift.pulled - before
       };
     });
     expect(r.found).toBe(true);
-    expect(r.ok).toBe(true);
-    expect(r.action).toBe('nothing');
+    expect(r.looked).toBe(false);
+    expect(r.why).toBe('nolook');
     expect(r.open).toBe(false);
-    expect(r.looked).toBe(1);
-    // and the press is exactly where it was
-    expect(r.charge).toBe(1);
-    expect(r.stillOn).toBe(true);
+    // the same click did the job instead
+    expect(r.pulledDelta).toBe(1);
   });
 
   /* The line throttles to a crawl while an item is open, so almost nothing
@@ -324,35 +343,36 @@ test.describe('looking closely at line 5', () => {
     expect(r.after).toBeGreaterThan(0.9);
   });
 
-  /* Reading a carrier used to cost you the fault it was on: the belt ran at
-     full speed and the piece was long gone by the time you looked up. It is
-     still in the bay now, and you can take it off. Looking costs the clock
-     and nothing else. */
-  test('the fault a carrier was on is still there when you look up',
+  /* The tape is consumed by reading it, so the second click on the same
+     piece does the job. That is how a player learns the two are the same
+     reach made two different ways. */
+  test('reading a taped piece leaves it on the belt, and the next click takes it',
     async ({ page }) => {
       await boot(page);
       await enterShift(page, 3);
       expect(await runToCarrier(page)).toBe(true);
       const r = await page.evaluate(() => {
         const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
-        const before = sc.shift.rejects;
-        const clue = sc.nearestReturn().clue;
-        sc.look(null);
+        const piece = sc.nearestReturn();
+        const clue = piece.clue;
+        sc.look(piece.x);
         for (let i = 0; i < Math.ceil((L.readTime(clue) + 1) * 60); i++) g.tick(1 / 60);
         sc.closeInquiry();
-        const stillThere = !!sc.nearestReturn();
-        const pulled = sc.pull(null);
+        const stillThere = sc.returns.indexOf(piece) >= 0;
+        const tapeGone = !piece.clue;
+        const pulled = sc.pull(piece.x);
         return {
-          before, stillThere, pulled,
-          after: sc.shift.rejects,
-          awareness: g.run.awareness
+          stillThere, tapeGone, pulled,
+          gone: sc.returns.indexOf(piece) < 0,
+          // shift 3's first taped piece is a tip: banked, and worth nothing
+          seen: g.run.cluesSeen.length
         };
       });
-      expect(r.awareness).toBeGreaterThan(0);
+      expect(r.seen).toBe(1);
       expect(r.stillThere).toBe(true);
+      expect(r.tapeGone).toBe(true);
       expect(r.pulled).toBe(true);
-      // read it and still caught it: the piece never reached the works
-      expect(r.after).toBe(r.before);
+      expect(r.gone).toBe(true);
     });
 
   test('a carrier pulled instead of looked at takes what it carried with it',
@@ -443,7 +463,7 @@ test.describe('the bench set and the yard camera', () => {
     // is banked without you ever having stopped
     expect(r.started).toBeGreaterThanOrEqual(r.due - 1);
     expect(r.awareness).toBeGreaterThan(0);
-    expect(r.seen).toContain('c2-broadcast');
+    expect(r.seen).toContain('c2-priority');
     // and the rest of the time it is genuinely just a radio
     expect(r.fillerWasReal).toBe(true);
     expect(r.fillerCount).toBeGreaterThan(1);
@@ -514,8 +534,98 @@ test.describe('the bench set and the yard camera', () => {
   });
 });
 
-test.describe('the bin by the door', () => {
-  test('every shift ends at it, and tipping it costs nothing', async ({ page }) => {
+test.describe('the basket at the station', () => {
+  test('it is emptied during the shift, and the foreman pays for it',
+    async ({ page }) => {
+      await boot(page);
+      const r = await page.evaluate(() => {
+        const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+        const E = window.SOL.econ;
+        L.resetRun(g.run);
+        g.run.shift = 1;
+        g.go('shift');
+        for (let i = 0; i < 60 * 6; i++) g.tick(1 / 60);
+
+        const before = { done: sc.binDone, open: !!sc.bin };
+        const opened = sc.openBin(g);
+        const items = sc.bin.items.length;
+        const marked = sc.bin.items.filter((x) => x.marked).length;
+        // the line all but stops while the basket is open
+        g.tick(1 / 60); g.tick(1 / 60);
+        for (let i = 0; i < 20; i++) g.tick(1 / 60);
+        const rate = sc.lineRate;
+
+        // the harness sorts the rest and reads whatever was marked
+        if (sc.bin) {
+          for (let n = 0; n < 40 && sc.bin; n++) {
+            const next = sc.bin.items.findIndex((x) => !x.gone);
+            if (next < 0) break;
+            sc.sortItem(next, g);
+            if (sc.open) {
+              const need = window.SOL.logic.readTime(sc.open.clue) + 0.2;
+              for (let k = 0; k < Math.ceil(need * 60); k++) g.tick(1 / 60);
+              sc.closeInquiry();
+            }
+          }
+          if (sc.bin) sc.closeBin(g);
+        }
+        return {
+          before, opened, items, marked, rate,
+          done: sc.binDone,
+          scrip: sc.shift.binScrip,
+          sorted: sc.shift.trashSorted,
+          rateEarned: E.BIN_SCRIP,
+          again: sc.openBin(g)
+        };
+      });
+      expect(r.before.done).toBe(false);
+      expect(r.opened).toBe(true);
+      expect(r.items).toBe(6);
+      // exactly one thing in it is marked, on a shift that has something
+      expect(r.marked).toBe(1);
+      expect(r.rate).toBeLessThan(0.3);
+      expect(r.done).toBe(true);
+      expect(r.sorted).toBe(true);
+      expect(r.scrip).toBe(r.rateEarned);
+      // and it is a chore you do once a night
+      expect(r.again).toBe(false);
+    });
+
+  test('the marked paper is the only thing in it that opens', async ({ page }) => {
+    await boot(page);
+    const r = await page.evaluate(() => {
+      const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+      L.resetRun(g.run);
+      g.run.shift = 1;
+      g.go('shift');
+      for (let i = 0; i < 60 * 4; i++) g.tick(1 / 60);
+      sc.openBin(g);
+      const markIdx = sc.bin.items.findIndex((x) => x.marked);
+
+      // everything that is not marked just goes
+      const opens = [];
+      sc.bin.items.forEach((it, idx) => {
+        if (idx === markIdx) return;
+        sc.sortItem(idx, g);
+        opens.push(!!sc.open);
+      });
+      const beforeMark = g.run.awareness;
+      sc.sortItem(markIdx, g);
+      const openedIt = !!sc.open;
+      const kind = sc.open ? sc.open.clue.kind : null;
+      for (let i = 0; i < Math.ceil((L.readTime(sc.open.clue) + 0.3) * 60); i++) {
+        g.tick(1 / 60);
+      }
+      sc.closeInquiry();
+      return { opens, openedIt, kind, beforeMark, after: g.run.cluesSeen.slice() };
+    });
+    // five ordinary things, none of which is anything
+    expect(r.opens).toEqual([false, false, false, false, false]);
+    expect(r.openedIt).toBe(true);
+    expect(r.after).toContain('c1-pedal');
+  });
+
+  test('a basket left alone is a thing nobody found', async ({ page }) => {
     await boot(page);
     const r = await page.evaluate(() => {
       const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
@@ -526,100 +636,21 @@ test.describe('the bin by the door', () => {
         g.tick(1 / 60);
         if (g.screen === 'shift') sc.stamp(null);
       }
-      const atBin = g.screen;
-      const tr = window.SOL.screens.trash;
-      const hadSomething = !!tr.found;
-      tr.tip(g);
       const rec = g.run.shiftLog[0];
       return {
-        atBin, hadSomething,
-        after: g.screen,
-        late: rec.late,
+        screen: g.screen,          // straight to the sheet, no interstitial
         sorted: rec.trashSorted,
+        binScrip: rec.pay.bin,
         passed: rec.marksPassed,
         awareness: g.run.awareness
       };
     });
-    expect(r.atBin).toBe('trash');
-    expect(r.hadSomething).toBe(true);
-    expect(r.after).toBe('summary');
-    expect(r.late).toBe(false);
-    expect(r.sorted).toBe(false);
-    expect(r.awareness).toBe(0);
-    // it was there and it went in the skip, which nothing told you
-    expect(r.passed).toBeGreaterThan(0);
-  });
-
-  test('sorting it costs the hooter whether or not there was anything in it',
-    async ({ page }) => {
-      await boot(page);
-      const r = await page.evaluate(() => {
-        const g = window.SOL.game, L = window.SOL.logic, E = window.SOL.econ;
-        L.resetRun(g.run);
-        const sh = L.newShift(4);
-        sh.stamped = 40;
-        // shift 4 keeps nothing in the bin, so this is the empty case
-        g.go('trash', { shift: sh });
-        const tr = window.SOL.screens.trash;
-        const found = tr.found;
-        tr.sort(g);
-        const rec = g.run.shiftLog[0];
-        return {
-          found, screen: g.screen,
-          late: rec.late, sorted: rec.trashSorted,
-          deduction: rec.pay.late, rate: E.LATE_DEDUCTION
-        };
-      });
-      expect(r.found).toBe(null);
-      expect(r.screen).toBe('summary');
-      expect(r.late).toBe(true);
-      expect(r.sorted).toBe(true);
-      expect(r.deduction).toBe(-r.rate);
-    });
-
-  test('sorting it on a shift that has something opens it for reading',
-    async ({ page }) => {
-      await boot(page);
-      const r = await page.evaluate(() => {
-        const g = window.SOL.game, L = window.SOL.logic;
-        L.resetRun(g.run);
-        const sh = L.newShift(1);
-        sh.stamped = 26;
-        g.go('trash', { shift: sh });
-        const tr = window.SOL.screens.trash;
-        const id = tr.found.id;
-        tr.sort(g);
-        const opened = !!tr.open;
-        for (let i = 0; i < Math.ceil((L.readTime(tr.open.clue) + 0.5) * 60); i++) {
-          g.tick(1 / 60);
-        }
-        const read = tr.open.read;
-        tr.close_(g);
-        return { id, opened, read, awareness: g.run.awareness, seen: g.run.cluesSeen,
-                 screen: g.screen };
-      });
-      expect(r.opened).toBe(true);
-      expect(r.read).toBe(true);
-      expect(r.seen).toContain(r.id);
-      expect(r.awareness).toBeGreaterThan(0);
-      expect(r.screen).toBe('summary');
-    });
-
-  test('a shift walked off does not end at the bin', async ({ page }) => {
-    await boot(page);
-    const r = await page.evaluate(() => {
-      const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
-      L.resetRun(g.run);
-      g.run.revealed = true;
-      g.run.shift = 5;
-      g.go('shift');
-      for (let i = 0; i < 60 * 8; i++) g.tick(1 / 60);
-      sc.stopLine(g);          // arms it
-      sc.stopLine(g);          // and throws it
-      return { screen: g.screen, stopped: g.run.shiftLog[0].stopped };
-    });
-    expect(r.stopped).toBe(true);
     expect(r.screen).toBe('summary');
+    expect(r.sorted).toBe(false);
+    expect(r.binScrip).toBe(0);
+    expect(r.awareness).toBe(0);
+    // what was in it went out with the skip, and nothing said so
+    expect(r.passed).toBeGreaterThan(0);
   });
 });
 
@@ -663,7 +694,7 @@ test.describe('the reveal', () => {
       const r = await page.evaluate(() => {
         const L = window.SOL.logic;
         return {
-          says: /\bThe Final Solution\b/.test(L.REVEAL.lines.join(' ')),
+          says: /\bthe final solution\b/i.test(L.REVEAL.lines.join(' ')),
           via: L.REVEAL.via,
           inShiftClues: L.SHIFTS.some((s) =>
             L.cluesFor(s.n).some((c) => c.id === L.REVEAL.id)),
@@ -685,11 +716,11 @@ test.describe('the reveal', () => {
       for (let n = 1; n <= L.SHIFT_COUNT; n++) {
         g.run.shift = n;
         g.go('shift');
+        // head down, press only: the basket is never touched
         for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
           g.tick(1 / 60);
           if (g.screen === 'shift') sc.stamp(null);
         }
-        window.__clearBin();
         passed.push(g.run.shiftLog[n - 1].marksPassed);
       }
       return {
@@ -697,7 +728,10 @@ test.describe('the reveal', () => {
         awareness: g.run.awareness,
         canStop: L.canStop(g.run, L.newShift(6)),
         offered: passed.reduce((a, b) => a + b, 0),
-        total: L.CLUES.length - 1        // every clue but the circular
+        /* What the six shifts actually put within reach of this player.
+           Not the whole registry: the officer never called, and the two
+           bought channels were never bought. */
+        seen: g.run.shiftLog.reduce((a, s) => a + s.marksSeen, 0)
       };
     });
     expect(r.revealed).toBe(false);
@@ -707,7 +741,8 @@ test.describe('the reveal', () => {
     expect(r.canStop).toBe('unreasoned');
     /* Everything the run had to offer went past unfound, on all four
        channels, and at no point did the game say so. */
-    expect(r.offered).toBe(r.total);
+    expect(r.offered).toBe(r.seen);
+    expect(r.offered).toBeGreaterThan(10);
   });
 
   test('a player using every channel reaches it on shift 3', async ({ page }) => {
@@ -717,24 +752,22 @@ test.describe('the reveal', () => {
       L.resetRun(g.run);
       // the curious player has bought the set and the camera, and sorts the bin
       g.run.ledger.owned = ['radio', 'camera'];
-      window.__binPolicy = 'sort';
-      const seenPerShift = [];
+            const seenPerShift = [];
       for (let n = 1; n <= 3; n++) {
         g.run.shift = n;
         g.go('shift');
         for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
+          if (!sc.binDone && !sc.bin && !sc.open) window.__emptyBin();
           const r = sc.nearestReturn();
-          if (r && r.clue && !sc.open) sc.look(null);
+          if (r && r.clue && !sc.open) sc.look(r.x);
           if (sc.dockUp && !sc.open) sc.lookDock();
           g.tick(1 / 60);
           if (sc.open && sc.open.read) sc.closeInquiry();
           if (g.screen === 'shift' && !sc.open) sc.stamp(null);
         }
-        window.__clearBin();
         seenPerShift.push(g.run.cluesSeen.slice());
       }
-      window.__binPolicy = 'tip';
-      return {
+            return {
         revealed: g.run.revealed,
         on: g.run.revealedOn,
         beforeShift3: seenPerShift[1].indexOf(L.REVEAL.id) >= 0,
@@ -752,29 +785,60 @@ test.describe('the reveal', () => {
     expect(r.tier).toBe('know');
   });
 
-  test('one channel on its own never comes to it', async ({ page }) => {
+  /* Line 5 on its own cannot reach it at all, however diligently it is
+     worked: the circular is at the bottom of the basket and there is no
+     other way to it. The basket on its own does reach it, but not until
+     the fifth shift, with one night left to do anything about it. */
+  test('line 5 on its own never comes to it', async ({ page }) => {
     await boot(page);
     const r = await page.evaluate(() => {
       const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
       L.resetRun(g.run);
-      window.__binPolicy = 'sort';
       for (let n = 1; n <= L.SHIFT_COUNT; n++) {
         g.run.shift = n;
         g.go('shift');
         for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
+          const car = sc.nearestReturn();
+          if (car && car.clue && !sc.open) sc.look(car.x);
           g.tick(1 / 60);
-          if (g.screen === 'shift') sc.stamp(null);
+          if (sc.open && sc.open.read) sc.closeInquiry();
+          if (g.screen === 'shift' && !sc.open) sc.stamp(null);
         }
-        window.__clearBin();
       }
-      window.__binPolicy = 'tip';
-      return { revealed: g.run.revealed, on: g.run.revealedOn, awareness: g.run.awareness };
+      return {
+        revealed: g.run.revealed,
+        awareness: g.run.awareness,
+        binsSorted: g.run.binsSorted,
+        canStop: L.canStop(g.run, L.newShift(6))
+      };
     });
-    /* Sorting the bin every single shift, six shifts running, and it still
-       does not come to the circular. That is the shape of the thing: no one
-       channel is a route through, and nothing anywhere says so. */
-    expect(r.revealed).toBe(false);
+    expect(r.binsSorted).toBe(0);
     expect(r.awareness).toBeGreaterThan(0);
+    expect(r.revealed).toBe(false);
+    // and with it, walking off the line stays shut for the whole quarter
+    expect(r.canStop).toBe('unreasoned');
+  });
+
+  test('the basket on its own reaches it, and late', async ({ page }) => {
+    await boot(page);
+    const r = await page.evaluate(() => {
+      const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+      L.resetRun(g.run);
+      for (let n = 1; n <= L.SHIFT_COUNT; n++) {
+        g.run.shift = n;
+        g.go('shift');
+        for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
+          if (!sc.binDone && !sc.bin && !sc.open) window.__emptyBin();
+          g.tick(1 / 60);
+          if (sc.open && sc.open.read) sc.closeInquiry();
+          if (g.screen === 'shift' && !sc.open) sc.stamp(null);
+        }
+      }
+      return { revealed: g.run.revealed, on: g.run.revealedOn };
+    });
+    expect(r.revealed).toBe(true);
+    // two shifts later than a player who also turned pieces over
+    expect(r.on).toBeGreaterThan(3);
   });
 
   /* Both free channels, nothing bought. The circular must not be behind a
@@ -785,21 +849,19 @@ test.describe('the reveal', () => {
     const r = await page.evaluate(() => {
       const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
       L.resetRun(g.run);
-      window.__binPolicy = 'sort';
-      for (let n = 1; n <= 3; n++) {
+            for (let n = 1; n <= 3; n++) {
         g.run.shift = n;
         g.go('shift');
         for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
+          if (!sc.binDone && !sc.bin && !sc.open) window.__emptyBin();
           const car = sc.nearestReturn();
-          if (car && car.clue && !sc.open) sc.look(null);
+          if (car && car.clue && !sc.open) sc.look(car.x);
           g.tick(1 / 60);
           if (sc.open && sc.open.read) sc.closeInquiry();
           if (g.screen === 'shift' && !sc.open) sc.stamp(null);
         }
-        window.__clearBin();
       }
-      window.__binPolicy = 'tip';
-      return {
+            return {
         revealed: g.run.revealed, on: g.run.revealedOn,
         owned: g.run.ledger.owned.length, tier: L.awarenessTier(g.run)
       };
@@ -853,7 +915,9 @@ test.describe('awareness bands', () => {
       const run = L.newRun();
       const sh = L.newShift(1);
       sh.stamped = 24;
-      L.recordClue(run, sh, L.cluesFor(1)[0]);
+      // a weighted one: the first three items of shift 1 are tips
+      const weighted = L.CLUES.find((c) => c.weight > 0);
+      L.recordClue(run, sh, weighted);
       L.closeShift(run, sh);
       return run.shiftLog[0];
     });

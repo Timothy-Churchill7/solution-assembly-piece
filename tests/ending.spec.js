@@ -54,7 +54,7 @@ test.describe('reading the run', () => {
     async ({ page }) => {
       await boot(page);
       const blind = await build(page, { shifts: honest(), awareness: 0 });
-      const uneasy = await build(page, { shifts: honest(), awareness: 9 });
+      const uneasy = await build(page, { shifts: honest(), awareness: 5 });
       expect(blind.ending.id).toBe('blind');
       // suspicion without the circular is its own ending, and not the same one
       expect(uneasy.ending.id).toBe('uneasy');
@@ -274,7 +274,6 @@ test.describe('the run reaches an ending on its own', () => {
         g.tick(1 / 60);
         if (g.screen === 'shift') sc.stamp(null);
       }
-      window.__clearBin();
       window.SOL.screens.summary.advance(g);
       // the customer closes the contract before you get to think about it
       const atLetter = g.screen;
@@ -409,9 +408,10 @@ test.describe('the letter from the customer', () => {
         while (!g.run.finished && guard++ < 60 * 900) {
           if (g.screen === 'brief') { window.SOL.screens.brief.begin_(g); continue; }
           if (g.screen === 'summary') { window.SOL.screens.summary.advance(g); continue; }
-          if (g.screen === 'stores') { window.SOL.screens.stores.leave_(g); continue; }
-          if (g.screen === 'trash') { window.__clearBin(); continue; }
-          if (g.screen !== 'shift') break;
+          if (g.screen === 'officer') { window.__clearOfficer(); continue; }
+          if (g.screen === 'officer') { window.__clearOfficer(); continue; }
+        if (g.screen === 'stores') { window.SOL.screens.stores.leave_(g); continue; }
+                    if (g.screen !== 'shift') break;
           g.tick(1 / 60);
           if (g.screen === 'shift' && sc.candidate()) sc.stamp(null);
         }

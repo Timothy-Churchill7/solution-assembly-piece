@@ -144,15 +144,17 @@ test.describe('being told what can be withheld', () => {
           before, drawn,
           after: g.run.refusalTold,
           note: C.REFUSAL_NOTE,
-          /* No brief carries a welcome any more — the addendum slot exists
-             for this line alone, so nothing competes with it. */
-          anyWelcome: window.SOL.logic.SHIFTS.some((x) => !!C.shift(x.n).welcome)
+          /* Shift 1 has a welcome of its own — the foreman asking for the
+             basket to be emptied. Nothing from shift 2 on does, so nothing
+             ever competes with this line for the slot. */
+          lateWelcome: window.SOL.logic.SHIFTS
+            .filter((x) => x.n > 1 && !!C.shift(x.n).welcome).map((x) => x.n)
         };
       });
       expect(r.before).toBe(false);
       expect(r.drawn).toBe(false);
       expect(r.after).toBe(true);
-      expect(r.anyWelcome).toBe(false);
+      expect(r.lateWelcome).toEqual([]);
       // it names all three levers and says what it costs
       expect(r.note).toMatch(/do not stamp/i);
       expect(r.note).toMatch(/faulty piece you let go past/i);
@@ -172,12 +174,13 @@ test.describe('being told what can be withheld', () => {
       return {
         gone: [typeof sc.setShallow, typeof L.canSpoil, typeof L.spoilRisk,
                typeof sc.shallow].every((t) => t === 'undefined'),
-        // one switch at the station, and it is the master stop
+        /* One switch at the station and it is the master stop. The basket
+           is a hit region too, and it is a chore rather than a control. */
         controls: sc.hits.map((h) => h.id).filter((id) => id !== 'dock')
       };
     });
     expect(r.gone).toBe(true);
-    expect(r.controls).toEqual(['stop']);
+    expect(r.controls.sort()).toEqual(['bin', 'stop']);
   });
 });
 
@@ -268,53 +271,77 @@ test.describe('the run', () => {
   test('six shifts play end to end for a player using every channel',
     async ({ page }) => {
       await boot(page);
-      const r = await page.evaluate(() => {
+      const play = (policy) => page.evaluate((policy) => {
         const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
         L.resetRun(g.run);
         /* The most curious run the game allows: the set and the camera on
-           the bench from the start, every carrier turned over, every lorry
-           watched, every bin sorted. */
+           the bench from the start, every taped piece turned over, every
+           lorry watched, the basket emptied every night. */
         g.run.ledger.owned = ['radio', 'camera'];
-        window.__binPolicy = 'sort';
+        window.__officerPolicy = policy;
         g.go('brief');
         let guard = 0;
         while (g.screen !== 'menu' && !g.run.finished && guard++ < 60 * 900) {
           if (g.screen === 'brief') { window.SOL.screens.brief.begin_(g); continue; }
           if (g.screen === 'summary') { window.SOL.screens.summary.advance(g); continue; }
+          if (g.screen === 'officer') { window.__clearOfficer(); continue; }
           if (g.screen === 'stores') { window.SOL.screens.stores.leave_(g); continue; }
-          if (g.screen === 'trash') { window.__clearBin(); continue; }
           if (g.screen !== 'shift') break;
-          const car = sc.nearestReturn();
-          if (car && car.clue && !sc.open) sc.look(null);
+          if (!sc.binDone && !sc.bin && !sc.open) window.__emptyBin();
+          const car = sc.nearestCarrier();
+          if (car && !sc.open) sc.look(car.x);
           if (sc.dockUp && !sc.open) sc.lookDock();
           g.tick(1 / 60);
           if (sc.open && sc.open.read) sc.closeInquiry();
           if (g.screen === 'shift' && !sc.open && sc.candidate()) sc.stamp(null);
         }
-        window.__binPolicy = 'tip';
+        window.__officerPolicy = 'upgrade';
         return {
           log: g.run.shiftLog.map((s) => ({ n: s.n, target: s.target, aw: s.awareness })),
           finished: g.run.finished,
           awareness: g.run.awareness,
           revealedOn: g.run.revealedOn,
-          told: g.run.refusalTold,
+          upgraded: g.run.upgraded,
+          earned: g.run.ledger.earned,
           tier: L.awarenessTier(g.run),
           max: L.MAX_AWARENESS,
+          officerWeight: L.OFFICER_CLUE.weight,
           count: L.SHIFT_COUNT
         };
-      });
-      expect(r.log.map((s) => s.n)).toEqual([1, 2, 3, 4, 5, 6]);
-      expect(r.finished).toBe(true);
-      expect(r.count).toBe(6);
-      for (let i = 1; i < r.log.length; i++) {
-        expect(r.log[i].target).toBeGreaterThan(r.log[i - 1].target);
-        expect(r.log[i].aw).toBeGreaterThanOrEqual(r.log[i - 1].aw);
+      }, policy);
+
+      const asked = await play('answer');
+      const took = await play('upgrade');
+
+      expect(asked.log.map((s) => s.n)).toEqual([1, 2, 3, 4, 5, 6]);
+      expect(asked.finished).toBe(true);
+      expect(asked.count).toBe(6);
+      for (let i = 1; i < asked.log.length; i++) {
+        expect(asked.log[i].target).toBeGreaterThan(asked.log[i - 1].target);
+        expect(asked.log[i].aw).toBeGreaterThanOrEqual(asked.log[i - 1].aw);
       }
-      expect(r.revealedOn).toBe(3);
-      // and having found out, they were told once what could be done about it
-      expect(r.told).toBe(true);
-      expect(r.awareness).toBe(r.max);
-      expect(r.tier).toBe('sure');
+      expect(asked.revealedOn).toBe(3);
+      expect(asked.tier).toBe('sure');
+
+      /* The officer's answer is worth exactly its weight and nothing else,
+         and it is the only difference between the two runs — which is what
+         makes the question he asks a real one. */
+      expect(asked.upgraded).toBe(false);
+      expect(took.upgraded).toBe(true);
+      expect(asked.awareness - took.awareness).toBe(asked.officerWeight);
+
+      /* And the other side of it has to be worth something, or the question
+         is rhetorical. It was, for a while: the upgrade was written as more
+         stock arriving and the press cooldown is the ceiling, so the extra
+         stock went by unstamped and the offer paid nothing at all. The rate
+         is what carries it now — enough over the last three shifts to put
+         one more thing on the bench. */
+      expect(took.earned - asked.earned).toBeGreaterThan(50);
+
+      /* Neither run reaches the whole registry, and neither can: the
+         circular takes the basket on the night it turns up, so whatever
+         that basket held goes to the skip with it. */
+      expect(asked.awareness).toBeLessThan(asked.max);
     });
 
   test('a run played blind logs six shifts and learns nothing', async ({ page }) => {
@@ -328,9 +355,10 @@ test.describe('the run', () => {
         if (g.screen === 'brief') { window.SOL.screens.brief.begin_(g); continue; }
         if (g.screen === 'summary') { window.SOL.screens.summary.advance(g); continue; }
         // the stores sit between every pair of shifts; this player buys nothing
+        if (g.screen === 'officer') { window.__clearOfficer(); continue; }
+          if (g.screen === 'officer') { window.__clearOfficer(); continue; }
         if (g.screen === 'stores') { window.SOL.screens.stores.leave_(g); continue; }
-        if (g.screen === 'trash') { window.__clearBin(); continue; }
-        if (g.screen !== 'shift') break;
+                if (g.screen !== 'shift') break;
         g.tick(1 / 60);
         if (g.screen === 'shift' && sc.candidate()) sc.stamp(null);
       }
@@ -339,6 +367,7 @@ test.describe('the run', () => {
         awareness: g.run.awareness,
         tier: L.awarenessTier(g.run),
         passed: g.run.shiftLog.reduce((a, s) => a + s.marksPassed, 0),
+        seen: g.run.shiftLog.reduce((a, s) => a + s.marksSeen, 0),
         told: g.run.refusalTold,
         madeTarget: g.run.shiftLog.map((s) => s.stamped >= s.target),
         earned: g.run.ledger.earned,
@@ -349,7 +378,10 @@ test.describe('the run', () => {
     expect(r.awareness).toBe(0);
     expect(r.tier).toBe('none');
     // everything the run had to offer, on all four channels, went by unfound
-    expect(r.passed).toBe(12);
+    /* Everything the run put in reach, on every channel, went by unfound.
+       Twenty items now rather than twelve, because most of them are tips. */
+    expect(r.passed).toBe(r.seen);
+    expect(r.passed).toBeGreaterThan(15);
     expect(r.owned).toBe(0);
     // never found out, so never told what could be done about it
     expect(r.told).toBe(false);

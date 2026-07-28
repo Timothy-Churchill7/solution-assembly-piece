@@ -297,6 +297,10 @@
       SOL.audio.confirm();
       if (!L.isLastShift(rec.n)) {
         g.run.shift = rec.n + 1;
+        /* Once, on the way to the shift he was waiting for. He comes
+           before the stores, so whichever way it goes the player spends
+           the evening living with it. */
+        if (L.officerDue(g.run)) { g.go('officer'); return; }
         // the stores are open between shifts, and the brief is on the far
         // side of them — you are paid and then given somewhere to spend it
         g.go('stores');

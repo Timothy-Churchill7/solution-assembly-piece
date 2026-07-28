@@ -117,7 +117,15 @@
 
   /* The four channels. Nothing in the build lights up to tell you an item
      is available; the channel is where it will be if you go and look. */
-  L.CHANNELS = ['part', 'radio', 'dock', 'trash'];
+  L.CHANNELS = ['part', 'radio', 'dock', 'trash', 'officer'];
+
+  /* Tips are weight 0 and carry no story at all — they are how to work the
+     press, what a fault looks like, which thing in the stores is worth the
+     money. They exist so that looking is rewarded long before it costs
+     anything, and so that a player who only ever finds tips never advances
+     the story by accident. */
+  L.TIERS = ['tip', 'odd', 'damning', 'reveal'];
+  L.isTip = function (c) { return (c.weight || 0) === 0; };
 
   /* Two of the channels are bench kit and have to be bought before they
      carry anything at all. A run that never buys them cannot reach what
@@ -154,14 +162,46 @@
   L.REVEAL = C ? C.REVEAL : null;
   if (L.REVEAL) L.CLUES.push(L.REVEAL);
 
+  /* ---------- the officer ----------
+     Once, between shifts, a man from the works office puts one question:
+     a heavier line for the rest of the quarter, or an answer about where
+     the freight goes. There is no way to have both and he does not come
+     back. It is the argument of the whole piece as a single click, and it
+     is the only place the game states the trade out loud. */
+  L.OFFICER_CLUE = C ? C.OFFICER_CLUE : null;
+  if (L.OFFICER_CLUE) L.CLUES.push(L.OFFICER_CLUE);
+
+  L.OFFICER_SHIFT = 4;          // he is waiting when you clock off shift 3
+  L.UPGRADE_SPAWN = 0.87;       // ~15% more stock arriving, for the rest of it
+
+  L.officerDue = function (run) {
+    return !!run && !run.officerAnswered && run.shift === L.OFFICER_SHIFT;
+  };
+
+  /* The shift as it is actually run, which is the schedule unless the
+     player took the heavier line. Everything downstream — capacity, the
+     arrivals cap, what the belt does — reads through this. */
+  L.runConfig = function (n, run) {
+    var cfg = L.shiftConfig(n);
+    if (!run || !run.upgraded) return cfg;
+    var out = {};
+    Object.keys(cfg).forEach(function (k) { out[k] = cfg[k]; });
+    out.spawn = cfg.spawn * L.UPGRADE_SPAWN;
+    return out;
+  };
+
   L.REVEAL_FROM_SHIFT = 3;
   /* What the two free channels together are worth by the end of shift 3 —
-     the piece on line 5 and the bin by the door, used every time. It is
+     the pieces on line 5 and the bin at the station, used every time. It is
      deliberately payable without buying anything, so the circular is never
-     behind a price; the radio and the camera buy you more of the story and
-     a wider margin for error, not the ending. One channel on its own does
-     not come to it, and a test says so. */
-  L.REVEAL_MIN_AWARENESS = 8;
+     behind a price; the radio and the camera buy more of the story and a
+     wider margin, not the ending.
+
+     Three, because seven of the twenty items are tips and weigh nothing.
+     That is the whole point of them: a shift spent finding out how to work
+     the press faster is a shift that has taught you nothing about the
+     customer, and the arithmetic has to agree. */
+  L.REVEAL_MIN_AWARENESS = 3;
 
   L.canReveal = function (run, shift) {
     if (!L.REVEAL || !run || run.revealed) return false;
@@ -176,15 +216,18 @@
      nothing at all. It is the only channel that is free, always open, and
      never worth it on the balance of probability. */
 
+  /* Everything in the basket tonight, in the order it is lying in it. An
+     array rather than one item: a shift can put two papers in there and
+     handing over only the first made the second unreachable for the whole
+     run.
+
+     The circular is under all of it and takes the night when it is there,
+     because a basket that gives it up gives up nothing else. */
   L.trashFor = function (run, shift) {
-    /* The circular is under everything else, and it takes the night when
-       it is there: a bin that gives it up gives up nothing else, and
-       whatever the shift had put in it is simply gone with the skip. */
-    if (L.canReveal(run, shift)) return L.REVEAL;
-    var left = L.cluesVia(shift.n, 'trash').filter(function (c) {
+    if (L.canReveal(run, shift)) return [L.REVEAL];
+    return L.cluesVia(shift.n, 'trash').filter(function (c) {
       return run.cluesSeen.indexOf(c.id) < 0;
     });
-    return left.length ? left[0] : null;
   };
 
   L.MAX_AWARENESS = L.CLUES.reduce(function (a, c) { return a + c.weight; }, 0);
@@ -248,9 +291,9 @@
      plus the reveal itself. Below that the player has suspicions and no
      more than suspicions, which is the honest description of it. */
   L.AWARENESS_TIERS = [
-    { id: 'sure',  min: 28 },
-    { id: 'know',  min: 14 },   // REVEAL_MIN_AWARENESS + REVEAL.weight
-    { id: 'doubt', min: 6 },
+    { id: 'sure',  min: 26 },
+    { id: 'know',  min: 9 },    // REVEAL_MIN_AWARENESS + REVEAL.weight
+    { id: 'doubt', min: 4 },
     { id: 'trace', min: 1 },
     { id: 'none',  min: 0 }
   ];
@@ -278,6 +321,8 @@
       scrapped: 0,       // parts deliberately destroyed
       cluesSeen: [],     // ids of inquiry items opened, in order
       awareness: 0,      // points accumulated from those items
+      upgraded: false,   // the officer's heavier line was taken
+      officerAnswered: false,  // he has been answered, one way or the other
       revealed: false,   // the circular was read through
       revealedOn: null,  // and the shift it happened on
       refusalTold: false,// the brief has said what this station can withhold
@@ -303,8 +348,8 @@
 
   /* ---------- a single shift in progress ---------- */
 
-  L.newShift = function (n) {
-    var cfg = L.shiftConfig(n);
+  L.newShift = function (n, run) {
+    var cfg = L.runConfig(n, run);
     return {
       n: n,
       cfg: cfg,
@@ -319,7 +364,8 @@
       marksSeen: 0,      // items this shift put within reach, on any channel
       marksPassed: 0,    // of those, the ones that went by unfound
       looked: 0,         // pieces turned over on line 5, finding or not
-      trashSorted: false,// the bin was sorted rather than tipped
+      trashSorted: false,// the basket was emptied
+      binScrip: 0,       // and what the foreman put in it for that
       stopped: false,    // the shift ended because the operator stopped it
       late: false,       // still on the floor after the hooter
       /* line 5 */
@@ -372,6 +418,8 @@
     /* Pay is settled here rather than on the summary screen, so a shift
        that is never looked at is still a shift that was paid for. */
     var pay = E.payFor({
+      upgraded: run.upgraded,
+      binScrip: shift.binScrip,
       stamped: shift.stamped,
       target: shift.cfg.target,
       rejects: shift.rejects,
@@ -404,6 +452,7 @@
       opened: shift.opened.slice(),
       lostToInquiry: shift.lostToInquiry,
       readSecs: shift.readSecs,
+      marksSeen: shift.marksSeen,
       marksPassed: shift.marksPassed,
       looked: shift.looked,
       trashSorted: shift.trashSorted,

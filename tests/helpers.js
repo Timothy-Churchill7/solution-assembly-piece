@@ -18,25 +18,52 @@ async function boot(page, query = '') {
     window.SOL.game.frame > 3);
 
   /* Page-side conveniences for tests that drive the run rather than the
-     pixels. Every shift now ends at the bin, so a test that wants a closed
-     shift has to say what it did with it — `binPolicy` is that choice,
-     defaulted to what almost every player will actually do. */
+     pixels. The bin is emptied at the station during a shift now, so there
+     is no interstitial to clear — `__emptyBin` does the chore from the
+     outside, sorting every item and reading whatever was marked. */
   await page.evaluate(() => {
-    window.__binPolicy = 'tip';
-    window.__clearBin = function () {
-      const g = window.SOL.game, tr = window.SOL.screens.trash;
-      if (g.screen !== 'trash') return false;
-      if (window.__binPolicy === 'sort') {
-        tr.sort(g);
-        // sorting may open whatever was in it; read it through, then go
-        if (tr.open) {
-          const need = window.SOL.logic.readTime(tr.open.clue) + 0.2;
+    window.__binPolicy = 'skip';
+    window.__clearBin = function () { return false; };
+
+    /* Emptying the basket is a clocking-off chore — the foreman asks for
+       it "before you clock off" — so the harness does it in the last third
+       of the shift, which is when a player would. It matters: what is in
+       the basket is resolved when it is opened, so a bin emptied at the
+       start of shift 3 has not yet earned the circular and one emptied at
+       the end has. */
+    window.__emptyBin = function (anyTime) {
+      const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+      if (g.screen !== 'shift' || sc.binDone || sc.bin) return false;
+      if (!anyTime && sc.shift.timeLeft > sc.shift.cfg.duration * 0.35) return false;
+      if (!sc.openBin(g)) return false;
+      for (let n = 0; n < 40 && sc.bin; n++) {
+        const next = sc.bin.items.findIndex((i) => !i.gone);
+        if (next < 0) break;
+        sc.sortItem(next, g);
+        if (sc.open) {
+          const need = L.readTime(sc.open.clue) + 0.2;
           for (let i = 0; i < Math.ceil(need * 60); i++) g.tick(1 / 60);
-          tr.close_(g);
+          sc.closeInquiry();
         }
-      } else {
-        tr.tip(g);
       }
+      if (sc.bin) sc.closeBin(g);
+      return true;
+    };
+
+    /* Answer the man from the works office, whichever way the caller
+       wants. Defaults to the upgrade, which is what most people take. */
+    window.__officerPolicy = 'upgrade';
+    window.__clearOfficer = function () {
+      const g = window.SOL.game, sc = window.SOL.screens.officer, L = window.SOL.logic;
+      if (g.screen !== 'officer') return false;
+      if (window.__officerPolicy === 'answer') {
+        sc.askAnswer(g);
+        const need = L.readTime(sc.open.clue) + 0.2;
+        for (let i = 0; i < Math.ceil(need * 60); i++) g.tick(1 / 60);
+      } else {
+        sc.takeUpgrade(g);
+      }
+      sc.close_(g);
       return true;
     };
   });

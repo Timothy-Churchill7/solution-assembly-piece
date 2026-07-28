@@ -5,11 +5,14 @@ for. You stand at a finishing line in a components plant across six shifts,
 stamping parts to meet a quota and watching a second line for pieces that
 will not pass. The schedule rises every shift. Your hands do not.
 
-Nothing in it announces itself. There is no marker, no prompt and no colour
-on a working shift; what there is to find arrives on the ordinary channels
-of a working night — a faulty piece somebody has been at, a bench radio, a
-camera pointed at the yard, the bin by the door — and every one of them
-costs you output to use. The plant records output and nothing else.
+Nothing announces itself except a strip of red tape, which is the only
+colour on a working shift and the only thing in the building that tells you
+something is worth reading. What it marks arrives on the ordinary channels
+of a working night — a piece coming down the return line, the basket at
+your station, a bench radio, a camera pointed at the yard, a man from the
+works office who will answer one question or pay you not to ask it — and
+every one of them costs you output to use. The plant records output and
+nothing else.
 
 There is no clean win. The ending is decided by how much you chose to know
 and what you did on the nights after you knew.
@@ -40,8 +43,8 @@ entirely through paperwork, routing, silhouette and omission.
 The final screen is a letter from the office the parts were going to. It
 carries that office's seal — a swastika, in red — is signed by the man who
 ran the programme, and states plainly what the work was for. That is the
-only screen in the build with a symbol on it, the only one with a real
-name on it, and the only colour anywhere in the piece. All of it is
+only screen in the build with a symbol on it and the only one with a real
+name on it. All of it is
 deliberate and all of it is late: the run withholds the name of the thing
 for six shifts so that the moment it is said carries what it should.
 Nothing here celebrates or endorses any of it — the seal is the object of
@@ -100,8 +103,10 @@ check by hand, and the rough edges I know about.
 | `js/scene.js` | The hall: silhouettes, lamps, belt, parts. |
 | `js/econ.js` | Pure economy: pay, the stores, what a pair of hands can do. |
 | `js/screens.js` | Shared chrome, menu, about, handbook. |
-| `js/shift.js` | The station: both lines, the press, the four channels. |
-| `js/stores.js` `js/trash.js` `js/ending.js` | The screens between and after shifts. |
+| `js/shift.js` | The station: both lines, the press, the basket, four of the five channels. |
+| `js/officer.js` | The fifth: one question, asked out loud, once. |
+| `js/letter.js` `js/seal.js` | The last screen, and its seal as inlined vector data. |
+| `js/stores.js` `js/ending.js` | The screens between and after shifts. |
 | `js/draw.js` | Canvas primitives — type, plates, rivets, CRT surface. |
 | `js/audio.js` | Every sound, procedural. No asset files anywhere in the build. |
 | `tests/` | Playwright: logic assertions and screenshot capture. |

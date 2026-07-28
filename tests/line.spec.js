@@ -35,9 +35,6 @@ test.describe('shift lifecycle', () => {
     await page.keyboard.press('Enter');            // TAKE THE STATION
     expect(await screenName(page)).toBe('shift');
     await page.evaluate(() => window.SOL.game.step(70));
-    // the bin by the door sits between the hooter and the sheet
-    expect(await screenName(page)).toBe('trash');
-    await page.evaluate(() => window.__clearBin());
     expect(await screenName(page)).toBe('summary');
   });
 
@@ -52,7 +49,6 @@ test.describe('shift lifecycle', () => {
     expect(await screenName(page)).toBe('shift');
 
     await page.evaluate(() => window.SOL.game.step(6));
-    await page.evaluate(() => window.__clearBin());
     expect(await screenName(page)).toBe('summary');
     const log = await page.evaluate(() => window.SOL.game.run.shiftLog);
     expect(log).toHaveLength(1);
@@ -167,7 +163,6 @@ test.describe('scoring and the record', () => {
       for (let i = 0; i < 60 * 80; i++) {
         g.tick(1 / 60);
         if (n < 5 && sc.stamp(null)) n++;
-        if (g.screen === 'trash') { window.__clearBin(); }
         if (g.screen === 'summary') break;
       }
       return { log: g.run.shiftLog, run: g.run };

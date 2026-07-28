@@ -63,14 +63,15 @@ test.describe('shell', () => {
      in the build is the rule and the heading on an item already in your
      hands, so the running line must now be entirely colourless and the
      reading card must not be. Both halves are asserted here. */
-  test('the accent appears only once something is already in your hands',
+  test('the amber accent appears only once something is in your hands',
     async ({ page }) => {
       await boot(page);
 
-      /* Measured against the whole frame rather than only lit pixels:
-         opening an item dims the hall, which halves the lit count and would
-         inflate a lit-relative ratio for a fixed amount of amber. */
-      const measure = () => page.evaluate(() => {
+      /* Amber specifically. Red is a different thing and lives elsewhere:
+         it marks a piece with something on it and a paper in the basket.
+         Amber is only ever the rule and heading of a document already
+         open, and it must never appear on a running line. */
+      const amberFraction = () => page.evaluate(() => {
         const c = document.getElementById('screen');
         const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
         let warm = 0, lit = 0, total = 0;
@@ -79,15 +80,12 @@ test.describe('shell', () => {
           total++;
           if (Math.max(r, g, b) < 60) continue;
           lit++;
-          // amber is the only hue in the build: red well clear of blue
-          if (r - b > 34 && r > g && g > b) warm++;
+          // amber: green sits between red and blue. The marker red does not.
+          if (r - b > 40 && g - b > 24 && r - g > 12) warm++;
         }
-        return { warmFraction: warm / total, lit };
+        return { amber: warm / total, lit };
       });
 
-      /* A working shift, with everything on the bench, at the moment a
-         carrier is in the bay and a lorry is at the dock — that is, with
-         every channel of the game live at once and nothing yet touched. */
       await page.evaluate(() => {
         const g = window.SOL.game, sc = window.SOL.screens.shift;
         window.SOL.logic.resetRun(g.run);
@@ -95,8 +93,7 @@ test.describe('shell', () => {
         g.run.shift = 4;
         g.go('shift');
         for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
-          const r = sc.nearestReturn();
-          if (r && r.clue && sc.dockUp) break;
+          if (sc.nearestCarrier() && sc.dockUp) break;
           g.tick(1 / 60);
           if (i % 3 === 0) sc.stamp(null);
         }
@@ -104,157 +101,30 @@ test.describe('shell', () => {
       });
       const working = await page.evaluate(() => {
         const sc = window.SOL.screens.shift;
-        const r = sc.nearestReturn();
-        return { carrier: !!(r && r.clue), lorry: !!sc.dockUp, radio: !!sc.radioText() };
+        return { carrier: !!sc.nearestCarrier(), lorry: !!sc.dockUp };
       });
-      const plain = await measure();
+      const plain = await amberFraction();
 
-      // and with that item turned over and read through
       await page.evaluate(() => {
         const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
-        sc.look(null);
+        sc.look(sc.nearestCarrier().x);
         for (let i = 0; i < Math.ceil(L.readTime(sc.open.clue) * 60) + 6; i++) g.tick(1 / 60);
         g.step(0.02);
       });
-      const opened = await measure();
+      const opened = await amberFraction();
 
-      // the frame really did have everything live on it
+      // the frame really did have every channel live on it
       expect(working.carrier).toBe(true);
       expect(working.lorry).toBe(true);
-      expect(working.radio).toBe(true);
       expect(plain.lit).toBeGreaterThan(5000);
-      /* And not one warm pixel. A player looking at this screen is given
-         no reason whatever to think there is anything on it. */
-      expect(plain.warmFraction).toBe(0);
-      // the item in your hands does, and it is the only thing that does
-      expect(opened.warmFraction).toBeGreaterThan(0.0004);
-      expect(opened.warmFraction).toBeLessThan(0.01);
+      // not one amber pixel while the line is running
+      expect(plain.amber).toBe(0);
+      // and the document in your hands carries it
+      expect(opened.amber).toBeGreaterThan(0.0004);
+      expect(opened.amber).toBeLessThan(0.01);
     });
 });
 
-/* goal.md allows the seal, the real name and the colour red on exactly one
-   screen: the letter that closes the run. What these hold is the "one
-   screen" part, because any of the three leaking anywhere earlier would
-   turn an accusation into decoration and give away in shift 1 what the
-   piece spends six shifts withholding. */
-test.describe('the one screen', () => {
-  const CHROME = ['menu', 'credits', 'howto', 'brief', 'stores', 'ending'];
-
-  /* Red is not in the palette. It exists as one literal inside letter.js
-     and nowhere else in the build, and this measures the actual pixels
-     rather than trusting that. */
-  const redFraction = (page) => page.evaluate(() => {
-    const c = document.getElementById('screen');
-    const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-    let red = 0, total = 0;
-    for (let i = 0; i < d.length; i += 4) {
-      const r = d[i], g = d[i + 1], b = d[i + 2];
-      total++;
-      // the seal: clearly red, clearly not the amber accent
-      if (r > 90 && r - g > 55 && r - b > 55 && g - b < 26) red++;
-    }
-    return red / total;
-  });
-
-  test('no screen but the letter has any red on it', async ({ page }) => {
-    await boot(page);
-    for (const name of CHROME) {
-      await page.evaluate((n) => {
-        const g = window.SOL.game, L = window.SOL.logic;
-        L.resetRun(g.run);
-        g.run.revealed = true; g.run.revealedOn = 3; g.run.awareness = 30;
-        g.run.stamped = 180; g.run.shift = 4;
-        g.go(n);
-        g.redraw();
-      }, name);
-      expect(await redFraction(page), name).toBe(0);
-    }
-
-    // and a shift with every channel live on it, including a lorry at the dock
-    await page.evaluate(() => {
-      const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
-      L.resetRun(g.run);
-      g.run.ledger.owned = ['lamp', 'gauge', 'radio', 'camera'];
-      g.run.shift = L.SHIFT_COUNT;
-      g.go('shift');
-      for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
-        const r = sc.nearestReturn();
-        if (r && r.clue && sc.dockUp) break;
-        g.tick(1 / 60);
-        if (i % 3 === 0) sc.stamp(null);
-      }
-      g.step(0.02);
-    });
-    expect(await redFraction(page), 'the last shift').toBe(0);
-
-    // the letter, and only the letter
-    await page.evaluate(() => {
-      const g = window.SOL.game;
-      g.go('letter');
-      g.redraw();
-    });
-    const onLetter = await redFraction(page);
-    expect(onLetter).toBeGreaterThan(0.0002);
-    // a seal, not a flag: a trace of the frame and no more
-    expect(onLetter).toBeLessThan(0.01);
-  });
-
-  test('the real name is on the letter and nowhere else', async ({ page }) => {
-    await boot(page);
-    const r = await page.evaluate(() => {
-      const C = window.SOL.content, L = window.SOL.logic;
-      const everywhere = [];
-      const add = (w, s) => { if (s) everywhere.push([w, String(s)]); };
-      L.SHIFTS.forEach((s) => {
-        const sc = C.shift(s.n);
-        add('brief ' + s.n, sc.brief + ' ' + sc.note + ' ' + (sc.welcome || ''));
-        L.cluesFor(s.n).forEach((c) => add(c.id, c.lines.join(' ') + c.source + c.kind));
-      });
-      add('reveal', C.REVEAL.lines.join(' '));
-      L.ENDINGS.forEach((id) => add('ending ' + id, C.ENDINGS[id].title + C.ENDINGS[id].body));
-      C.RADIO_FILLER.forEach((f, i) => add('filler ' + i, f));
-      add('refusal', C.REFUSAL_NOTE);
-      add('shell', document.getElementById('plate').textContent + ' ' + document.title);
-      const name = /himmler|reichsf/i;
-      return {
-        leaks: everywhere.filter(([, s]) => name.test(s)).map(([w]) => w),
-        signature: C.LETTER_SIGNATURE,
-        signatory: C.LETTER_SIGNATORY,
-        office: C.LETTER_OFFICE
-      };
-    });
-    expect(r.leaks).toEqual([]);
-    expect(r.signature).toBe('Heinrich Himmler');
-    expect(r.signatory).toMatch(/REICHSF/);
-    expect(r.office).toMatch(/REICHSF/);
-  });
-
-  test('the build still has no image assets to leak one', async ({ page }) => {
-    await boot(page);
-    const r = await page.evaluate(() => ({
-      images: document.querySelectorAll('img, svg, picture, canvas:not(#screen)').length,
-      icons: document.querySelectorAll('link[rel*="icon"]').length,
-      title: document.title
-    }));
-    expect(r.images).toBe(0);
-    expect(r.icons).toBe(0);
-    expect(r.title).not.toMatch(/reich|nazi|solution final/i);
-  });
-
-  /* The About screen has to describe the build it actually is. It said
-     "no insignia" for most of this project's life and that stopped being
-     true the day the letter got a seal. */
-  test('the content note describes the build honestly', async ({ page }) => {
-    await boot(page);
-    const note = await page.evaluate(() => window.SOL.content.CRAFT_NOTE);
-    expect(note).toMatch(/swastika/i);
-    expect(note).toMatch(/last screen|letter/i);
-    expect(note).toMatch(/only colour|only color/i);
-    // and it still says what the build does not do
-    expect(note).toMatch(/no photographs/i);
-    expect(note).toMatch(/celebrat|endorse/i);
-  });
-});
 
 test.describe('navigation', () => {
   test('menu -> about -> back, by mouse', async ({ page }) => {

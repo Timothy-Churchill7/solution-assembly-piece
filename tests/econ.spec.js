@@ -223,7 +223,6 @@ test.describe('the press cycle', () => {
         g.tick(1 / 60);
         if (g.screen === 'shift') sc.stamp(null);
       }
-      window.__clearBin();
       const rec = g.run.shiftLog[g.run.shiftLog.length - 1];
       return {
         stamped: rec.stamped,
@@ -248,7 +247,6 @@ test.describe('the stores between shifts', () => {
         g.tick(1 / 60);
         if (g.screen === 'shift') sc.stamp(null);
       }
-      window.__clearBin();
       const rec = g.run.shiftLog[0];
       const onSummary = g.screen;
       window.SOL.screens.summary.advance(g);
@@ -313,8 +311,7 @@ test.describe('the stores between shifts', () => {
           g.tick(1 / 60);
           if (g.screen === 'shift') sc.stamp(null);
         }
-        window.__clearBin();
-        return g.run.shiftLog[g.run.shiftLog.length - 1].stamped;
+          return g.run.shiftLog[g.run.shiftLog.length - 1].stamped;
       }
       const bare = run([]);
       const pedal = run(['pedal']);

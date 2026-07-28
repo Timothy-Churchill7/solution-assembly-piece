@@ -42,6 +42,14 @@
     bright:   '#f0f2f3',
     white:    '#f9fafa',
 
+    /* Red, and the only red on the working screens. It marks a thing that
+       has something on it — a piece coming down line 5 that somebody has
+       been at, a balled-up paper in the bin. It is a marker and nothing
+       else: it never carries meaning of its own, and the seal on the
+       closing letter is a different red for a different reason. */
+    mark:     '#b8392c',
+    markLo:   '#7d2118',
+
     // the one thing letting light in
     accent:   '#c8912e',
     accentHi: '#efc274',
