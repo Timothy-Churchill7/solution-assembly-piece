@@ -9,3 +9,9 @@ shots/
 # The brief this was built to, kept out of the published result on purpose.
 goal.md
 prompt.md
+
+# The source artwork for the closing seal, inlined into js/seal.js. Kept out
+# of the repository because GitHub renders SVGs inline, and a bare file of
+# it at the root is precisely the "mistaken for the piece's own identity"
+# case prompt.md rules out. It belongs on the last screen and nowhere else.
+swastika_seal.svg

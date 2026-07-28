@@ -45,6 +45,10 @@ These are the things the suite cannot judge.
    say whether the composition is pointing anywhere.
 5. **Read the eight endings back to back.** None may read as praise or as a
    scolding.
+6. **Read the closing letter cold, after a run that delivered.** It is the
+   only screen that names the thing, and the only one with a seal, a real
+   signature or any colour on it. It should read as a form somebody worked
+   through in a stack — if it reads as gloating, it has let the player off.
 
 ## Measured balance
 
@@ -120,6 +124,63 @@ behind a price. One channel alone never reaches it.
 420 seconds of line time across six shifts, plus the brief, the bin, the
 sheet and the stores between each. Call it twelve to fifteen minutes.
 
+## Refusal, and what it costs
+
+There is no hidden control. An earlier build had a depth stop on the press
+that let you wreck the work while the plant's count went on being met; it
+was removed, because it let refusal cost the player nothing and taught
+them that the sheet is the only thing that can be fought.
+
+What a station can withhold is what a station does, and the brief says so
+in as many words the first time you clock on knowing:
+
+- parts you do not stamp
+- faults you let past on line 5
+- sound stock you put down the scrap chute
+
+All three land on the sheet and all three cost the bonus — **and that is
+the entire consequence.** Nobody comes down to the floor, nothing is
+confiscated and nobody calls at the house. The handbook says so before the
+first shift, the brief says so again the first time you clock on knowing,
+and the closing letter says it a third time in the office's own words: *no
+proceedings arise from a contract closure.*
+
+That is deliberate and it is load-bearing. A player who is not certain
+refusal is safe can tell themselves afterwards that they were afraid, and
+the piece becomes a story about coercion instead of one about a bonus. Two
+tests keep it said, and a third scans every line in the build for anything
+that threatens the player with something worse.
+
+To the customer the three are the same shortfall and the ending cannot
+tell them apart. What it
+*can* tell apart is how they read on a sheet: an empty count or a full
+chute is a night nobody can explain away, and a full count of faulty work
+is the only way to withhold everything and still look like a good
+operator.
+
+## The last screen
+
+Every run ends at a letter from the office the parts were going to —
+before the ending screen, and regardless of whether the player ever
+investigated anything. It branches on what was actually delivered across
+the whole run:
+
+| delivered | letter |
+| --- | --- |
+| 85% or more | thanked for its part in the work of The Final Solution |
+| 55–85% | a remark; the programme was not materially delayed |
+| under 55% | reprimanded; the work was held up while replacements were found |
+
+It carries the office's seal — an eagle over a wreathed swastika, the
+swastika in red and the only colour anywhere in the build — and is signed
+Heinrich Himmler, Reichsführer-SS. The seal is vector artwork inlined into
+`js/seal.js` as Path2D data rather than kept as a file, so the build stays
+what it has always been: a folder of text with no assets in it. Every document
+before it is unsigned or countersigned by a department number with no
+department name; this is what that omission was for. A player who found a
+way to withhold work is told by the perpetrators that it registered, which
+is the only acknowledgement the piece ever offers.
+
 ## Known rough edges
 
 - **The bin is four clicks' worth of interstitial per shift** (bin → sheet
@@ -133,10 +194,14 @@ sheet and the stores between each. Call it twelve to fifteen minutes.
 - **The radio is text only.** There is a blip when a line arrives and no
   voice under it. That is a deliberate limit of a build with no asset
   files, but it does mean the set is quieter than a real one would be.
+- **The letter is a hard tonal break** from the six shifts before it, on
+  purpose. Whether the break lands or merely jars is the one thing I would
+  most want a first-time player's reaction to, and it is not something the
+  suite can tell me.
 
 ## What the suite covers
 
-156 tests. The load-bearing ones, if you only read a few:
+168 tests. The load-bearing ones, if you only read a few:
 
 - `econ.spec.js` — the schedule outruns a pair of unaided hands
 - `returns.spec.js` — nothing but a stamp touches the cooldown, and exactly
@@ -145,4 +210,5 @@ sheet and the stores between each. Call it twelve to fifteen minutes.
   be missed
 - `ending.spec.js` — the count, the bonus and the book decide nothing
 - `layout.spec.js` — every posted notice fits between the rails
-- `shell.spec.js` — no colour on a working shift; nothing from the novel
+- `shell.spec.js` — no colour on a working shift; the seal, the real name
+  and the colour red appear on exactly one screen; nothing from the novel

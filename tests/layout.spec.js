@@ -80,17 +80,17 @@ test.describe('posted notices fit between the rails', () => {
 
   /* The worst end-of-shift sheet the game can produce: a late shift with
      the scrap chute cut, work sent back, good stock pulled in error, the
-     feeder running, parts stamped short, and the sample flagged. */
+     feeder running, and something read on the line. */
   test('the end-of-shift sheet at its very fullest', async ({ page }) => {
     await boot(page);
     const r = await page.evaluate(() => {
-      const g = window.SOL.game, L = window.SOL.logic, E = window.SOL.econ;
+      const g = window.SOL.game, L = window.SOL.logic;
       L.resetRun(g.run);
       const sh = L.newShift(6);
-      sh.stamped = 44; sh.spoiled = 12; sh.missed = 9; sh.scrapped = 4;
+      sh.stamped = 44; sh.missed = 9; sh.scrapped = 4;
       sh.rejects = 5; sh.late = true; sh.lostToInquiry = 7; sh.marksPassed = 2;
       sh.pulled = 11; sh.pulledFaulty = 8; sh.pulledSound = 3; sh.autoStamped = 19;
-      L.closeShift(g.run, sh, 0);        // roll of 0 flags whenever risk > 0
+      L.closeShift(g.run, sh);
       g.go('summary');
       g.redraw();
       const sc = window.SOL.screens.summary;
@@ -98,14 +98,14 @@ test.describe('posted notices fit between the rails', () => {
       return {
         card: sc.card,
         button: sc.hits[0],
-        flagged: rec.flagged,
+        usable: rec.usable,
         cols: sc.columns(rec)
       };
     });
     // the case really is the full one, or the test is proving nothing
-    expect(r.flagged).toBe(true);
+    expect(r.usable).toBe(39);
     expect(r.cols.sheet.length).toBe(6);
-    expect(r.cols.own.length).toBe(8);
+    expect(r.cols.own.length).toBe(7);
     fits(r.card, 'summary');
     expect(r.button.y + r.button.h).toBeLessThanOrEqual(r.card.y + r.card.h);
   });
@@ -117,7 +117,7 @@ test.describe('posted notices fit between the rails', () => {
       L.resetRun(g.run);
       const sh = L.newShift(1);
       sh.stamped = 26;
-      L.closeShift(g.run, sh, 1);
+      L.closeShift(g.run, sh);
       g.go('summary');
       g.redraw();
       const sc = window.SOL.screens.summary;
@@ -140,7 +140,7 @@ test.describe('the last screen', () => {
         const g = window.SOL.game, L = window.SOL.logic;
         L.resetRun(g.run);
         // stand a run up with plausible figures, then force the branch
-        g.run.stamped = 214; g.run.spoiled = 96; g.run.looked = 31;
+        g.run.stamped = 214; g.run.rejects = 96; g.run.looked = 31;
         g.run.binsSorted = 4; g.run.awareness = 39;
         g.run.ledger.earned = 470; g.run.ledger.spent = 325;
         g.run.revealed = true; g.run.revealedOn = 3;
@@ -165,7 +165,7 @@ test.describe('the last screen', () => {
       const g = window.SOL.game, L = window.SOL.logic, D = window.SOL.D;
       const ctx = document.getElementById('screen').getContext('2d');
       L.resetRun(g.run);
-      g.run.stamped = 9999; g.run.spoiled = 8888;
+      g.run.stamped = 9999; g.run.rejects = 8888;
       g.run.looked = 999; g.run.binsSorted = 6;
       g.run.ledger.earned = 9999; g.run.ledger.spent = 9999;
       // the widest the awareness value ever gets
@@ -185,5 +185,29 @@ test.describe('the last screen', () => {
       return bad;
     });
     expect(over).toEqual([]);
+  });
+});
+
+/* Three letters, three lengths of copy, one sheet of paper. */
+test.describe('the letter', () => {
+  test('every letter fits between the rails', async ({ page }) => {
+    await boot(page);
+    const ids = await page.evaluate(() => window.SOL.logic.LETTERS);
+    expect(ids).toHaveLength(3);
+    for (const id of ids) {
+      const r = await page.evaluate((id) => {
+        const g = window.SOL.game, L = window.SOL.logic;
+        L.resetRun(g.run);
+        g.run.stamped = 214; g.run.rejects = 96;
+        g.go('letter');
+        const sc = window.SOL.screens.letter;
+        sc.res = Object.assign(L.resolveLetter(g.run), { id: id });
+        g.redraw();
+        return { card: sc.card, button: sc.hits[0] };
+      }, id);
+      fits(r.card, `letter ${id}`);
+      expect(r.button.y + r.button.h, id).toBeLessThanOrEqual(r.card.y + r.card.h);
+      expect(r.button.y, id).toBeGreaterThanOrEqual(r.card.y);
+    }
   });
 });

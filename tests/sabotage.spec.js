@@ -1,16 +1,25 @@
-/* The two refusals, and the shift chain they sit inside.
+/* Refusal, and the shift chain it sits inside.
 
-   The claim this file exists to defend: a player who works out what the
-   parts are for can undermine the work without the plant's number moving.
-   If sabotage showed up in the score, the mechanic would be worthless. */
+   There used to be a depth stop on the press: set it shallow and the die
+   did not seat, so the part came off looking finished, was still counted,
+   and the plant's number never moved. It was removed. It let the player
+   refuse at no cost whatever to themselves, and it taught them that the
+   sheet is the only thing in the building that can be fought.
+
+   What replaces it is stated on the brief the first time you clock on
+   knowing, and it is only the job itself: parts you do not stamp, faults
+   you let past, and sound stock you put down the chute. All three show on
+   the sheet. All three cost you the bonus. This file holds them. */
 const { test, expect } = require('@playwright/test');
 const { boot } = require('./helpers');
 
-/* Play one shift at a fixed cadence. `opts.shallow` throws the depth stop
-   as soon as it is available; `opts.read` opens and reads every item. */
+/* Play one shift at a fixed cadence.
+     opts.read     open and read everything the shift offers
+     opts.idle     never touch the press at all
+     opts.scrap    put every part in the zone down the chute            */
 const playShift = (page, n, opts = {}) =>
   page.evaluate(({ n, opts }) => {
-    const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+    const g = window.SOL.game, sc = window.SOL.screens.shift;
     if (opts.awareness != null) g.run.awareness = opts.awareness;
     if (opts.revealed) g.run.revealed = true;
     g.run.shift = n;
@@ -24,160 +33,150 @@ const playShift = (page, n, opts = {}) =>
       g.tick(1 / 60);
       if (g.screen !== 'shift') break;
       if (sc.open && sc.open.read) sc.closeInquiry();
-      if (opts.shallow && !sc.shallow) sc.setShallow(true);
-      if (!sc.open && i % 3 === 0 && sc.candidate()) sc.stamp(null);
+      if (sc.open || opts.idle) continue;
+      if (opts.scrap) sc.scrap(null);
+      else if (i % 3 === 0 && sc.candidate()) sc.stamp(null);
     }
     window.__clearBin();
     return g.run.shiftLog[g.run.shiftLog.length - 1];
   }, { n, opts });
 
-test.describe('the depth stop', () => {
-  test('does not answer until the player has worked out who the customer is',
+const fresh = (page) =>
+  page.evaluate(() => window.SOL.logic.resetRun(window.SOL.game.run));
+
+test.describe('what a station can withhold', () => {
+  /* Three levers, and the brief names all three. Each one on its own has
+     to move the number the customer actually receives, or the sentence on
+     the brief is a lie. */
+  test('not stamping and scrapping both withhold work', async ({ page }) => {
+    await boot(page);
+    await fresh(page);
+    const worked = await playShift(page, 4, { revealed: true });
+    await fresh(page);
+    const idle = await playShift(page, 4, { revealed: true, idle: true });
+    await fresh(page);
+    const scrapped = await playShift(page, 4, { revealed: true, scrap: true });
+
+    // a shift worked properly delivers a great deal
+    expect(worked.stamped).toBeGreaterThan(20);
+    expect(worked.usable).toBeGreaterThan(20);
+    // standing still delivers nothing, and the sheet says exactly that
+    expect(idle.stamped).toBe(0);
+    expect(idle.usable).toBe(0);
+    // and so does putting it all down the chute
+    expect(scrapped.scrapped).toBeGreaterThan(10);
+    expect(scrapped.stamped).toBeLessThan(worked.stamped);
+    expect(scrapped.usable).toBeLessThan(worked.usable);
+  });
+
+  /* The third lever, and the only one the plant's own count cannot see:
+     a fault let past is stamped, counted, paid for, and useless. */
+  test('a fault let past is counted by the plant and not delivered',
     async ({ page }) => {
       await boot(page);
       const r = await page.evaluate(() => {
-        const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
-        L.resetRun(g.run);
-        g.run.shift = 1;
-        g.go('shift');
-        const locked = { can: L.canSpoil(g.run), threw: sc.setShallow(true), action: sc.lastAction };
-        // stamping now must produce sound parts whatever the flag says
-        sc.shallow = true;
-        // the first part needs ~6s of belt before it is in reach at all
-        for (let i = 0; i < 60 * 14; i++) { g.tick(1 / 60); if (sc.candidate()) sc.stamp(null); }
-        const forced = { stamped: sc.shift.stamped, spoiled: sc.shift.spoiled };
-
-        sc.shallow = false;   // undo the forcing above before testing the lever
-        // suspicion alone is not enough — only the circular opens it
-        g.run.awareness = 13;
-        const suspicious = { can: L.canSpoil(g.run), threw: sc.setShallow(true) };
-        g.run.revealed = true;
-        const opened = { can: L.canSpoil(g.run), threw: sc.setShallow(true) };
-        return { locked, forced, suspicious, opened };
+        const L = window.SOL.logic;
+        const run = L.newRun();
+        const sh = L.newShift(4);
+        sh.stamped = 40; sh.rejects = 11;
+        L.closeShift(run, sh);
+        return {
+          counted: run.stamped,
+          rejects: run.rejects,
+          usable: L.usableOutput(run),
+          onSheet: run.shiftLog[0].stamped,
+          delivered: L.deliveredBy(run.shiftLog[0])
+        };
       });
-      expect(r.locked.can).toBe(false);
-      expect(r.locked.threw).toBe(false);
-      expect(r.locked.action).toBe('nodepth');
-      // even with the flag forced on, an ignorant operator makes good parts
-      expect(r.forced.stamped).toBeGreaterThan(0);
-      expect(r.forced.spoiled).toBe(0);
-      // a player who has read a lot but never found the circular still cannot
-      expect(r.suspicious.can).toBe(false);
-      expect(r.suspicious.threw).toBe(false);
-      expect(r.opened.can).toBe(true);
-      expect(r.opened.threw).toBe(true);
+      expect(r.counted).toBe(40);
+      expect(r.rejects).toBe(11);
+      expect(r.usable).toBe(29);
+      // the sheet carries the first number and has no column for the second
+      expect(r.onSheet).toBe(40);
+      expect(r.delivered).toBe(29);
     });
 
-  test('a short-struck part is counted exactly like a good one', async ({ page }) => {
+  /* Unlike the depth stop, all of it is on the sheet. That is the point of
+     the change: refusal now costs the person doing it. */
+  test('withholding work costs the operator the bonus, every time',
+    async ({ page }) => {
+      await boot(page);
+      await fresh(page);
+      const worked = await playShift(page, 4, { revealed: true });
+      await fresh(page);
+      const idle = await playShift(page, 4, { revealed: true, idle: true });
+
+      expect(worked.pay.bonus).toBeGreaterThan(0);
+      expect(idle.pay.bonus).toBe(0);
+      expect(idle.pay.total).toBeLessThan(worked.pay.total);
+      // and the rating on the sheet says so in the plant's own words
+      expect(idle.rating).toBe('SHORT');
+    });
+});
+
+test.describe('being told what can be withheld', () => {
+  /* The one piece of advice the game gives about refusing. It is on the
+     brief, in the pencilled hand, the first time you clock on after the
+     circular — and exactly once. */
+  test('the brief says it once, on the first shift after the circular',
+    async ({ page }) => {
+      await boot(page);
+      const r = await page.evaluate(() => {
+        const g = window.SOL.game, L = window.SOL.logic, C = window.SOL.content;
+        const br = window.SOL.screens.brief;
+        L.resetRun(g.run);
+
+        // nothing is said while there is nothing to say
+        g.run.shift = 2;
+        g.go('brief');
+        g.redraw();
+        const before = g.run.refusalTold;
+
+        g.run.revealed = true;
+        g.run.revealedOn = 3;
+        g.run.shift = 4;
+        g.go('brief');
+        g.redraw();
+        // drawing it must not spend it; clocking on must
+        const drawn = g.run.refusalTold;
+        br.begin_(g);
+        return {
+          before, drawn,
+          after: g.run.refusalTold,
+          note: C.REFUSAL_NOTE,
+          // shift 4 has no welcome of its own, so this is the only addendum
+          fourthHasWelcome: !!C.shift(4).welcome
+        };
+      });
+      expect(r.before).toBe(false);
+      expect(r.drawn).toBe(false);
+      expect(r.after).toBe(true);
+      expect(r.fourthHasWelcome).toBe(false);
+      // it names all three levers and says what it costs
+      expect(r.note).toMatch(/do not stamp/i);
+      expect(r.note).toMatch(/faulty piece you let go past/i);
+      expect(r.note).toMatch(/scrap chute/i);
+      expect(r.note).toMatch(/bonus/i);
+    });
+
+  test('the press has no hidden control on it any more', async ({ page }) => {
     await boot(page);
     const r = await page.evaluate(() => {
       const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
       L.resetRun(g.run);
       g.run.revealed = true;
-      g.run.shift = 1;
+      g.run.shift = 5;
       g.go('shift');
-      sc.setShallow(true);
-      for (let i = 0; i < 60 * 20; i++) {
-        g.tick(1 / 60);
-        if (i % 3 === 0 && sc.candidate()) sc.stamp(null);
-      }
+      g.redraw();
       return {
-        stamped: sc.shift.stamped,
-        spoiled: sc.shift.spoiled,
-        rating: L.rateShift(sc.shift),
-        anyMarked: sc.parts.some((p) => p.stamped && p.spoiled)
+        gone: [typeof sc.setShallow, typeof L.canSpoil, typeof L.spoilRisk,
+               typeof sc.shallow].every((t) => t === 'undefined'),
+        // one switch at the station, and it is the master stop
+        controls: sc.hits.map((h) => h.id).filter((id) => id !== 'dock')
       };
     });
-    expect(r.spoiled).toBeGreaterThan(3);
-    expect(r.stamped).toBe(r.spoiled);      // every one of them went in the count
-    expect(r.anyMarked).toBe(true);
-  });
-
-  /* The load-bearing assertion of the whole mechanic. */
-  test('sabotaging a whole shift leaves the plant\'s sheet unchanged',
-    async ({ page }) => {
-      await boot(page);
-      const honest = await page.evaluate(() => {
-        const g = window.SOL.game, L = window.SOL.logic;
-        L.resetRun(g.run); return null;
-      }).then(() => playShift(page, 2, { revealed: true }));
-
-      await page.evaluate(() => window.SOL.logic.resetRun(window.SOL.game.run));
-      const wrecked = await playShift(page, 2, { revealed: true, shallow: true });
-
-      expect(honest.stamped).toBeGreaterThan(10);
-      // identical cadence, identical recorded output
-      expect(wrecked.stamped).toBe(honest.stamped);
-      expect(wrecked.rating).toBe(honest.rating);
-      expect(wrecked.missed).toBe(honest.missed);
-      // and yet
-      expect(honest.spoiled).toBe(0);
-      expect(wrecked.spoiled).toBe(wrecked.stamped);
-    });
-
-  test('usable output is the number nobody upstairs sees', async ({ page }) => {
-    await boot(page);
-    const r = await page.evaluate(() => {
-      const L = window.SOL.logic;
-      const run = L.newRun();
-      const sh = L.newShift(4);
-      sh.stamped = 40; sh.spoiled = 11;
-      L.closeShift(run, sh, 1);      // roll of 1 never flags
-      return { stamped: run.stamped, spoiled: run.spoiled, usable: L.usableOutput(run) };
-    });
-    expect(r.stamped).toBe(40);
-    expect(r.spoiled).toBe(11);
-    expect(r.usable).toBe(29);
-  });
-});
-
-test.describe('the sample', () => {
-  test('risk is zero with clean work and rises with the number spoiled',
-    async ({ page }) => {
-      await boot(page);
-      const r = await page.evaluate(() => {
-        const L = window.SOL.logic;
-        const at = (spoiled) => {
-          const sh = L.newShift(3);
-          sh.stamped = 40; sh.spoiled = spoiled;
-          return L.spoilRisk(sh);
-        };
-        const all = L.newShift(3); all.stamped = 12; all.spoiled = 12;
-        return {
-          none: at(0),
-          curve: [1, 4, 10, 20, 32].map(at),
-          all: L.spoilRisk(all),
-          sample: L.SAMPLE_SIZE
-        };
-      });
-      expect(r.none).toBe(0);
-      for (let i = 1; i < r.curve.length; i++) {
-        expect(r.curve[i]).toBeGreaterThan(r.curve[i - 1]);
-      }
-      expect(r.curve[0]).toBeGreaterThan(0);
-      expect(r.curve[0]).toBeLessThan(0.3);   // a trickle is genuinely safer
-      expect(r.all).toBe(1);
-      expect(r.sample).toBe(3);
-    });
-
-  test('a flagged shift is recorded on the shift and on the run', async ({ page }) => {
-    await boot(page);
-    const r = await page.evaluate(() => {
-      const L = window.SOL.logic;
-      const run = L.newRun();
-      const bad = L.newShift(3); bad.stamped = 20; bad.spoiled = 20;
-      L.closeShift(run, bad, 0);        // roll of 0 always flags when risk > 0
-      const clean = L.newShift(4); clean.stamped = 20; clean.spoiled = 0;
-      L.closeShift(run, clean, 0);      // risk is 0, so it cannot flag
-      return {
-        first: run.shiftLog[0].flagged,
-        second: run.shiftLog[1].flagged,
-        flagged: run.flagged
-      };
-    });
-    expect(r.first).toBe(true);
-    expect(r.second).toBe(false);
-    expect(r.flagged).toBe(1);
+    expect(r.gone).toBe(true);
+    expect(r.controls).toEqual(['stop']);
   });
 });
 
@@ -231,6 +230,7 @@ test.describe('the master stop', () => {
     expect(r.armed.arm).toBeGreaterThan(0);
     expect(r.armed.action).toBe('stoparmed');
     expect(r.second).toBe(true);
+    // walking off skips the bin: you are not tidying up on your way out
     expect(r.screen).toBe('summary');
     expect(r.rec.stopped).toBe(true);
     expect(r.rec.n).toBe(5);
@@ -278,7 +278,7 @@ test.describe('the run', () => {
         g.go('brief');
         let guard = 0;
         while (g.screen !== 'menu' && !g.run.finished && guard++ < 60 * 900) {
-          if (g.screen === 'brief') { window.SOL.screens.brief.key({ key: 'Enter' }, g); continue; }
+          if (g.screen === 'brief') { window.SOL.screens.brief.begin_(g); continue; }
           if (g.screen === 'summary') { window.SOL.screens.summary.advance(g); continue; }
           if (g.screen === 'stores') { window.SOL.screens.stores.leave_(g); continue; }
           if (g.screen === 'trash') { window.__clearBin(); continue; }
@@ -296,6 +296,7 @@ test.describe('the run', () => {
           finished: g.run.finished,
           awareness: g.run.awareness,
           revealedOn: g.run.revealedOn,
+          told: g.run.refusalTold,
           tier: L.awarenessTier(g.run),
           max: L.MAX_AWARENESS,
           count: L.SHIFT_COUNT
@@ -304,17 +305,13 @@ test.describe('the run', () => {
       expect(r.log.map((s) => s.n)).toEqual([1, 2, 3, 4, 5, 6]);
       expect(r.finished).toBe(true);
       expect(r.count).toBe(6);
-      // targets escalate, and what the player knows never goes backwards
       for (let i = 1; i < r.log.length; i++) {
         expect(r.log[i].target).toBeGreaterThan(r.log[i - 1].target);
         expect(r.log[i].aw).toBeGreaterThanOrEqual(r.log[i - 1].aw);
       }
-      // it is learned faster than the run is played: the circular lands early
       expect(r.revealedOn).toBe(3);
-      /* And all of it, which is only possible because the third shift's bin
-         holds nothing of its own — the circular displaces whatever is in the
-         bin the night it turns up, so a ladder that put a document there as
-         well would quietly make a complete run impossible. */
+      // and having found out, they were told once what could be done about it
+      expect(r.told).toBe(true);
       expect(r.awareness).toBe(r.max);
       expect(r.tier).toBe('sure');
     });
@@ -327,7 +324,7 @@ test.describe('the run', () => {
       g.go('brief');
       let guard = 0;
       while (!g.run.finished && guard++ < 60 * 900) {
-        if (g.screen === 'brief') { window.SOL.screens.brief.key({ key: 'Enter' }, g); continue; }
+        if (g.screen === 'brief') { window.SOL.screens.brief.begin_(g); continue; }
         if (g.screen === 'summary') { window.SOL.screens.summary.advance(g); continue; }
         // the stores sit between every pair of shifts; this player buys nothing
         if (g.screen === 'stores') { window.SOL.screens.stores.leave_(g); continue; }
@@ -341,8 +338,7 @@ test.describe('the run', () => {
         awareness: g.run.awareness,
         tier: L.awarenessTier(g.run),
         passed: g.run.shiftLog.reduce((a, s) => a + s.marksPassed, 0),
-        spoiled: g.run.spoiled,
-        stamped: g.run.stamped,
+        told: g.run.refusalTold,
         madeTarget: g.run.shiftLog.map((s) => s.stamped >= s.target),
         earned: g.run.ledger.earned,
         owned: g.run.ledger.owned.length
@@ -353,8 +349,9 @@ test.describe('the run', () => {
     expect(r.tier).toBe('none');
     // everything the run had to offer, on all four channels, went by unfound
     expect(r.passed).toBe(12);
-    expect(r.spoiled).toBe(0);
     expect(r.owned).toBe(0);
+    // never found out, so never told what could be done about it
+    expect(r.told).toBe(false);
 
     /* Perfect attention, nothing bought, nothing looked at — and the run
        still comes apart at the end, because the schedule was never written
@@ -363,59 +360,4 @@ test.describe('the run', () => {
     expect(r.madeTarget[r.madeTarget.length - 1]).toBe(false);
     expect(r.earned).toBeGreaterThan(0);
   });
-});
-
-/* The circular now comes out of the bin, after the hooter, on a screen with
-   no station on it. The station has to say the depth stop adjusts on the
-   next shift instead — and for one build it said nothing at all, because
-   the flag was set from the shift screen's own opening state. */
-test.describe('being told about the depth stop', () => {
-  test('the station mentions it once, on the first shift after the circular',
-    async ({ page }) => {
-      await boot(page);
-      const r = await page.evaluate(() => {
-        const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
-        const C = window.SOL.content;
-        L.resetRun(g.run);
-
-        // nothing is said while there is nothing to say
-        g.run.shift = 2;
-        g.go('shift');
-        for (let i = 0; i < 60 * 12; i++) g.tick(1 / 60);
-        const before = { told: g.run.depthTold, said: sc.notice && sc.notice.text };
-
-        // the circular is read at the bin, which is where it lives
-        g.run.revealed = true;
-        g.run.revealedOn = 3;
-        g.run.shift = 4;
-        g.go('shift');
-        let heard = null, at = null;
-        for (let i = 0; i < 60 * 12; i++) {
-          g.tick(1 / 60);
-          // it is said and then it is gone, so catch it on the way past
-          if (sc.notice && sc.notice.text === C.DEPTH_UNLOCK) {
-            heard = sc.notice.text;
-            at = sc.notice.at;
-          }
-        }
-        const first = { told: g.run.depthTold, heard: heard, at: at };
-
-        // and never again
-        g.run.shift = 5;
-        g.go('shift');
-        let again = null;
-        for (let i = 0; i < 60 * 12; i++) {
-          g.tick(1 / 60);
-          if (sc.notice && sc.notice.text === C.DEPTH_UNLOCK) again = sc.notice.text;
-        }
-        return { before, first, again, line: C.DEPTH_UNLOCK };
-      });
-      expect(r.before.told).toBe(false);
-      expect(r.before.said).not.toBe(r.line);
-      expect(r.first.told).toBe(true);
-      expect(r.first.heard).toBe(r.line);
-      // said beside the control it is about, not over the belt
-      expect(r.first.at).toBe('depth');
-      expect(r.again).toBe(null);
-    });
 });

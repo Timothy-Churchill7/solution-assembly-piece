@@ -97,29 +97,6 @@
     o.start(t0); o.stop(t0 + 0.18);
   };
 
-  /* Dull, unsatisfying thud — scrapping is not rewarded by the sound. */
-  /* The same press, not seated. Duller and shorter — the difference a
-     foreman would hear from across the floor and an operator hears every
-     time. Nothing about it is triumphant. */
-  A.stampShort = function () {
-    if (!ready()) return;
-    var t0 = ac.currentTime;
-    var o = ac.createOscillator();
-    o.type = 'triangle';
-    o.frequency.setValueAtTime(132, t0);
-    o.frequency.exponentialRampToValueAtTime(58, t0 + 0.06);
-    env(o, t0, 0.004, 0.07, 0.20).connect(master);
-    o.start(t0); o.stop(t0 + 0.15);
-
-    var s = ac.createBufferSource();
-    s.buffer = noiseBuf(0.05);
-    var lp = ac.createBiquadFilter();
-    lp.type = 'lowpass'; lp.frequency.value = 900;
-    s.connect(lp);
-    env(lp, t0, 0.002, 0.05, 0.06).connect(master);
-    s.start(t0);
-  };
-
   /* A lever thrown at the station. Metal, small, and final-sounding. */
   A.lever = function () {
     if (!ready()) return;

@@ -311,7 +311,11 @@
      were off the bottom of the card and the BACK button was printed over
      them. Same treatment as the stores — a budget that adds up, with the
      card rect published for a test that checks it still does. */
-  var HOWTO = { x: 168, w: W - 336, top: 78, line: 16, button: 42 };
+  /* Wider than the other notices. The handbook is the one screen that has
+     to explain things in sentences rather than label them, and at the old
+     width the two paragraphs of advice at the foot pushed the card off the
+     top of the stage. */
+  var HOWTO = { x: 130, w: W - 260, top: 74, line: 16, button: 42 };
 
   Screens.howto = {
     name: 'howto',
@@ -337,11 +341,14 @@
          they started actually explaining anything. */
       var vOpt = { size: 12.5, lineHeight: HOWTO.line };
       var rows = C.HOWTO.map(function (r) { return D.wrap(ctx, r.v, pw, vOpt).length; });
-      var bodyH = rows.reduce(function (a, n) { return a + 22 + n * HOWTO.line + 12; }, 0);
-      var noteLines = D.wrap(ctx, C.HOWTO_BUY, pw, { size: 13 }).length
+      var bodyH = rows.reduce(function (a, n) { return a + 22 + n * HOWTO.line + 8; }, 0);
+      var advOpt = { size: 13, color: P.text, lineHeight: 22 };
+      var buyLines = D.wrap(ctx, C.HOWTO_BUY, pw, advOpt).length;
+      var stakeLines = D.wrap(ctx, C.HOWTO_STAKES, pw, advOpt).length;
+      var noteLines = buyLines + stakeLines
         + D.wrap(ctx, C.HOWTO_NOTE, pw, noteOpt).length;
-      var nh = HOWTO.top + bodyH + 12 + noteLines * 22 + 12
-             + 24 + HOWTO.button + 24;
+      var nh = HOWTO.top + bodyH + 12 + noteLines * 22 + 20
+             + 20 + HOWTO.button + 20;
       var ny = Math.round((H - nh) / 2);
       this.card = { x: nx, y: ny, w: nw, h: nh };
       notice(ctx, nx, ny, nw, nh, 'INSTRUCTIONS');
@@ -354,18 +361,22 @@
         D.stencil(ctx, row.k, px, y - 2, { size: 11, track: 2.2, color: P.bright });
         D.para(ctx, row.v, px, y + 14, pw,
           { size: 12.5, lineHeight: HOWTO.line, color: P.dim });
-        y += 22 + rows[i] * HOWTO.line + 12;
+        y += 22 + rows[i] * HOWTO.line + 8;
       });
 
       y += 10;
       /* The one piece of outright advice the handbook gives. It is here
          rather than buried in a clue because a player who never finds a
          clue still has to be able to finish the quarter. */
-      D.para(ctx, C.HOWTO_BUY, px, y, pw,
-        { size: 13, color: P.text, lineHeight: 22 });
-      D.para(ctx, C.HOWTO_NOTE, px, y + noteLines * 22 + 12, pw, noteOpt);
+      y = D.para(ctx, C.HOWTO_BUY, px, y, pw, advOpt) + 10;
+      /* The other half of the advice, and the more important half: what it
+         costs to do the job badly is your bonus and nothing else. A player
+         who does not know that can tell themselves afterwards that they
+         were afraid, and the whole piece rests on them not being able to. */
+      y = D.para(ctx, C.HOWTO_STAKES, px, y, pw, advOpt) + 10;
+      D.para(ctx, C.HOWTO_NOTE, px, y, pw, noteOpt);
 
-      var back = { x: px - 14, y: ny + nh - HOWTO.button - 24, w: 190, h: HOWTO.button, id: 'back' };
+      var back = { x: px - 14, y: ny + nh - HOWTO.button - 20, w: 190, h: HOWTO.button, id: 'back' };
       control(ctx, back, 'BACK', g.hoverId === 'back' ? 'hover' : 'idle', { size: 12 });
       this.hits.push(back);
 

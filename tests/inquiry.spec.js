@@ -636,7 +636,7 @@ test.describe('the reveal', () => {
       const r = await page.evaluate(() => {
         const L = window.SOL.logic;
         return {
-          says: /the final solution/.test(L.REVEAL.lines.join(' ')),
+          says: /\bThe Final Solution\b/.test(L.REVEAL.lines.join(' ')),
           via: L.REVEAL.via,
           inShiftClues: L.SHIFTS.some((s) =>
             L.cluesFor(s.n).some((c) => c.id === L.REVEAL.id)),
@@ -668,7 +668,6 @@ test.describe('the reveal', () => {
       return {
         revealed: g.run.revealed,
         awareness: g.run.awareness,
-        canSpoil: L.canSpoil(g.run),
         canStop: L.canStop(g.run, L.newShift(6)),
         offered: passed.reduce((a, b) => a + b, 0),
         total: L.CLUES.length - 1        // every clue but the circular
@@ -676,8 +675,8 @@ test.describe('the reveal', () => {
     });
     expect(r.revealed).toBe(false);
     expect(r.awareness).toBe(0);
-    // and with it, both forms of refusal stay shut
-    expect(r.canSpoil).toBe(false);
+    // and with it, the master stop stays shut: there is nothing you could
+    // say if they asked you why
     expect(r.canStop).toBe('unreasoned');
     /* Everything the run had to offer went past unfound, on all four
        channels, and at no point did the game say so. */
@@ -715,7 +714,6 @@ test.describe('the reveal', () => {
         ids: seenPerShift[2],
         awareness: g.run.awareness,
         min: L.REVEAL_MIN_AWARENESS,
-        canSpoil: L.canSpoil(g.run),
         tier: L.awarenessTier(g.run)
       };
     });
@@ -724,7 +722,6 @@ test.describe('the reveal', () => {
     expect(r.revealed).toBe(true);
     expect(r.on).toBe(3);
     expect(r.ids).toContain('reveal-circular');
-    expect(r.canSpoil).toBe(true);          // and only now does the press open
     expect(r.tier).toBe('know');
   });
 

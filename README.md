@@ -33,9 +33,23 @@ writing; every line of in-game copy here is original.
 
 ## Content note
 
-Nothing in this build depicts violence. There are no photographs, no
-insignia, no reconstructions of real events. The subject is approached
-through paperwork, routing, silhouette and omission.
+Nothing in this build depicts violence. There are no photographs and no
+reconstructions of real events; for six shifts the subject is approached
+entirely through paperwork, routing, silhouette and omission.
+
+The final screen is a letter from the office the parts were going to. It
+carries that office's seal — a swastika, in red — is signed by the man who
+ran the programme, and states plainly what the work was for. That is the
+only screen in the build with a symbol on it, the only one with a real
+name on it, and the only colour anywhere in the piece. All of it is
+deliberate and all of it is late: the run withholds the name of the thing
+for six shifts so that the moment it is said carries what it should.
+Nothing here celebrates or endorses any of it — the seal is the object of
+the player's horror, and the letter exists to tell them what they were
+part of.
+
+*Display of the symbol is legally restricted in Germany and Austria
+outside recognised artistic and educational exemptions.*
 
 ## Running it
 
@@ -63,7 +77,7 @@ connecting the repo is the whole of it.
 npm install && npx playwright install chromium && npm test
 ```
 
-156 tests. They cover the pay arithmetic and the ceiling on a pair of
+168 tests. They cover the pay arithmetic and the ceiling on a pair of
 hands, both assembly lines, every inquiry channel, the layout budget of
 every posted notice, and the ending resolver — including the load-bearing
 claim that the count, the bonus and the balance on the book decide nothing

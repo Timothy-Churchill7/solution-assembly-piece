@@ -154,23 +154,20 @@ test('shots: end of shift', async ({ page }) => {
   await shot(page, '08-summary');
 });
 
-test('shots: the depth stop set shallow', async ({ page }) => {
+/* The brief the first time you clock on knowing. It is the only advice the
+   game gives about refusing, and it replaced a control on the press. */
+test('shots: the brief that says what can be withheld', async ({ page }) => {
   await boot(page);
   await page.evaluate(() => {
-    const g = window.SOL.game, sc = window.SOL.screens.shift;
-    g.run.revealed = true;        // the circular has been read
-    g.run.shift = 3;
-    g.go('shift');
-    for (let i = 0; i < 60 * 30; i++) {
-      g.tick(1 / 60);
-      if (!sc.shallow) sc.setShallow(true);
-      if (i % 3 === 0 && sc.candidate()) sc.stamp(null);
-    }
-    sc.notice = null;             // let the station speak for itself
-    g.step(0.02);
+    const g = window.SOL.game, L = window.SOL.logic;
+    L.resetRun(g.run);
+    g.run.revealed = true;
+    g.run.revealedOn = 3;
+    g.run.shift = 4;
+    g.go('brief');
   });
-  await still(page);
-  await shot(page, '13-station-shallow');
+  await still(page, 9);
+  await shot(page, '13-brief-refusal');
 });
 
 test('shots: the master stop, armed', async ({ page }) => {
@@ -198,16 +195,13 @@ test('shots: end of a shift that was quietly wrecked', async ({ page }) => {
     g.run.revealed = true;
     g.run.shift = 4;
     g.go('shift');
+    // a shift worked badly on purpose: most of it left on the belt
     for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
-      if (!sc.shallow) sc.setShallow(true);
       g.tick(1 / 60);
-      if (g.screen === 'shift' && i % 3 === 0 && sc.candidate()) sc.stamp(null);
+      if (g.screen === 'shift' && i % 14 === 0 && sc.candidate()) sc.stamp(null);
     }
     window.__clearBin();
-    // the sample found one, which is the version of this screen worth looking at
-    const rec = g.run.shiftLog[g.run.shiftLog.length - 1];
-    rec.flagged = true;
-    window.SOL.screens.summary.rec = rec;
+    window.SOL.screens.summary.rec = g.run.shiftLog[g.run.shiftLog.length - 1];
     g.step(0.02);
   });
   await still(page, 9);
@@ -650,4 +644,38 @@ test('shots: the ending, a run that knew and quietly did not', async ({ page }) 
   await endingShot(page, 'quiet');
   await still(page, 9);
   await shot(page, '37-ending-quiet');
+});
+
+/* ---------- the last shift, and the letter ----------
+   The two places goal.md allows the piece to stop being oblique. Both have
+   to be looked at: the mark has to read as gouged into somebody else's
+   machine rather than printed on it, and the letter has to read as a form
+   nobody thought twice about sending. */
+
+const letterShot = (page, id) => page.evaluate((id) => {
+  const g = window.SOL.game, L = window.SOL.logic;
+  L.resetRun(g.run);
+  g.run.stamped = 198; g.run.rejects = 14;
+  g.go('letter');
+  const sc = window.SOL.screens.letter;
+  sc.res = Object.assign(L.resolveLetter(g.run), { id: id });
+}, id);
+
+test('shots: the letter, thanking a run that delivered', async ({ page }) => {
+  await boot(page);
+  await letterShot(page, 'commended');
+  await still(page, 9);
+  await shot(page, '39-letter-commended');
+});
+
+test('shots: the letter, reprimanding a run that did not', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => {
+    const g = window.SOL.game, L = window.SOL.logic;
+    L.resetRun(g.run);
+    g.run.stamped = 188; g.run.rejects = 132;
+    g.go('letter');
+  });
+  await still(page, 9);
+  await shot(page, '40-letter-reprimand');
 });

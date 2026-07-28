@@ -309,7 +309,6 @@
   /* Set flush with the finished-stock tray so the apron reads as one bench
      of fittings rather than three things at three heights. */
   var SW = {
-    depth: { x: 316, y: LAY.apronY + 30, w: 168, h: 46, id: 'depth' },
     stop:  { x: 716, y: LAY.apronY + 30, w: 170, h: 46, id: 'stop' }
   };
 
@@ -370,16 +369,7 @@
       : { hi: '#767c81', mid: '#454a4e', lo: '#181a1c' };
     S.widget(ctx, p.x, LAY.partY + p.bob, 1.2, p.form, o);
 
-    if (p.stamped && p.spoiled) {
-      /* The tell, and it is only a tell. One bar, light, sitting off the
-         centre line — a mark that would pass a glance and not a gauge. The
-         plant's sheet cannot see this; the player can. */
-      ctx.save();
-      ctx.globalAlpha = 0.55;
-      ctx.fillStyle = 'rgba(226,236,243,0.34)';
-      ctx.fillRect(p.x - 9, LAY.partY + p.bob - 1, 16, 1.5);
-      ctx.restore();
-    } else if (p.stamped) {
+    if (p.stamped) {
       // a struck mark: two short bars, unreadable, official-looking
       ctx.save();
       ctx.globalAlpha = 0.75;
@@ -415,7 +405,7 @@
 
   /* How long each kind of flash has to say what it is. */
   var FLASH_SPAN = {
-    stamp: 0.30, short: 0.20, scrap: 0.45, gone: 0.45,
+    stamp: 0.30, scrap: 0.45, gone: 0.45,
     pull: 0.9, pullgood: 0.9, swept: 0.4, reject: 1.4,
     look: 1.1, nothing: 1.1
   };
@@ -510,6 +500,19 @@
       ctx.fillStyle = 'rgba(2,3,4,0.94)';
       ctx.fillRect(px2 + 5, py2 - 5, 9, 17);
 
+      // headlamps on, throwing across the apron: the change in the picture
+      // has to be visible from the press, not only when looked at
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      var hg = ctx.createRadialGradient(bx + 132, by + 24, 2, bx + 132, by + 24, 62);
+      hg.addColorStop(0, 'rgba(214,228,238,0.40)');
+      hg.addColorStop(1, 'rgba(214,228,238,0)');
+      ctx.fillStyle = hg;
+      ctx.beginPath(); ctx.arc(bx + 132, by + 24, 62, 0, 6.3); ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = 'rgba(232,242,249,0.85)';
+      ctx.fillRect(bx + 128, by + 20, 4, 4);
+
       // two men at the straps, working, lit down one side by the gate lamp
       var sway = Math.sin(t * 1.6) * 2;
       [[bx - 14, sway], [bx - 28, -sway]].forEach(function (m) {
@@ -531,11 +534,20 @@
     ctx.restore();
 
     // bezel
-    ctx.strokeStyle = hover ? 'rgba(206,220,230,0.34)' : 'rgba(0,0,0,0.85)';
-    ctx.lineWidth = 1.5;
+    /* With something in it the bezel takes a slow pulse and the label says
+       so. This is the one instrument in the build allowed to ask for
+       attention, and it is allowed because the player paid for it. */
+    var live = has ? 0.5 + 0.5 * Math.sin(t * 2.2) : 0;
+    ctx.strokeStyle = hover ? 'rgba(206,220,230,0.42)'
+      : (has ? 'rgba(206,220,230,' + (0.24 + 0.30 * live) + ')' : 'rgba(0,0,0,0.85)');
+    ctx.lineWidth = has ? 2 : 1.5;
     ctx.strokeRect(DOCK.x + 0.5, DOCK.y + 0.5, DOCK.w - 1, DOCK.h - 1);
-    D.stencil(ctx, C.DOCK_LABEL, DOCK.x, DOCK.y + DOCK.h + 15,
-      { size: 8, track: 1.8, color: P.faint });
+    D.stencil(ctx, has ? C.DOCK_ALERT : C.DOCK_LABEL, DOCK.x, DOCK.y + DOCK.h + 15,
+      { size: 8, track: 1.8, color: has ? P.text : P.faint });
+    if (has) {
+      D.stencil(ctx, C.DOCK_HINT, DOCK.x + DOCK.w, DOCK.y + DOCK.h + 15,
+        { size: 8, track: 1.8, color: P.dim, align: 'right' });
+    }
   }
 
   /* ---------- screen ---------- */
@@ -562,8 +574,6 @@
     fillerT: 0,
     open: null,      // { clue, t, shown, read } while an item is being read
     run: null,       // the run this shift belongs to
-    shallow: false,  // the depth stop is set short
-    ramDepth: 1,     // how far the last strike actually travelled
     stopArm: 0,      // seconds left on an armed master stop
     notice: null,    // { text, t, at } — a line said at the station, briefly
     pendingSay: null,// a line waiting for the belt to be visible again
@@ -598,11 +608,9 @@
         dock: E.owns(led, 'camera')
       };
       this.ram = 0; this.ramPhase = null; this.ramT = 0;
-      this.ramDepth = 1;
       this.flashes = [];
       this.lastAction = null;
       this.open = null;
-      this.shallow = false;
       this.stopArm = 0;
       this.notice = null;
       this.pendingSay = null;
@@ -737,6 +745,13 @@
       if (!this.dockUp && this.dockQ.length && this.dockQ[0].at <= elapsed) {
         this.dockUp = this.dockQ.shift().clue;
         this.dockT = 0;
+        /* Said once, beside the monitor, if the monitor is on the bench.
+           A player who paid for the camera is told there is something to
+           look at; a player who did not is told nothing, because there is
+           nothing on their bench to tell them. */
+        if (this.kit.dock) {
+          this.pendingSay = { text: C.DOCK_ALERT, secs: 6.0, at: 'dock' };
+        }
       }
       if (this.dockUp) {
         this.dockT += dt;
@@ -757,8 +772,7 @@
 
       /* The feeder works its own share of line 4 and does not touch the
          cycle you are waiting on — it is a second pair of hands, which is
-         exactly what it costs. It strikes at full depth, always: it has no
-         opinion about the customer and no depth stop of its own. */
+         exactly what it costs. */
       if (this.kit.feeder) {
         for (var a = 0; a < this.parts.length; a++) {
           var q = this.parts[a];
@@ -782,20 +796,10 @@
 
       if (reading) this.updateReading(dt, g);
 
-      /* The adjustment does not announce itself. It becomes usable the
-         moment the player has read the circular, and all that happens is
-         that the plate at the station is worth a second look.
-
-         The flag lives on the run, not on the screen. It used to be set
-         from `canSpoil` when the shift opened, which worked only while the
-         circular arrived mid-shift; the moment it moved to the bin — after
-         the hooter, on a screen with no station on it — the next shift
-         started with the flag already true and the line was never said at
-         all. A player got a new control and no indication of it. */
-      if (!g.run.depthTold && L.canSpoil(g.run) && elapsed > 3.0) {
-        g.run.depthTold = true;
-        this.pendingSay = { text: C.DEPTH_UNLOCK, secs: 5.0, at: 'depth' };
-      }
+      /* What a player can do about it once they know is said on the brief
+         when they clock on, not at the station — see flow.js. There is
+         nothing here to unlock and no new control to notice: the three
+         things that withhold work are the three they were already doing. */
       if (this.pendingSay && !this.open) {
         this.say(this.pendingSay.text, this.pendingSay.secs, this.pendingSay.at);
         this.pendingSay = null;
@@ -907,7 +911,6 @@
         bob: (D.rnd(id * 4.1) - 0.5) * 5,
         auto: Math.floor((id + 1) * share) > Math.floor(id * share),
         stamped: false,
-        spoiled: false
       });
       this.nextId = id + 1;
     },
@@ -951,7 +954,6 @@
        line 5, and it never short-strikes. */
     autoStamp: function (p) {
       p.stamped = true;
-      p.spoiled = false;
       this.shift.stamped++;
       this.shift.autoStamped++;
       this.strike(1);
@@ -1084,22 +1086,8 @@
       return best;
     },
 
-    strike: function (depth) {
+    strike: function () {
       this.ramPhase = 'down'; this.ramT = 0;
-      this.ramDepth = depth == null ? 1 : depth;
-    },
-
-    /* Set the depth stop short. Nothing about the shift changes: the same
-       parts arrive, the same count is taken, the same sheet goes upstairs.
-       Only the parts are different, and only downstream. */
-    setShallow: function (v) {
-      if (!L.canSpoil(this.run)) { this.lastAction = 'nodepth'; return false; }
-      var want = v == null ? !this.shallow : !!v;
-      if (want === this.shallow) return false;
-      this.shallow = want;
-      this.lastAction = want ? 'shallow' : 'full';
-      SOL.audio.lever && SOL.audio.lever();
-      return true;
     },
 
     stamp: function (atX) {
@@ -1110,18 +1098,13 @@
       if (this.charge < 1) { this.lastAction = 'charging'; return false; }
       var p = this.candidate(atX);
       if (!p) { this.lastAction = 'empty'; return false; }
-      var short = this.shallow && L.canSpoil(this.run);
       p.stamped = true;
-      p.spoiled = short;
-      // it counts either way — that is the entire point of doing it this way
       this.shift.stamped++;
-      if (short) this.shift.spoiled++;
       this.charge = 0;
-      this.strike(short ? 0.55 : 1);
-      this.flashes.push({ t: short ? 0.20 : 0.30, x: p.x, kind: short ? 'short' : 'stamp' });
-      this.lastAction = short ? 'short' : 'stamp';
-      if (short) SOL.audio.stampShort && SOL.audio.stampShort();
-      else SOL.audio.stamp();
+      this.strike();
+      this.flashes.push({ t: 0.30, x: p.x, kind: 'stamp' });
+      this.lastAction = 'stamp';
+      SOL.audio.stamp();
       return true;
     },
 
@@ -1186,7 +1169,6 @@
       if (e.key === 'a' || e.key === 'A') { this.pull(null); return; }
       if (e.key === ' ') { this.stamp(null); return; }
       if (e.key === 'x' || e.key === 'X') { this.scrap(null); return; }
-      if (e.key === 'f' || e.key === 'F') { this.setShallow(null); return; }
       if (e.key === 'q' || e.key === 'Q') { this.stopLine(g); return; }
     },
 
@@ -1202,7 +1184,6 @@
         if (hit && hit.id === 'close') this.closeInquiry();
         return;
       }
-      if (hit && hit.id === 'depth') { this.setShallow(null); return; }
       if (hit && hit.id === 'stop') { this.stopLine(g); return; }
       if (hit && hit.id === 'dock') { this.lookDock(); return; }
       // line 5 is its own band of the screen, well clear of the press
@@ -1239,7 +1220,7 @@
 
       for (var i = 0; i < this.parts.length; i++) drawPart(ctx, this.parts[i], t);
 
-      drawRam(ctx, this.ram * this.ramDepth);
+      drawRam(ctx, this.ram);
 
       // strike flash
       for (var f = 0; f < this.flashes.length; f++) {
@@ -1249,9 +1230,7 @@
         var fy = fl.y || LAY.partY;
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
-        // a short strike throws almost no light — there is nothing to see
-        var col = fl.kind === 'stamp' ? '226,238,246'
-          : (fl.kind === 'short' ? '120,132,142' : '150,162,172');
+        var col = fl.kind === 'stamp' ? '226,238,246' : '150,162,172';
         var gr = ctx.createRadialGradient(fl.x, fy, 2, fl.x, fy, 90);
         gr.addColorStop(0, 'rgba(' + col + ',' + (0.34 * a) + ')');
         gr.addColorStop(1, 'rgba(' + col + ',0)');
@@ -1309,23 +1288,7 @@
 
     /* The two station controls, and the one line the station ever says. */
     drawStation: function (ctx, t, g) {
-      var canSpoil = L.canSpoil(this.run);
       var stopState = L.canStop(this.run, this.shift);
-
-      if (canSpoil) {
-        drawSwitch(ctx, SW.depth, C.DEPTH_LABEL,
-          this.shallow ? C.DEPTH_SHALLOW : C.DEPTH_FULL,
-          { thrown: this.shallow, hover: g.hoverId === 'depth' });
-        this.hits.push(SW.depth);
-        if (this.shift.spoiled > 0) {
-          /* The operator's own tally. It sits under the switch at the
-             station rather than on the console, because the console belongs
-             to the plant and the plant has no idea. */
-          D.stencil(ctx, C.DEPTH_TELL + ' ' + this.shift.spoiled,
-            SW.depth.x, SW.depth.y + SW.depth.h + 18,
-            { size: 9, track: 2.2, color: 'rgba(104,114,122,0.9)' });
-        }
-      }
 
       // the master stop is bolted to the station from the first shift; it
       // simply does not answer to you until it does
@@ -1360,7 +1323,6 @@
          — not when there happens to be something in it. A prompt that came
          and went would be the amber crate again, in words. */
       if (this.kit && this.kit.dock) keys.push(C.DOCK_HINT);
-      if (L.canSpoil(this.run)) keys.push(C.DEPTH_HINT);
       if (L.canStop(this.run, this.shift) === true) keys.push(C.STOP_HINT);
       return keys.join('  ·  ');
     },

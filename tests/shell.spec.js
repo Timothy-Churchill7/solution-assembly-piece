@@ -132,6 +132,130 @@ test.describe('shell', () => {
     });
 });
 
+/* goal.md allows the seal, the real name and the colour red on exactly one
+   screen: the letter that closes the run. What these hold is the "one
+   screen" part, because any of the three leaking anywhere earlier would
+   turn an accusation into decoration and give away in shift 1 what the
+   piece spends six shifts withholding. */
+test.describe('the one screen', () => {
+  const CHROME = ['menu', 'credits', 'howto', 'brief', 'stores', 'ending'];
+
+  /* Red is not in the palette. It exists as one literal inside letter.js
+     and nowhere else in the build, and this measures the actual pixels
+     rather than trusting that. */
+  const redFraction = (page) => page.evaluate(() => {
+    const c = document.getElementById('screen');
+    const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let red = 0, total = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i], g = d[i + 1], b = d[i + 2];
+      total++;
+      // the seal: clearly red, clearly not the amber accent
+      if (r > 90 && r - g > 55 && r - b > 55 && g - b < 26) red++;
+    }
+    return red / total;
+  });
+
+  test('no screen but the letter has any red on it', async ({ page }) => {
+    await boot(page);
+    for (const name of CHROME) {
+      await page.evaluate((n) => {
+        const g = window.SOL.game, L = window.SOL.logic;
+        L.resetRun(g.run);
+        g.run.revealed = true; g.run.revealedOn = 3; g.run.awareness = 30;
+        g.run.stamped = 180; g.run.shift = 4;
+        g.go(n);
+        g.redraw();
+      }, name);
+      expect(await redFraction(page), name).toBe(0);
+    }
+
+    // and a shift with every channel live on it, including a lorry at the dock
+    await page.evaluate(() => {
+      const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+      L.resetRun(g.run);
+      g.run.ledger.owned = ['lamp', 'gauge', 'radio', 'camera'];
+      g.run.shift = L.SHIFT_COUNT;
+      g.go('shift');
+      for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
+        const r = sc.nearestReturn();
+        if (r && r.clue && sc.dockUp) break;
+        g.tick(1 / 60);
+        if (i % 3 === 0) sc.stamp(null);
+      }
+      g.step(0.02);
+    });
+    expect(await redFraction(page), 'the last shift').toBe(0);
+
+    // the letter, and only the letter
+    await page.evaluate(() => {
+      const g = window.SOL.game;
+      g.go('letter');
+      g.redraw();
+    });
+    const onLetter = await redFraction(page);
+    expect(onLetter).toBeGreaterThan(0.0002);
+    // a seal, not a flag: a trace of the frame and no more
+    expect(onLetter).toBeLessThan(0.01);
+  });
+
+  test('the real name is on the letter and nowhere else', async ({ page }) => {
+    await boot(page);
+    const r = await page.evaluate(() => {
+      const C = window.SOL.content, L = window.SOL.logic;
+      const everywhere = [];
+      const add = (w, s) => { if (s) everywhere.push([w, String(s)]); };
+      L.SHIFTS.forEach((s) => {
+        const sc = C.shift(s.n);
+        add('brief ' + s.n, sc.brief + ' ' + sc.note + ' ' + (sc.welcome || ''));
+        L.cluesFor(s.n).forEach((c) => add(c.id, c.lines.join(' ') + c.source + c.kind));
+      });
+      add('reveal', C.REVEAL.lines.join(' '));
+      L.ENDINGS.forEach((id) => add('ending ' + id, C.ENDINGS[id].title + C.ENDINGS[id].body));
+      C.RADIO_FILLER.forEach((f, i) => add('filler ' + i, f));
+      add('refusal', C.REFUSAL_NOTE);
+      add('shell', document.getElementById('plate').textContent + ' ' + document.title);
+      const name = /himmler|reichsf/i;
+      return {
+        leaks: everywhere.filter(([, s]) => name.test(s)).map(([w]) => w),
+        signature: C.LETTER_SIGNATURE,
+        signatory: C.LETTER_SIGNATORY,
+        office: C.LETTER_OFFICE
+      };
+    });
+    expect(r.leaks).toEqual([]);
+    expect(r.signature).toBe('Heinrich Himmler');
+    expect(r.signatory).toMatch(/REICHSF/);
+    expect(r.office).toMatch(/REICHSF/);
+  });
+
+  test('the build still has no image assets to leak one', async ({ page }) => {
+    await boot(page);
+    const r = await page.evaluate(() => ({
+      images: document.querySelectorAll('img, svg, picture, canvas:not(#screen)').length,
+      icons: document.querySelectorAll('link[rel*="icon"]').length,
+      title: document.title
+    }));
+    expect(r.images).toBe(0);
+    expect(r.icons).toBe(0);
+    expect(r.title).not.toMatch(/reich|nazi|solution final/i);
+  });
+
+  /* The About screen has to describe the build it actually is. It said
+     "no insignia" for most of this project's life and that stopped being
+     true the day the letter got a seal. */
+  test('the content note describes the build honestly', async ({ page }) => {
+    await boot(page);
+    const note = await page.evaluate(() => window.SOL.content.CRAFT_NOTE);
+    expect(note).toMatch(/swastika/i);
+    expect(note).toMatch(/last screen|letter/i);
+    expect(note).toMatch(/only colour|only color/i);
+    // and it still says what the build does not do
+    expect(note).toMatch(/no photographs/i);
+    expect(note).toMatch(/celebrat|endorse/i);
+  });
+});
+
 test.describe('navigation', () => {
   test('menu -> about -> back, by mouse', async ({ page }) => {
     await boot(page);
@@ -349,5 +473,70 @@ test.describe('nothing from the novel', () => {
       expect(r.reachable).toBe(true);
       expect(r.runs).toBe(r.required);
       expect(r.lineage).toContain('Brenda Romero');
+    });
+});
+
+/* The piece only works if the player knows, while they are playing, that
+   the only thing at stake is money. A player who does not know that can
+   tell themselves afterwards they were afraid, and the whole argument
+   collapses into a story about coercion. It is said in three places and
+   this is what keeps it said. */
+test.describe('what is actually at stake', () => {
+  test('the handbook, the brief and the letter all say it is only the pay',
+    async ({ page }) => {
+      await boot(page);
+      const r = await page.evaluate(() => {
+        const C = window.SOL.content;
+        return {
+          handbook: C.HOWTO_STAKES,
+          brief: C.REFUSAL_NOTE,
+          footer: C.LETTER_FOOTER,
+          letters: window.SOL.logic.LETTERS.map((id) => C.LETTERS[id].body)
+        };
+      });
+
+      // the handbook, before any of it matters
+      expect(r.handbook).toMatch(/bonus/i);
+      expect(r.handbook).toMatch(/entire consequence|nothing else|only/i);
+      expect(r.handbook).toMatch(/nobody comes down to the floor/i);
+
+      // the brief, on the first shift after finding out
+      expect(r.brief).toMatch(/bonus/i);
+      expect(r.brief).toMatch(/no penalty|nothing worse|only thing/i);
+
+      // and the office itself, on every letter, at the end
+      expect(r.footer).toMatch(/no proceedings/i);
+      for (const body of r.letters) {
+        expect(body).toMatch(/bonus|notation/i);
+      }
+    });
+
+  /* Nothing anywhere may threaten the player with anything else. If a line
+     ever implies the plant or the customer will do something to them, the
+     excuse is back and the piece has been let off. */
+  test('nothing in the build threatens the player with anything worse',
+    async ({ page }) => {
+      await boot(page);
+      const hits = await page.evaluate(() => {
+        const C = window.SOL.content, L = window.SOL.logic;
+        const all = [];
+        const add = (w, s) => { if (s) all.push([w, String(s)]); };
+        L.SHIFTS.forEach((s) => {
+          const sc = C.shift(s.n);
+          add('brief ' + s.n, sc.brief + ' ' + sc.note);
+          L.cluesFor(s.n).forEach((c) => add(c.id, c.lines.join(' ')));
+        });
+        add('reveal', C.REVEAL.lines.join(' '));
+        add('refusal', C.REFUSAL_NOTE);
+        L.LETTERS.forEach((id) => add('letter ' + id, C.LETTERS[id].body));
+        add('footer', C.LETTER_FOOTER);
+        L.ENDINGS.forEach((id) => add('ending ' + id, C.ENDINGS[id].body));
+        Object.keys(C.SUMMARY_LINES).forEach((k) => add('signoff ' + k, C.SUMMARY_LINES[k]));
+        C.HOWTO.forEach((h, i) => add('howto ' + i, h.v));
+
+        const threat = /\b(arrest|arrested|shot|shoot|prison|camp|police|denounce|denounced|reported to|taken away|disappear|punish|punished|punishment)\b/i;
+        return all.filter(([, s]) => threat.test(s)).map(([w]) => w);
+      });
+      expect(hits).toEqual([]);
     });
 });

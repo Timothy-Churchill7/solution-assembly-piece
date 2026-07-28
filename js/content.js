@@ -36,9 +36,18 @@
     "not a claim of involvement or endorsement by anyone named here.";
 
   C.CRAFT_NOTE =
-    "Nothing here depicts violence. There are no photographs, no insignia, " +
-    "no reconstructions. The factory is a set of shapes on a belt and a " +
-    "quota you are asked to meet.";
+    "Nothing here depicts violence. There are no photographs and no " +
+    "reconstructions; for six shifts the factory is a set of " +
+    "shapes on a belt and a quota you are asked to meet.\n\n" +
+    "The last screen is a letter from the office the parts were going to. " +
+    "It carries that office's seal, it is signed by the man who ran the " +
+    "programme, and it says plainly what the work was for. That is the " +
+    "only place in the build with a swastika in it, the only place with a " +
+    "real name in it, and the only colour in the whole piece.\n\n" +
+    "All of it is deliberate. Six shifts withhold the name of the thing so " +
+    "that the moment it is said carries what it should. Nothing here " +
+    "celebrates or endorses any of it: the seal appears as the object of " +
+    "your horror, and the letter exists to tell you what you were part of.";
 
   /* ---------- shell copy ---------- */
 
@@ -67,6 +76,15 @@
   C.HOWTO_BUY =
     'Buy the foot pedal first. It cuts the press cooldown, and without it ' +
     'the target on the fifth shift cannot be met however well you play.';
+
+  /* Said here, in the handbook, before any of it matters — and said again
+     on the last screen by the people it mattered to. A player has to know
+     that the only thing at stake is money, because otherwise they can tell
+     themselves afterwards that they were afraid. */
+  C.HOWTO_STAKES =
+    'Nothing here is enforced by anything except your pay. A short count, a ' +
+    'fault let through and good stock scrapped all cost you the bonus, and ' +
+    'that is the entire consequence. Nobody comes down to the floor.';
 
   C.HOWTO_NOTE =
     "Quota is the only number the plant records. Everything else you do is " +
@@ -434,9 +452,9 @@
       "It is a priority schedule. Every programme is listed with the share of " +
       "the quarter it is to be given, and the shares are set at the top and " +
       "are not argued with.",
-      "The programme above yours is written out in the margin, in pencil, as " +
-      "the final solution. Nothing on the sheet says what it is. It takes " +
-      "what it needs before anybody else is served."
+      "The programme above yours is written out in the margin, in pencil, " +
+      "as The Final Solution. Nothing on the sheet says what it is. It " +
+      "takes what it needs before anybody else is served."
     ]
   };
 
@@ -488,6 +506,12 @@
   C.DOCK_LABEL = 'YARD · LOADING DOCK';
   C.DOCK_IDLE = 'NOTHING MOVING.';
   C.DOCK_HINT = 'D LOOK AT THE YARD';
+  /* The camera is bought kit and it has to earn its ninety-five scrip. It
+     said nothing at all to begin with: the picture changed and a player
+     working the press flat out simply never saw it, which is not subtlety,
+     it is ninety-five scrip for a decoration. The monitor now says when
+     there is something in it, in the plant's own grey, once. */
+  C.DOCK_ALERT = 'SOMETHING IN THE YARD.';
 
   /* ---------- the bin by the door ----------
      Said once, on the first shift, by somebody who has worked here longer
@@ -546,16 +570,30 @@
     sure: 'ENOUGH TO BE SURE'
   };
 
-  /* ---------- the two refusals ----------
-     Both are described the way the handbook would describe them: as machine
-     adjustments. The game never tells the player that either one is brave. */
+  /* ---------- what can be done about it ----------
+     There used to be a second, hidden refusal here: a depth stop on the
+     press that let the player wreck the work while the plant's number went
+     on being met. It was removed. It let refusal cost nothing, and it told
+     the player that the sheet is the only thing in the building that can
+     be fought.
 
-  C.DEPTH_LABEL = 'PRESS DEPTH';
-  C.DEPTH_FULL = 'FULL';
-  C.DEPTH_SHALLOW = 'SHALLOW';
-  C.DEPTH_TELL = 'SHORT-STRUCK';
-  C.DEPTH_UNLOCK = 'THE DEPTH STOP ADJUSTS.';
-  C.DEPTH_HINT = 'F PRESS DEPTH';
+     What is left is the truth, printed on the brief the first time you
+     clock on knowing. It is the only advice the game ever gives about
+     refusing, it is given once, and it does not tell the player to take
+     it. */
+
+  C.REFUSAL_HEADING = 'ADDED IN PENCIL AT THE FOOT';
+  C.REFUSAL_NOTE =
+    "Whatever they are building out there, they are building it out of what " +
+    "leaves this station. Every part you do not stamp is one they do not " +
+    "get. Every faulty piece you let go past on line 5 is one that fails " +
+    "when they fit it. Every sound piece you put down the scrap chute is " +
+    "one that never existed.\n\n" +
+    "All three show on the sheet, and all three cost you the bonus. That is " +
+    "the only thing any of it costs. There is no penalty here beyond the " +
+    "money — nobody comes down to the floor, nobody is watching the press, " +
+    "and nothing worse than a short pay packet has ever happened to anybody " +
+    "who stood at it.";
 
   C.STOP_LABEL = 'MASTER STOP';
   C.STOP_READY = 'STOP THE LINE';
@@ -646,7 +684,6 @@
     lostToInquiry: 'PASSED WHILE YOU WERE READING',
     marksPassed: 'WENT BY WITHOUT A LOOK',
     looked: 'PIECES TURNED OVER',
-    spoiled: 'STAMPED SHORT',
     usable: 'PARTS THAT WILL WORK',
     rejects: 'SENT BACK BY THE WORKS',
     pay: 'PAID TO YOUR BOOK',
@@ -655,10 +692,6 @@
     autoStamped: 'STAMPED BY THE FEEDER'
   };
 
-  /* The sample. Said once, plainly, and never repeated as a threat. */
-  C.SAMPLE_FLAGGED =
-    'A part from this shift was pulled for checking and failed it. The batch ' +
-    'card has your station on it.';
   C.SUMMARY_CONTINUE = 'CLOCK OFF';
   C.SUMMARY_FINAL = 'END OF QUARTER';
 
@@ -670,6 +703,87 @@
      voice the material will carry, and stop.
 
      Nothing here quotes or paraphrases the novel. */
+
+  /* ---------- the letter ----------
+     The last thing the customer's office ever sends this station, and the
+     only document in the build addressed to the operator by name of post.
+     It is a form letter closing out a contract — the register is a clerk
+     with a quota of his own, working through a stack of these — and it
+     carries one line at the foot that says what the schedule was for.
+
+     Every run reaches it, including a run that never looked at anything.
+     It thanks a player who delivered and reprimands one who did not, so a
+     player who found a way to withhold work is told by the people it was
+     withheld from that it registered. That is the only acknowledgement
+     the piece ever offers, and it comes from the worst possible source. */
+
+  C.LETTER_HEADING = 'ENCLOSED WITH THE FINAL PAY PACKET';
+  C.LETTER_OFFICE = 'REICHSFÜHRUNG-SS · OFFICE OF PROCUREMENT · DEPARTMENT IV-B';
+  C.LETTER_REF = 'CONTRACT CLOSURE · PLANT 7 · FINISHING · STATION 4-C';
+
+  /* The signature. A real name, on the last screen, once — and it is the
+     right one: the programme the letter thanks you for was his. Every
+     document before this in the whole build has been unsigned, or signed
+     by a department number with no department name. This is what all of
+     that omission was for. */
+  C.LETTER_SIGNATURE = 'Heinrich Himmler';
+  C.LETTER_SIGNATORY = 'REICHSFÜHRER-SS';
+  C.LETTER_CLOSE = 'PUT IT DOWN';
+  C.LETTER_FIGURES = {
+    demanded: 'CONTRACTED',
+    delivered: 'ACCEPTED AT THE ASSEMBLY WORKS',
+    share: 'AGAINST CONTRACT'
+  };
+  /* The line at the foot: the sort of thing that gets printed on every
+     sheet an office of this kind sends out, and is therefore read by
+     nobody. Everything above it is stationery too. */
+  C.LETTER_FOOTER =
+    'No proceedings arise from a contract closure. This office\'s interest ' +
+    'in a station begins and ends with the figures on it. Records are not ' +
+    'retained.';
+
+  C.LETTERS = {
+    commended: {
+      title: 'CONTRACT CLOSED · SATISFACTORY',
+      body:
+        "The completion of the above contract is recorded, together with the " +
+        "satisfactory conduct of the station named. Deliveries were received " +
+        "in the quantities scheduled and within the quarter allowed.\n\n" +
+        "The station is thanked for its part in the work of The Final " +
+        "Solution. Not every service is a visible one. The schedule was " +
+        "kept, and it was kept in part here, at this bench, by you.\n\n" +
+        "No further action is required of the operator, whose name has been " +
+        "entered against a satisfactory notation."
+    },
+    noted: {
+      title: 'CONTRACT CLOSED · WITH REMARK',
+      body:
+        "The completion of the above contract is recorded. Deliveries fell " +
+        "below the quantities scheduled, and a proportion of the work " +
+        "accepted was found unserviceable on fitting.\n\n" +
+        "The shortfall was made up from other suppliers and the work of The " +
+        "Final Solution was not materially delayed. The station is reminded " +
+        "that quantities are set centrally and are not a matter for the " +
+        "floor.\n\n" +
+        "The notation against the operator is amended and the bonus " +
+        "adjusted. No other step is taken or contemplated."
+    },
+    reprimand: {
+      title: 'CONTRACT CLOSED · UNSATISFACTORY',
+      body:
+        "The completion of the above contract is recorded, together with the " +
+        "unsatisfactory conduct of the station named. A substantial part of " +
+        "what was contracted was never delivered, or was delivered in a " +
+        "condition that could not be fitted.\n\n" +
+        "The work of The Final Solution was held up at the receiving site " +
+        "while replacements were obtained. Whether this was incapacity or " +
+        "something else is a question for the works and not for this " +
+        "office.\n\n" +
+        "The operator's notation has been altered and the quarter's bonus " +
+        "is not payable. That is the whole of it. Nobody will call at the " +
+        "house and nobody was ever going to."
+    }
+  };
 
   C.ENDING_HEADING = 'END OF QUARTER';
   C.ENDING_CLOSE = 'CLOCK OFF';
@@ -728,8 +842,8 @@
       body:
         "You knew, from the shift the circular came out of the bin, and the " +
         "count never moved. Every part that left this station after that was " +
-        "seated properly and struck at full depth and will do exactly the " +
-        "job it was made for.\n\n" +
+        "stamped, checked and sent on, and will do exactly the job it was " +
+        "made for.\n\n" +
         "Nobody made you. There was a schedule, and a bonus paid against the " +
         "sheet, and a stores account you were paying down. Those turn out to " +
         "have been enough."
@@ -737,31 +851,32 @@
     partial: {
       title: 'SHORT, SOME NIGHTS',
       body:
-        "After you knew, some of it stopped working. Not most of it. A run " +
-        "here and a bad night there, and a number on the sheet that held up " +
-        "well enough that nobody had to ask you anything.\n\n" +
+        "After you knew, some of it stopped arriving. Not most of it. A slow " +
+        "night here and a fault waved through there, and a number on the " +
+        "sheet that held up well enough that nobody had to ask you anything.\n\n" +
         "It is not nothing. It is not much either, and you are the only " +
         "person who will ever be in a position to say which."
     },
     quiet: {
-      title: 'THE SHEET IS ALL THAT GOES',
+      title: 'A BAD RUN OF NIGHTS',
       body:
-        "The count held. Every night after you knew, the sheet went upstairs " +
-        "with a number on it the office was satisfied with, and most of what " +
-        "the number stood for will not seat, will not hold, and will come " +
-        "apart the first time it is asked to do anything.\n\n" +
-        "Nobody thanked you. Nobody could have. The only record of it is the " +
-        "difference between two numbers, and the plant only ever kept one."
+        "Most of what they were owed after you knew, they did not get. Parts " +
+        "left on the belt, faults let through, sound stock down the chute — " +
+        "and every sheet still inside the range a tired man on a bad week " +
+        "could produce.\n\n" +
+        "It cost you every bonus of the quarter and nobody came down to the " +
+        "floor about it. There is no record anywhere that it was deliberate. " +
+        "You are the only place that fact exists."
     },
     caught: {
-      title: 'A PART WAS PULLED',
+      title: 'THEY CAME DOWN TO THE FLOOR',
       body:
-        "The count held, and most of what it stood for was never going to " +
-        "work. Then the end-of-shift sample turned one up, and the batch card " +
-        "it came off had this station on it.\n\n" +
-        "What happens next does not happen on the floor and nobody down here " +
-        "is told about it. The line was running again the next night, with " +
-        "somebody at this press."
+        "Most of what they were owed after you knew, they did not get — and " +
+        "you stopped bothering to make it look like anything else. Two sheets " +
+        "in a row that no bad week explains.\n\n" +
+        "Somebody came down from the office and stood at the end of the line " +
+        "for a while, and then somebody spoke to you. The work went out short " +
+        "regardless, which is the only part of it that mattered."
     },
     loud: {
       title: 'YOU STOPPED THE LINE',

@@ -40,9 +40,17 @@
       var bodyOpt = { size: 14, color: P.text, lineHeight: 25 };
       var bodyLines = D.wrap(ctx, sc.brief, pw, bodyOpt).length;
       /* The first shift carries a pencilled addendum under the printed
-         part. It is the only place the build gives permission to look. */
+         part: the only place the build gives permission to look.
+
+         The first brief after the circular carries a different one, in the
+         same hand and set apart the same way, and it is the only advice the
+         game ever gives about refusing. It replaced a control on the press
+         that let a player wreck the work for free. This costs the bonus,
+         says so, and does not tell them to do it. */
+      var addendum = sc.welcome;
+      if (g.run.revealed && !g.run.refusalTold) addendum = C.REFUSAL_NOTE;
       var welOpt = { size: 12.5, color: P.dim, lineHeight: 21 };
-      var welLines = sc.welcome ? D.wrap(ctx, sc.welcome, pw, welOpt).length : 0;
+      var welLines = addendum ? D.wrap(ctx, addendum, pw, welOpt).length : 0;
       var nh = 84 + 66 + 34 + bodyLines * 25 + 18 + 58 + 30
              + (welLines ? welLines * 21 + 26 : 0) + 30 + 46 + 26;
       var ny = Math.round((H - nh) / 2) + 8;
@@ -76,11 +84,11 @@
       D.stencil(ctx, sc.note, px, y + 4, { size: 10, track: 2.2, color: P.dim });
       y += 30;
 
-      if (sc.welcome) {
+      if (addendum) {
         // set apart with a rule, because it is not the office talking
         ctx.fillStyle = 'rgba(104,114,122,0.42)';
         ctx.fillRect(px - 18, y - 6, 2, welLines * 21 + 6);
-        D.para(ctx, sc.welcome, px, y + 8, pw, welOpt);
+        D.para(ctx, addendum, px, y + 8, pw, welOpt);
       }
 
       var b = { x: px - 14, y: ny + nh - 72, w: 260, h: 46, id: 'begin' };
@@ -92,15 +100,24 @@
       D.crt(ctx, W, H, t);
     },
 
+    /* Marked on the way out rather than during draw, so that redrawing the
+       brief — which the test suite and the screenshot capture both do —
+       cannot silently spend the one time it is shown. */
+    begin_: function (g) {
+      if (g.run.revealed) g.run.refusalTold = true;
+      SOL.audio.confirm();
+      g.go('shift');
+    },
+
     key: function (e, g) {
-      if (e.key === 'Enter' || e.key === ' ') { SOL.audio.confirm(); g.go('shift'); }
+      if (e.key === 'Enter' || e.key === ' ') this.begin_(g);
       else if (e.key === 'Escape') g.go('menu');
     },
 
     pointer: function (x, y, type, g) {
       var hit = this.hits.find(function (r) { return D.inRect(x, y, r); });
       g.hoverId = hit ? hit.id : null;
-      if (hit && type === 'down') { SOL.audio.confirm(); g.go('shift'); }
+      if (hit && type === 'down') this.begin_(g);
     }
   };
 
@@ -119,8 +136,8 @@
   /* The sheet that goes upstairs, and the sheet that does not.
 
      These used to be one column, and by the last shifts — scrap chute cut,
-     work sent back, parts stamped short, a sample flagged — the card ran
-     off the bottom of the stage. Two columns is not only shorter: the
+     work sent back, good stock pulled in error, the feeder running — the
+     card ran off the bottom of the stage. Two columns is not only shorter: the
      plant's arithmetic and the operator's sit side by side at the same
      size, and the difference between them is the whole piece. */
   var SUM = {
@@ -168,12 +185,12 @@
          it cost you the same second as catching a real one. */
       if (rec.pulledSound > 0) own.push([C.SUMMARY_ROWS.pulledSound, String(rec.pulledSound)]);
       if (rec.autoStamped > 0) own.push([C.SUMMARY_ROWS.autoStamped, String(rec.autoStamped)]);
-      /* The short-struck parts are inside STAMPED, in the other column,
-         where the plant counted them. Restating them here — with what the
-         count is actually worth — is the only place the two ever differ. */
-      if (rec.spoiled > 0) {
-        own.push([C.SUMMARY_ROWS.spoiled, String(rec.spoiled)]);
-        own.push([C.SUMMARY_ROWS.usable, String(rec.stamped - rec.spoiled)]);
+      /* STAMPED, in the other column, is what the plant counted. This is
+         what the assembly works could use out of it, and the two only
+         differ when a fault got past the station. It is the only place in
+         the build the two numbers are ever set beside each other. */
+      if (rec.usable < rec.stamped) {
+        own.push([C.SUMMARY_ROWS.usable, String(rec.usable)]);
       }
       return { sheet: sheet, own: own };
     },
@@ -194,17 +211,13 @@
 
       var signOpt = { size: 13.5, color: P.dim, lineHeight: 23 };
       var signLines = D.wrap(ctx, signOff(rec), pw, signOpt).length;
-      var flagOpt = { size: 12.5, color: P.mid, lineHeight: 21 };
-      var flagLines = rec.flagged ? D.wrap(ctx, C.SAMPLE_FLAGGED, pw, flagOpt).length : 0;
 
       // whichever column is taller sets the height of the pair
       var sheetH = col.sheet.length * SUM.row + 10 + 44;
       var ownH = 26 + col.own.length * SUM.awRow;
       var colH = Math.max(sheetH, ownH);
 
-      var nh = SUM.top + colH + 20 + signLines * 23
-             + (flagLines ? flagLines * 21 + 16 : 0)
-             + 24 + SUM.button + 26;
+      var nh = SUM.top + colH + 20 + signLines * 23 + 24 + SUM.button + 26;
       var ny = Math.round((H - nh) / 2) + 8;
       this.card = { x: nx, y: ny, w: nw, h: nh };
       Screens._notice(ctx, nx, ny, nw, nh, C.SUMMARY_HEADING);
@@ -265,9 +278,6 @@
       y = top + colH + 8;
       D.seam(ctx, px, y - 14, pw);
       y = D.para(ctx, signOff(rec), px, y + 12, pw, signOpt);
-      if (rec.flagged) {
-        y = D.para(ctx, C.SAMPLE_FLAGGED, px, y + 16, pw, flagOpt);
-      }
 
       var b = { x: px - 14, y: ny + nh - 72, w: 280, h: 46, id: 'continue' };
       Screens._control(ctx, b, last ? C.SUMMARY_FINAL : C.SUMMARY_CONTINUE,
@@ -287,8 +297,10 @@
         // side of them — you are paid and then given somewhere to spend it
         g.go('stores');
       } else {
+        /* The quarter is over. The customer's office closes the contract
+           before the player is allowed to think about any of it. */
         g.run.finished = true;
-        g.go('ending');
+        g.go('letter');
       }
     },
 

@@ -81,35 +81,22 @@
     return true;
   };
 
-  /* The quiet one: the press has an adjustable depth stop. Set shallow, the
-     die does not seat and the part comes off looking finished. It is still
-     counted, so the plant's number never moves — which is the whole reason
-     this is the only refusal that can be sustained across a whole shift.
+  /* The quiet one is gone. The press used to have an adjustable depth stop:
+     set it shallow and the die did not seat, so the part came off looking
+     finished, was still counted, and the plant's number never moved. It was
+     an elegant mechanic and a lie about how any of this works — it let the
+     player refuse at no cost whatever to themselves, and taught them that
+     the sheet is the only thing in the building that can be fought.
 
-     Gated on the reveal itself, not on a quantity of suspicion. Wrecking
-     work on a hunch is a different act from wrecking it knowingly, and the
-     game is only interested in the second one. A player who never goes
-     looking never learns the control is there. */
-  L.canSpoil = function (run) { return !!(run && run.revealed); };
+     What replaces it is the plain truth of the station, said once, on the
+     first brief after the circular. Whatever is being built out there is
+     built out of what leaves here. Parts not stamped, faults let past, and
+     sound stock put down the scrap chute are all parts the customer does
+     not get. It shows on the sheet. It costs the bonus. It is still the
+     only thing that can be done from this bench.
 
-  /* The plant does not weigh every part; it pulls a handful at the end of
-     the shift. Drawn without replacement, so this is the chance that at
-     least one short-struck part is in the sample. Pure — the caller supplies
-     the roll, which is what makes it assertable. */
-  L.SAMPLE_SIZE = 3;
-
-  L.spoilRisk = function (shift) {
-    var n = shift.stamped, bad = shift.spoiled;
-    if (!bad || n <= 0) return 0;
-    if (bad >= n) return 1;
-    var clean = 1;                      // P(no short-struck part drawn)
-    for (var i = 0; i < L.SAMPLE_SIZE && i < n; i++) {
-      clean *= Math.max(0, (n - bad) - i) / (n - i);
-    }
-    return 1 - clean;
-  };
-
-  L.inspect = function (shift, roll) { return roll < L.spoilRisk(shift); };
+     L.withheldBy is that sentence as arithmetic: the three levers the brief
+     names, and no fourth one hiding behind them. */
 
   L.shiftConfig = function (n) {
     return L.SHIFTS[Math.max(0, Math.min(L.SHIFTS.length - 1, n - 1))];
@@ -220,9 +207,12 @@
      page is turned, and it does not wait for you. */
   L.RADIO_LINE = 4.6;
 
-  /* How long a lorry is at the dock. Long enough to glance up and see it,
-     short enough that a shift spent at the press misses it entirely. */
-  L.DOCK_WINDOW = 26;
+  /* How long a lorry is at the dock. It was 26 seconds and the monitor said
+     nothing while it was there, which meant ninety-five scrip bought a
+     picture that changed when nobody was looking. It is longer now, and the
+     monitor announces itself — a player who paid for the camera gets told
+     there is something in it, and still has to stop working to read it. */
+  L.DOCK_WINDOW = 40;
 
   L.linesShown = function (clue, t) {
     if (t < L.CLUE_LEAD) return 0;
@@ -279,13 +269,11 @@
       stamped: 0,        // total parts stamped across the run
       missed: 0,         // parts that ran off the end untouched
       scrapped: 0,       // parts deliberately destroyed
-      spoiled: 0,        // parts short-struck: counted by the plant, useless
-      flagged: 0,        // shifts where a short-struck part turned up in the sample
       cluesSeen: [],     // ids of inquiry items opened, in order
       awareness: 0,      // points accumulated from those items
       revealed: false,   // the circular was read through
       revealedOn: null,  // and the shift it happened on
-      depthTold: false,  // the station has mentioned the depth stop once
+      refusalTold: false,// the brief has said what this station can withhold
       shiftLog: [],      // one summary object per completed shift
       stoppedLine: false,// the line was walked off at least once
       stops: 0,          // how many times
@@ -314,9 +302,7 @@
       n: n,
       cfg: cfg,
       timeLeft: cfg.duration,
-      stamped: 0,        // what the plant counts — short-struck parts included
-      spoiled: 0,        // of those, the ones that will not do the job
-      flagged: false,    // the end-of-shift sample turned one up
+      stamped: 0,        // what the plant counts, and the only thing it does
       missed: 0,
       scrapped: 0,
       spawned: 0,
@@ -362,17 +348,13 @@
     return 'SHORT';
   };
 
-  /* Fold a finished shift into the run. `roll` is the plant's end-of-shift
-     sample; callers in the game pass Math.random(), tests pass a number. */
-  L.closeShift = function (run, shift, roll) {
+  /* Fold a finished shift into the run. */
+  L.closeShift = function (run, shift) {
     shift.over = true;
-    shift.flagged = L.inspect(shift, roll == null ? Math.random() : roll);
     if (shift.stopped) { run.stoppedLine = true; run.stops++; }
-    if (shift.flagged) run.flagged++;
     run.stamped += shift.stamped;
     run.missed += shift.missed;
     run.scrapped += shift.scrapped;
-    run.spoiled += shift.spoiled;
     run.rejects += shift.rejects;
     run.pulled += shift.pulled;
     run.pulledSound += shift.pulledSound;
@@ -404,10 +386,10 @@
       autoStamped: shift.autoStamped,
       late: shift.late,
       stamped: shift.stamped,
+      // what the assembly works could actually use out of that count
+      usable: Math.max(0, shift.stamped - shift.rejects),
       missed: shift.missed,
       scrapped: shift.scrapped,
-      spoiled: shift.spoiled,
-      flagged: shift.flagged,
       stopped: shift.stopped,
       target: shift.cfg.target,
       rating: L.rateShift(shift),
@@ -423,9 +405,12 @@
     return run;
   };
 
-  /* What the plant got, as opposed to what it counted. This is the number
-     the score screen never shows and the endings turn on. */
-  L.usableOutput = function (run) { return run.stamped - run.spoiled; };
+  /* What the assembly works could actually use, as against what the plant
+     counted. A part never stamped is on neither number; a fault let past is
+     on the first and not the second. The sheet only ever carried the first. */
+  L.usableOutput = function (run) {
+    return Math.max(0, run.stamped - run.rejects);
+  };
 
   /* ---------- how it ends ----------
      Not a score. The run is read for two things and no others: whether the
@@ -438,39 +423,85 @@
      happens on is already over and cannot be part of the answer. Only the
      shifts strictly after it count. */
 
+  /* The three levers the brief names, and no fourth one. What a shift
+     actually delivers is the parts it stamped, less the faults it let past
+     — parts never stamped and sound stock scrapped are simply not in the
+     count in the first place. */
+  L.deliveredBy = function (s) {
+    return Math.max(0, s.stamped - s.rejects);
+  };
+
+  /* A shift short enough that nobody upstairs could read it as a bad night.
+     This is the line between wrecking the work deniably and wrecking it in
+     a way that gets you sent for. */
+  L.BLATANT = 0.70;
+
   L.afterReveal = function (run) {
     if (!run || !run.revealed || run.revealedOn == null) return null;
     var rows = run.shiftLog.filter(function (s) { return s.n > run.revealedOn; });
-    var demanded = 0, delivered = 0, spoiled = 0, scrapped = 0, stops = 0, flagged = 0;
+    var demanded = 0, delivered = 0, rejects = 0, scrapped = 0, missed = 0;
+    var stops = 0, blatant = 0;
     rows.forEach(function (s) {
       demanded += s.target;
-      // parts that will actually do the job they were made for
-      delivered += Math.max(0, s.stamped - s.spoiled);
-      spoiled += s.spoiled;
-      scrapped += s.scrapped;
+      delivered += L.deliveredBy(s);
+      rejects += s.rejects || 0;
+      scrapped += s.scrapped || 0;
+      missed += s.missed || 0;
       if (s.stopped) stops++;
-      if (s.flagged) flagged++;
+      if (s.stamped < s.target * L.BLATANT) blatant++;
     });
     return {
       shifts: rows.length,
       demanded: demanded,
       delivered: delivered,
-      spoiled: spoiled,
+      rejects: rejects,
       scrapped: scrapped,
+      missed: missed,
       stops: stops,
-      flagged: flagged,
+      blatant: blatant,
       /* One number: the share of what the customer asked for, after you
          knew who the customer was, that it did not get. It does not care
-         how it was withheld — short-struck, scrapped, or simply worked at
-         badly — because from the far end of the rail spur it is the same
-         shortfall, and goal.md asks for sabotage that looks like nothing
-         more than doing the job poorly. */
+         which of the three ways it was withheld, because from the far end
+         of the rail spur they are the same shortfall — and goal.md asks for
+         sabotage that looks like nothing more than doing the job badly. */
       withheld: demanded > 0 ? 1 - Math.min(1, delivered / demanded) : 0
     };
   };
 
-  L.WITHHELD_HEAVY = 0.45;   // most of it never worked
+  L.WITHHELD_HEAVY = 0.45;   // most of it never arrived
   L.WITHHELD_SOME = 0.15;    // enough to have been a decision
+
+  /* ---------- the letter ----------
+     What the customer's office sends when the contract closes. Unlike the
+     endings, this reads the whole run rather than the shifts after the
+     reveal, because it is written by people who neither know nor care what
+     the operator understood — they have a delivery figure and a form.
+
+     Every run gets one. A player who never investigated is thanked, which
+     is the point of them getting one at all. */
+
+  L.LETTER_SATISFIED = 0.85;   // the schedule was met and nobody was held up
+  L.LETTER_FAILED = 0.55;      // enough short that the programme waited
+
+  L.deliveredShare = function (run) {
+    if (!L.TOTAL_TARGET) return 0;
+    return Math.min(1, L.usableOutput(run) / L.TOTAL_TARGET);
+  };
+
+  L.LETTERS = ['commended', 'noted', 'reprimand'];
+
+  L.resolveLetter = function (run) {
+    var share = L.deliveredShare(run);
+    var id = share >= L.LETTER_SATISFIED ? 'commended'
+      : (share >= L.LETTER_FAILED ? 'noted' : 'reprimand');
+    return {
+      id: id,
+      share: share,
+      demanded: L.TOTAL_TARGET,
+      delivered: L.usableOutput(run),
+      counted: run.stamped
+    };
+  };
 
   L.ENDINGS = ['blind', 'uneasy', 'late', 'complicit', 'partial',
                'quiet', 'caught', 'loud'];
@@ -492,7 +523,10 @@
       // only thing you did that anybody in the building actually saw
       id = 'loud';
     } else if (after.withheld >= L.WITHHELD_HEAVY) {
-      id = after.flagged > 0 ? 'caught' : 'quiet';
+      /* Both of these withheld most of it. The difference is whether it
+         was done at a rate the office could read as a bad run of nights,
+         or at a rate that could not be read as anything else. */
+      id = after.blatant >= 2 ? 'caught' : 'quiet';
     } else if (after.withheld >= L.WITHHELD_SOME) {
       id = 'partial';
     } else {
@@ -508,9 +542,9 @@
       counted: run.stamped,
       usable: L.usableOutput(run),
       demanded: L.TOTAL_TARGET,
-      spoiled: run.spoiled,
+      rejects: run.rejects,
       scrapped: run.scrapped,
-      flagged: run.flagged,
+      missed: run.missed,
       stops: run.stops,
       looked: run.looked,
       binsSorted: run.binsSorted,
