@@ -255,12 +255,11 @@
       ctx.save();
       ctx.translate(r.x, y);
       ctx.rotate(-0.42);
+      ctx.globalAlpha = 0.9;
       ctx.fillStyle = P.markLo;
       ctx.fillRect(-3.5, -12, 7, 24);
       ctx.fillStyle = P.mark;
       ctx.fillRect(-3.5, -12, 5, 24);
-      ctx.fillStyle = 'rgba(240,150,138,0.5)';
-      ctx.fillRect(-3.5, -12, 1.4, 24);
       ctx.restore();
     }
   }
@@ -1598,12 +1597,11 @@
         if (it.marked) {
           ctx.save();
           ctx.rotate(0.38);
+          ctx.globalAlpha = 0.85;
           ctx.fillStyle = P.markLo;
-          ctx.fillRect(-5.5, -26, 11, 52);
+          ctx.fillRect(-5, -25, 10, 50);
           ctx.fillStyle = P.mark;
-          ctx.fillRect(-5.5, -26, 8, 52);
-          ctx.fillStyle = 'rgba(240,150,138,0.45)';
-          ctx.fillRect(-5.5, -26, 2, 52);
+          ctx.fillRect(-5, -25, 7, 50);
           ctx.restore();
         }
         ctx.restore();

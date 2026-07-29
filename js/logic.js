@@ -190,23 +190,50 @@
     return out;
   };
 
-  L.REVEAL_FROM_SHIFT = 3;
-  /* What the two free channels together are worth by the end of shift 3 —
-     the pieces on line 5 and the bin at the station, used every time. It is
-     deliberately payable without buying anything, so the circular is never
-     behind a price; the radio and the camera buy more of the story and a
-     wider margin, not the ending.
+  L.REVEAL_FROM_SHIFT = 4;
 
-     Three, because seven of the twenty items are tips and weigh nothing.
-     That is the whole point of them: a shift spent finding out how to work
-     the press faster is a shift that has taught you nothing about the
-     customer, and the arithmetic has to agree. */
-  L.REVEAL_MIN_AWARENESS = 3;
+  /* Two things stand between an operator and the circular, and they are
+     different kinds of thing on purpose.
+
+     The first is arithmetic. Eight of the twenty-two items are playing
+     tips and weigh nothing at all, which is the whole point of them: a
+     shift spent finding out how to work the press faster is a shift that
+     has taught you nothing about the customer, and the count has to agree.
+     Eight is roughly the free channels used diligently from the third
+     shift on, plus one thing you had to go out of your way for. */
+  L.REVEAL_MIN_AWARENESS = 8;
+
+  /* The second is that one of those things has to have cost you something
+     you could have kept. The pieces on line 5 and the basket at your feet
+     are free and always open; a run that uses only those never gets there,
+     however diligent it is. Somewhere in what you have read there must be
+     an item off the radio, off the yard camera, or out of the mouth of the
+     man from the works office — sixty scrip, ninety-five, or the sixty-two
+     you turned down to ask him a question.
+
+     This was the other way round for most of the build's life: the reveal
+     was deliberately payable for nothing, so that it could never be said
+     to sit behind a price. That is a defensible design and it is not this
+     one. Finding out has to be a purchase the player made against their
+     own interest, because that is what the piece is about — the operator
+     who never finds out is not being punished by the game, they are being
+     described by it. */
+  L.PAID_CHANNELS = ['radio', 'dock', 'officer'];
+
+  L.hasPaidSource = function (run) {
+    if (!run) return false;
+    for (var i = 0; i < run.cluesSeen.length; i++) {
+      var c = L.clue(run.cluesSeen[i]);
+      if (c && L.PAID_CHANNELS.indexOf(c.via) >= 0) return true;
+    }
+    return false;
+  };
 
   L.canReveal = function (run, shift) {
     if (!L.REVEAL || !run || run.revealed) return false;
     if (run.cluesSeen.indexOf(L.REVEAL.id) >= 0) return false;
     if (!shift || shift.n < L.REVEAL_FROM_SHIFT) return false;
+    if (!L.hasPaidSource(run)) return false;
     return run.awareness >= L.REVEAL_MIN_AWARENESS;
   };
 

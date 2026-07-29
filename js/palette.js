@@ -46,9 +46,16 @@
        has something on it — a piece coming down line 5 that somebody has
        been at, a balled-up paper in the bin. It is a marker and nothing
        else: it never carries meaning of its own, and the seal on the
-       closing letter is a different red for a different reason. */
-    mark:     '#b8392c',
-    markLo:   '#7d2118',
+       closing letter is a different red for a different reason.
+
+       Twice as dull as it started. The first cut was a signal red and it
+       carried across the whole hall, which made every taped piece read as
+       something the game wanted from you rather than something somebody
+       on an earlier shift had done and forgotten. This is oxide on old
+       tape under a factory lamp: you find it by looking at the belt, not
+       by having it shouted at you. */
+    mark:     '#8c4a41',
+    markLo:   '#5e2f2a',
 
     // the one thing letting light in
     accent:   '#c8912e',

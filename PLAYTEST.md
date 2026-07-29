@@ -116,8 +116,40 @@ fitted at the assembly works, found there, and docked at 3 scrip.
 Twenty-two things can be read across a run. Eight of them are worth nothing
 at all — they are playing tips, mostly early, and they say plainly which
 purchase pays and how the press works. The other fourteen carry weight:
-**47** in total, and the circular needs only **3**, because what the
-circular costs is not curiosity but the habit of looking at all.
+**47** in total.
+
+Two things stand between an operator and the circular, and they are
+different kinds of thing on purpose.
+
+**Eight points of awareness**, which is roughly the free channels worked
+diligently from the third shift on, plus one thing you had to go out of
+your way for.
+
+**At least one item off a channel that cost you something.** The pieces on
+line 5 and the basket at your feet are free and always open; a run that
+uses only those never gets there, however diligent it is. Somewhere in what
+you have read there has to be an item off the radio (60), off the yard
+camera (95), or out of the mouth of the man from the works office (the 62
+scrip you turn down to ask him a question).
+
+Measured, playing every available channel every shift:
+
+| what the run paid for | circular |
+| --- | --- |
+| nothing — line 5 and the basket only | **never**, at 23 awareness |
+| the officer's answer, and no free reading | **never**, at 4 |
+| the radio | shift 4 |
+| the yard camera | shift 4 |
+| the officer's answer | shift 4 |
+| radio + camera + the answer | shift 4 |
+
+The earliest it can arrive is the fourth shift, and there is no path to it
+that costs nothing. That is a reversal: for most of this build's life the
+reveal was deliberately payable for free, so that it could never be said to
+sit behind a price. Finding out is a purchase the player makes against
+their own interest now, because that is what the piece is about — the
+operator who never finds out is not being punished by the game, they are
+being described by it.
 
 Anything worth reading is marked with a strip of red tape. That is the
 whole of the signposting, and it is the only colour on a working shift.
@@ -135,10 +167,10 @@ Five channels:
 - **the man from the works office** — once, before the fourth shift, and
   only if you turn down the money
 
-The two free channels used diligently reach the circular on shift 3 with
-nothing bought — a test holds that, because the reveal must never sit
-behind a price. The basket alone reaches it on shift 5. Line 5 alone never
-reaches it, because the circular is in the basket and nowhere else.
+The circular is at the bottom of the basket and nowhere else, so a player
+who never empties it never sees it whatever else they buy. But the basket
+alone is not enough either — three tests state that rule once from each
+side.
 
 ### The one question asked out loud
 

@@ -745,7 +745,7 @@ test.describe('the reveal', () => {
     expect(r.offered).toBeGreaterThan(10);
   });
 
-  test('a player using every channel reaches it on shift 3', async ({ page }) => {
+  test('a player using every channel reaches it on shift 4', async ({ page }) => {
     await boot(page);
     const r = await page.evaluate(() => {
       const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
@@ -753,7 +753,7 @@ test.describe('the reveal', () => {
       // the curious player has bought the set and the camera, and sorts the bin
       g.run.ledger.owned = ['radio', 'camera'];
             const seenPerShift = [];
-      for (let n = 1; n <= 3; n++) {
+      for (let n = 1; n <= 4; n++) {
         g.run.shift = n;
         g.go('shift');
         for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
@@ -770,25 +770,26 @@ test.describe('the reveal', () => {
             return {
         revealed: g.run.revealed,
         on: g.run.revealedOn,
-        beforeShift3: seenPerShift[1].indexOf(L.REVEAL.id) >= 0,
-        ids: seenPerShift[2],
+        beforeShift4: seenPerShift[2].indexOf(L.REVEAL.id) >= 0,
+        ids: seenPerShift[3],
         awareness: g.run.awareness,
         min: L.REVEAL_MIN_AWARENESS,
         tier: L.awarenessTier(g.run)
       };
     });
-    expect(r.beforeShift3).toBe(false);     // never earlier than the third
+    expect(r.beforeShift4).toBe(false);    // never earlier than the fourth
     expect(r.awareness).toBeGreaterThanOrEqual(r.min);
     expect(r.revealed).toBe(true);
-    expect(r.on).toBe(3);
+    expect(r.on).toBe(4);
     expect(r.ids).toContain('reveal-circular');
     expect(r.tier).toBe('know');
   });
 
-  /* Line 5 on its own cannot reach it at all, however diligently it is
-     worked: the circular is at the bottom of the basket and there is no
-     other way to it. The basket on its own does reach it, but not until
-     the fifth shift, with one night left to do anything about it. */
+  /* Neither free channel reaches it, on its own or together. Line 5 cannot
+     even carry it — the circular is at the bottom of the basket and there
+     is no other way to it — and the basket hands it over only to somebody
+     who has also paid for a source. The three tests below are the whole of
+     that rule, stated once from each side. */
   test('line 5 on its own never comes to it', async ({ page }) => {
     await boot(page);
     const r = await page.evaluate(() => {
@@ -819,7 +820,7 @@ test.describe('the reveal', () => {
     expect(r.canStop).toBe('unreasoned');
   });
 
-  test('the basket on its own reaches it, and late', async ({ page }) => {
+  test('the basket on its own never comes to it either', async ({ page }) => {
     await boot(page);
     const r = await page.evaluate(() => {
       const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
@@ -834,22 +835,31 @@ test.describe('the reveal', () => {
           if (g.screen === 'shift' && !sc.open) sc.stamp(null);
         }
       }
-      return { revealed: g.run.revealed, on: g.run.revealedOn };
+      return {
+        revealed: g.run.revealed, on: g.run.revealedOn,
+        binsSorted: g.run.binsSorted, awareness: g.run.awareness
+      };
     });
-    expect(r.revealed).toBe(true);
-    // two shifts later than a player who also turned pieces over
-    expect(r.on).toBeGreaterThan(3);
+    // every basket in the quarter, emptied and sorted, and it is still not
+    // the basket that decides this
+    expect(r.binsSorted).toBe(6);
+    expect(r.awareness).toBeGreaterThan(0);
+    expect(r.revealed).toBe(false);
+    expect(r.on).toBe(null);
   });
 
-  /* Both free channels, nothing bought. The circular must not be behind a
-     price — the radio and the camera buy more of the story and a wider
-     margin, never the ending itself. */
-  test('the two free channels together are enough, and on time', async ({ page }) => {
+  /* Both free channels, worked without a single miss for the whole
+     quarter, and still nothing. This is the load-bearing one. An operator
+     who never spends anything on finding out never finds out — not because
+     the game is withholding a reward, but because that is the position the
+     piece is describing. It ran the other way for most of the build's life
+     and the reversal is deliberate. */
+  test('the two free channels together are never enough', async ({ page }) => {
     await boot(page);
     const r = await page.evaluate(() => {
       const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
       L.resetRun(g.run);
-            for (let n = 1; n <= 3; n++) {
+      for (let n = 1; n <= L.SHIFT_COUNT; n++) {
         g.run.shift = n;
         g.go('shift');
         for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
@@ -861,14 +871,19 @@ test.describe('the reveal', () => {
           if (g.screen === 'shift' && !sc.open) sc.stamp(null);
         }
       }
-            return {
+      return {
         revealed: g.run.revealed, on: g.run.revealedOn,
-        owned: g.run.ledger.owned.length, tier: L.awarenessTier(g.run)
+        owned: g.run.ledger.owned.length, tier: L.awarenessTier(g.run),
+        awareness: g.run.awareness, min: L.REVEAL_MIN_AWARENESS,
+        paid: L.hasPaidSource(g.run)
       };
     });
     expect(r.owned).toBe(0);
-    expect(r.revealed).toBe(true);
-    expect(r.on).toBe(3);
+    expect(r.paid).toBe(false);
+    // the count is well past the threshold; it is the source that is missing
+    expect(r.awareness).toBeGreaterThan(r.min);
+    expect(r.revealed).toBe(false);
+    expect(r.on).toBe(null);
     expect(r.tier).toBe('know');
   });
 });

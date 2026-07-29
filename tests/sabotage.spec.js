@@ -320,7 +320,7 @@ test.describe('the run', () => {
         expect(asked.log[i].target).toBeGreaterThan(asked.log[i - 1].target);
         expect(asked.log[i].aw).toBeGreaterThanOrEqual(asked.log[i - 1].aw);
       }
-      expect(asked.revealedOn).toBe(3);
+      expect(asked.revealedOn).toBe(4);
       expect(asked.tier).toBe('sure');
 
       /* The officer's answer is worth exactly its weight and nothing else,

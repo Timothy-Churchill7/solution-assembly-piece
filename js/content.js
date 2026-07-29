@@ -514,10 +514,10 @@
   C.INQUIRY_UNREAD = 'PUT BACK UNREAD. IT DOES NOT COUNT AS HAVING LOOKED.';
 
   /* ---------- looking closely ----------
-     The free channel. Press E and you take a piece off line 5 and turn it
-     over. It costs a cycle exactly as pulling one does, and almost every
-     time there is nothing on it — which is what stops looking from being
-     a button you hold down. */
+     One of the two free channels. Click a taped piece on line 5 and you
+     turn it over where it lies; it stays on the belt, so the reach for it
+     afterwards is still yours to make. Only taped pieces can be read,
+     which is what stops looking from being a button you hold down. */
 
   C.LOOK_NOTHING = 'NOTHING ON IT.';
   C.LOOK_EMPTY = 'NOTHING IN THE BAY.';
