@@ -43,12 +43,14 @@ These are the things the suite cannot judge.
    scrip and the foreman mentions it once. If emptying it ever feels
    automatic rather than like a decision to stop working, the channel has
    stopped working.
-4. **Does the red tape read as tape, and only as tape?** It is the one
-   marker on a working shift: a strip on a piece coming down line 5, and a
-   strip on one thing in the basket. It has to be findable without being a
-   quest icon, and it must not look like a button. It has twice been too
-   big — once wide and square enough to read as a redaction bar, once
-   nearly the size of the part it was stuck to.
+4. **Can you find the glint without hunting for it?** It is the one marker
+   on a working shift: two pixels by nine, on a piece coming down line 5
+   and on one thing in the basket, brightest in the middle and gone at
+   both ends. It should read as light catching something that has been
+   marked, not as a label the game has attached for you. It has been four
+   sizes now — a redaction bar, a stripe, a strip of tape, and this — and
+   every reduction has been an improvement, but this is the first one
+   small enough that it could plausibly be missed on a busy shift.
 5. **Read the eight endings back to back.** None may read as praise or as a
    scolding.
 6. **Read a clue with the shift running.** The line should slow enough to
@@ -291,6 +293,14 @@ is the only acknowledgement the piece ever offers.
 - **The radio is text only.** There is a blip when a line arrives and no
   voice under it. That is a deliberate limit of a build with no asset
   files, but it does mean the set is quieter than a real one would be.
+- **There is no room tone.** A continuous hum ran under every shift and
+  has been taken out. It was the loudest sustained thing in the build, it
+  did not quieten when the belt was throttled for reading, and it had no
+  cycle in it and did not change as the schedule rose — a drone that does
+  none of those things is a test tone, not a factory. The press, the belt
+  and the hooter carry the room now, and the silence between them is a
+  fair description of the job. Whether the hall now reads as *quiet* or as
+  *unfinished* is a judgement only a first-time player can make.
 - **The letter is a hard tonal break** from the six shifts before it, on
   purpose. Whether the break lands or merely jars is the one thing I would
   most want a first-time player's reaction to, and it is not something the

@@ -56,6 +56,11 @@
        by having it shouted at you. */
     mark:     '#8c4a41',
     markLo:   '#5e2f2a',
+    /* The centre of the glint. Brighter than `mark` on purpose: once the
+       mark came down to two pixels by nine it stopped being paint on a
+       part and became light catching one, and light is the one thing that
+       is allowed to be bright. Dull at that size is invisible. */
+    markHi:   '#c9584a',
 
     // the one thing letting light in
     accent:   '#c8912e',

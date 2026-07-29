@@ -255,11 +255,19 @@
       ctx.save();
       ctx.translate(r.x, y);
       ctx.rotate(-0.42);
-      ctx.globalAlpha = 0.9;
-      ctx.fillStyle = P.markLo;
-      ctx.fillRect(-3.5, -12, 7, 24);
-      ctx.fillStyle = P.mark;
-      ctx.fillRect(-3.5, -12, 5, 24);
+      /* A glint, not a label. Two pixels wide and nine long, brightest in
+         the middle and gone at both ends — the light catching one edge of
+         something that has been marked, rather than a stripe painted on
+         for the player's benefit. It has been three sizes now and every
+         reduction has been an improvement. */
+      var gl = ctx.createLinearGradient(0, -4.5, 0, 4.5);
+      gl.addColorStop(0, 'rgba(0,0,0,0)');
+      gl.addColorStop(0.28, P.mark);
+      gl.addColorStop(0.5, P.markHi);
+      gl.addColorStop(0.72, P.mark);
+      gl.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = gl;
+      ctx.fillRect(-1, -4.5, 2, 9);
       ctx.restore();
     }
   }
@@ -1597,11 +1605,15 @@
         if (it.marked) {
           ctx.save();
           ctx.rotate(0.38);
-          ctx.globalAlpha = 0.85;
-          ctx.fillStyle = P.markLo;
-          ctx.fillRect(-5, -25, 10, 50);
-          ctx.fillStyle = P.mark;
-          ctx.fillRect(-5, -25, 7, 50);
+          // the same glint, at the size the basket is drawn at
+          var pg = ctx.createLinearGradient(0, -8, 0, 8);
+          pg.addColorStop(0, 'rgba(0,0,0,0)');
+          pg.addColorStop(0.28, P.mark);
+          pg.addColorStop(0.5, P.markHi);
+          pg.addColorStop(0.72, P.mark);
+          pg.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = pg;
+          ctx.fillRect(-1.5, -8, 3, 16);
           ctx.restore();
         }
         ctx.restore();

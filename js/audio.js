@@ -226,43 +226,20 @@
     o.start(t0); o.stop(t0 + 0.13);
   };
 
-  /* The line itself: a low continuous hum plus filtered noise, held for
-     as long as the shift screen is up. */
-  var line = null;
-  A.lineOn = function () {
-    if (!ready() || line) return;
-    var g = ac.createGain();
-    g.gain.value = 0.0001;
-    g.gain.linearRampToValueAtTime(0.10, ac.currentTime + 1.2);
-    g.connect(master);
+  /* There is no room tone. The line ran under the whole shift as a 47 Hz
+     sawtooth and filtered noise, which was the loudest sustained thing in
+     the build and never changed — it did not quieten when the belt was
+     throttled for reading, it had no cycle in it, and it did not move as
+     the schedule rose. A drone that does none of those things is not a
+     factory, it is a test tone. The press, the belt clicks and the hooter
+     carry the room on their own; the silence between them is the point of
+     a station where nothing happens but the work.
 
-    var o1 = ac.createOscillator();
-    o1.type = 'sawtooth'; o1.frequency.value = 47;
-    var lp = ac.createBiquadFilter();
-    lp.type = 'lowpass'; lp.frequency.value = 190;
-    o1.connect(lp); lp.connect(g);
-
-    var n = ac.createBufferSource();
-    n.buffer = noiseBuf(2.5); n.loop = true;
-    var bp = ac.createBiquadFilter();
-    bp.type = 'bandpass'; bp.frequency.value = 700; bp.Q.value = 0.5;
-    var ng = ac.createGain(); ng.gain.value = 0.035;
-    n.connect(bp); bp.connect(ng); ng.connect(g);
-
-    o1.start(); n.start();
-    line = { g: g, nodes: [o1, n] };
-  };
-
-  A.lineOff = function () {
-    if (!line || !ac) return;
-    var l = line; line = null;
-    try {
-      l.g.gain.cancelScheduledValues(ac.currentTime);
-      l.g.gain.setValueAtTime(l.g.gain.value, ac.currentTime);
-      l.g.gain.linearRampToValueAtTime(0.0001, ac.currentTime + 0.35);
-      l.nodes.forEach(function (n) { try { n.stop(ac.currentTime + 0.45); } catch (e) {} });
-    } catch (e) {}
-  };
+     `lineOn` and `lineOff` are kept as no-ops rather than removed, because
+     three screens called them and the call sites read as "the line is
+     running now" — which is still true, it just makes no sound. */
+  A.lineOn = function () {};
+  A.lineOff = function () {};
 
   A.stop = function () {
     if (ac) { try { ac.close(); } catch (e) {} ac = null; started = false; }
