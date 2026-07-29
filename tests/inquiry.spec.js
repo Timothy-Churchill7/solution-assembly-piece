@@ -265,8 +265,11 @@ test.describe('looking closely at line 5', () => {
   });
 
   /* Investigating is not a thing you do to a piece; it is a thing you do
-     to a piece with red tape on it. Everything else on line 5 is work. */
-  test('only a taped piece can be investigated', async ({ page }) => {
+     to a piece whose split runs warm. Everything else on line 5 is work,
+     and clicking it does nothing at all — taking a piece off is X, and
+     only X. The two used to share the click, which meant misreading a
+     split cost you the piece you were trying to read. */
+  test('clicking an unmarked piece does nothing whatever', async ({ page }) => {
     await boot(page);
     await enterShift(page, 5);
     const r = await page.evaluate(() => {
@@ -280,19 +283,23 @@ test.describe('looking closely at line 5', () => {
       const plain = sc.nearestReturn();
       const looked = sc.look(plain.x);
       const why = sc.lastAction;
-      // clicking it on the belt takes it off instead, which is the job
+      // and clicking it on the belt leaves it exactly where it is
       const before = sc.shift.pulled;
       sc.pointer(plain.x, window.SOL.LAY.retY + 20, 'down', g);
+      const afterClick = sc.shift.pulled - before;
+      // X still takes it off, which is the job
+      const pulled = sc.pull(plain.x);
       return {
         found: !!plain, looked, why, open: !!sc.open,
-        pulledDelta: sc.shift.pulled - before
+        afterClick, pulled, pulledDelta: sc.shift.pulled - before
       };
     });
     expect(r.found).toBe(true);
     expect(r.looked).toBe(false);
     expect(r.why).toBe('nolook');
     expect(r.open).toBe(false);
-    // the same click did the job instead
+    expect(r.afterClick).toBe(0);
+    expect(r.pulled).toBe(true);
     expect(r.pulledDelta).toBe(1);
   });
 

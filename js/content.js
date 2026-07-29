@@ -64,13 +64,13 @@
 
   C.HOWTO = [
     { k: 'SPACE, or CLICK the belt', v: 'Stamps the part in the press zone. Stamped parts are your quota; nothing else counts.' },
-    { k: 'THE COOLDOWN', v: 'A stamp puts the press out for 1.7 seconds. Nothing else on the screen changes that.' },
-    { k: 'X, or CLICK line 5', v: 'Takes a piece off the return line. Every faulty one you leave on costs you 3 scrip.' },
-    { k: 'SPOTTING A FAULT', v: 'A faulty piece sits crooked, with a bright split across it. A few carry something else.' },
-    { k: 'CLICK a piece with red tape on it', v: 'Reads what is on it. The line slows right down while you do. It stays on the belt.' },
+    { k: 'THE COOLDOWN', v: 'A stamp puts the press out for 1.7 seconds. The target rises every shift; your hands do not.' },
+    { k: 'X', v: 'Takes a piece off the return line. Every faulty one you leave on costs you 3 scrip.' },
+    { k: 'SPOTTING A FAULT', v: 'A faulty piece sits crooked, with a bright split across it. Every one, every time.' },
+    { k: 'CLICK a piece on line 5', v: 'Looks at it. It stays on the belt. Most splits are cold white; a few run warm.' },
+    { k: 'A WARM SPLIT', v: 'Those are the pieces with something on them. Nothing else is marked.' },
     { k: 'S', v: 'Scraps the part in the press zone. It counts as a miss. Available from shift 3.' },
-    { k: 'ESC', v: 'Puts down whatever you are reading. Nothing stops while you read it.' },
-    { k: 'BETWEEN SHIFTS', v: 'Pay, then the stores, then the bin. The target rises every shift; your hands do not.' }
+    { k: 'ESC', v: 'Puts down whatever you are reading. Nothing stops while you read it.' }
   ];
 
   C.HOWTO_BUY =
@@ -106,14 +106,14 @@
      Each item arrives through one of four channels and none of them lights
      up:
 
-       via 'part'   a piece on line 5 that reads as a fault. Pull it and it
-                    is gone; look at it instead and the fault is a strip of
-                    tape with something on it. Free, and it costs a cycle.
+       via 'part'   a faulty piece on line 5 whose split runs a tenth of
+                    the way towards red instead of cold white. Free. It
+                    costs the clock, and it stays on the belt either way.
        via 'radio'  the bench set, if it was bought, talking over the noise
                     while you work. Mostly adverts and weather.
        via 'dock'   the yard camera, if it was bought. Mostly an empty yard.
-       via 'trash'  the bin by the door at the end of a shift. You are
-                    supposed to sort it. Nobody does.
+       via 'trash'  the basket at the station, emptied during the shift.
+                    You are supposed to sort it. Nobody does.
 
      `at` is the fraction of the shift elapsed when it becomes available;
      `weight` is what reading it adds to what the player knows.
@@ -514,10 +514,11 @@
   C.INQUIRY_UNREAD = 'PUT BACK UNREAD. IT DOES NOT COUNT AS HAVING LOOKED.';
 
   /* ---------- looking closely ----------
-     One of the two free channels. Click a taped piece on line 5 and you
-     turn it over where it lies; it stays on the belt, so the reach for it
-     afterwards is still yours to make. Only taped pieces can be read,
-     which is what stops looking from being a button you hold down. */
+     One of the two free channels. Click any piece on line 5 and you look
+     at it where it lies; it stays on the belt either way, so the reach for
+     it afterwards is still yours to make. Almost none of them has anything
+     on it, which is what stops looking from being a button you hold
+     down. */
 
   C.LOOK_NOTHING = 'NOTHING ON IT.';
   C.LOOK_EMPTY = 'NOTHING IN THE BAY.';
@@ -706,7 +707,9 @@
   C.BIN_NOTE = 'BOTH BINS GO IN THE SAME SKIP.';
 
   /* Six things. The labels are flat and none of them is a hint — the one
-     that matters is marked in red, and that is the only signal. */
+     that matters is a warmer sheet of paper than the others, the same
+     tenth of the way to red as the split on the line, and that is the
+     only signal. */
   C.BIN_ITEMS = [
     { kind: 'paper', label: 'BATCH CARD' },
     { kind: 'swarf', label: 'SWARF' },

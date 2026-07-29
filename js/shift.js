@@ -220,9 +220,24 @@
       : { hi: '#8e9397', mid: '#52575b', lo: '#1a1c1e' });
 
     if (faulty) {
-      // the split, raked by whatever light there is
+      /* The split, raked by whatever light there is — and on a piece with
+         something on it, the same split running warm instead of cold. Not
+         a mark laid on top of the part: the light coming off the break has
+         a different colour in it, and that is the whole tell. Brightness
+         is deliberately identical, so the only difference is hue and the
+         eye cannot fall back on "that one is brighter".
+
+         Measured off the canvas on shift 6, brightest pixel on the stroke:
+         bare, cold is rgb(124,129,133) and warm is rgb(140,131,129) — the
+         blue-over-red bias flips from +9 to -11, which is a real change
+         and a small one. With the lamp it is rgb(162,169,173) against
+         rgb(172,151,142), a swing of forty. Fifty scrip of light is what
+         turns this from something you might catch into something you can
+         work by, which is the most honest thing the lamp has ever done. */
       ctx.save();
-      ctx.strokeStyle = 'rgba(232,242,249,' + (kit.lamp ? 0.62 : 0.34) + ')';
+      ctx.strokeStyle = r.clue
+        ? 'rgba(247,201,181,' + (kit.lamp ? 0.62 : 0.34) + ')'
+        : 'rgba(232,242,249,' + (kit.lamp ? 0.62 : 0.34) + ')';
       ctx.lineWidth = kit.lamp ? 1.8 : 1.4;
       ctx.beginPath();
       ctx.moveTo(r.x - 13, y + 7);
@@ -243,33 +258,9 @@
       }
     }
 
-    /* Something on it. A strip of red tape wrapped round the seat, which is
-       how anybody marks a piece they want somebody else to look at, and the
-       only red on a working screen. Click it and you read what is on it;
-       click it again and it comes off the line like anything else. */
-    if (r.clue) {
-      /* Wrapped round the seat at an angle, the way tape goes on by hand.
-         Drawn square to begin with, which read as a redaction bar — the
-         wrong idea entirely, since nothing here is being hidden from the
-         player. */
-      ctx.save();
-      ctx.translate(r.x, y);
-      ctx.rotate(-0.42);
-      /* A glint, not a label. Two pixels wide and nine long, brightest in
-         the middle and gone at both ends — the light catching one edge of
-         something that has been marked, rather than a stripe painted on
-         for the player's benefit. It has been three sizes now and every
-         reduction has been an improvement. */
-      var gl = ctx.createLinearGradient(0, -4.5, 0, 4.5);
-      gl.addColorStop(0, 'rgba(0,0,0,0)');
-      gl.addColorStop(0.28, P.mark);
-      gl.addColorStop(0.5, P.markHi);
-      gl.addColorStop(0.72, P.mark);
-      gl.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = gl;
-      ctx.fillRect(-1, -4.5, 2, 9);
-      ctx.restore();
-    }
+    /* Nothing else is drawn on it. There was a strip of red tape here, and
+       then a glint, and both were things the game had added to the part to
+       point at it. The mark is in the split now and nowhere else. */
   }
 
   /* The bay's own readout: one line, under the belt, on a seat dark enough
@@ -1054,29 +1045,36 @@
     spawnReturn: function (cfg) {
       var i = this.retIdx++;
       var faulty = L.isFaulty(i, cfg);
-      var armable = false;
-      if (faulty) {
-        armable = L.armTakes(this.faultIdx, E.ARM_SHARE);
-        this.faultIdx++;
-        this.shift.faulty++;
-      }
-      /* A piece with something on it carries red tape, and that is the
-         whole signal — it does not have to be faulty as well.
+      /* An item rides in on a fault, because the only mark it has is in
+         the fault's own split — a warmth in the light coming off it, where
+         every other split on the line is cold. There is nothing else to
+         see, so there has to be a split to see it in.
 
-         It used to require a fault to ride on, back when there was one
-         part-borne item a shift. With the tips in, shift 1 has two of them
-         and exactly one fault on the whole line, so the second could never
-         appear at all. Tape and fault are separate things now: crooked and
-         split means it will not pass, red tape means somebody wants it
-         looked at, and a piece can be either, both or neither.
+         This went back and forth. Tape and fault were separate for a while,
+         which let a sound piece carry something; the tape was its own
+         signal and did not need the split. The tape is gone, so they are
+         one thing again, and shift 1's flaw rate went up to give it two
+         faults instead of one to hang its two tips on.
 
-         The arm never takes a taped piece. A machine that sorts by the
-         obvious would have put it straight in the skip. */
+         The arm never takes a piece with something on it. A machine that
+         sorts by the obvious would have put it straight in the skip. */
       var clue = null;
-      if (this.carry) {
+      if (faulty && this.carry) {
         clue = this.carry;
         this.carry = null;
-        armable = false;
+      }
+      /* The arm's share is dealt out of the faults it can actually see,
+         which is why this counts after the item is assigned rather than
+         before. Counting first made every item-bearing fault a sweep the
+         arm silently lost, and quietly took the arm below the price it is
+         sold at. */
+      var armable = false;
+      if (faulty) {
+        this.shift.faulty++;
+        if (!clue) {
+          armable = L.armTakes(this.faultIdx, E.ARM_SHARE);
+          this.faultIdx++;
+        }
       }
       this.shift.returns++;
       this.returns.push({
@@ -1436,14 +1434,18 @@
       if (hit && hit.id === 'bin') { this.openBin(g); return; }
       if (hit && hit.id === 'stop') { this.stopLine(g); return; }
       if (hit && hit.id === 'dock') { this.lookDock(); return; }
-      /* Line 5. A piece with red tape on it is read; anything else is
-         taken off. Reading it consumes the tape, so a second click on the
-         same piece does the job instead — which is how a player learns
-         that the two are the same reach made two different ways. */
+      /* Line 5, and clicking it only ever looks. Taking a piece off is X
+         and nothing but X.
+
+         It used to do both — read a marked piece, take off anything else —
+         and that made the same gesture mean two opposite things depending
+         on something the player was still learning to see. A player who
+         misread a split lost the piece they were trying to read, which is
+         the one mistake this mechanic cannot afford to punish. Looking is
+         now free of consequence and taking off is a separate decision made
+         with a separate hand. */
       if (y >= LAY.retY - 44 && y <= LAY.retY + LAY.retH + 16) {
-        var got = this.returnAt(x);
-        if (got && got.clue) this.look(x);
-        else this.pull(x);
+        this.look(x);
         return;
       }
       // the whole belt band is a stamping surface
@@ -1574,7 +1576,12 @@
         ctx.translate(cx, cy);
         ctx.rotate((D.rnd(i * 3.7) - 0.5) * 0.5);
         if (it.kind === 'paper') {
-          ctx.fillStyle = hot ? 'rgba(196,190,178,0.62)' : 'rgba(168,163,152,0.48)';
+          /* The one with something on it is the same tenth of the way to
+             red as the split on the line is — a warm sheet among cold
+             ones, and no other mark. */
+          ctx.fillStyle = it.marked
+            ? (hot ? 'rgba(201,183,175,0.66)' : 'rgba(174,157,150,0.52)')
+            : (hot ? 'rgba(196,190,178,0.62)' : 'rgba(168,163,152,0.48)');
           ctx.beginPath();
           for (var k = 0; k < 9; k++) {
             var a = (k / 9) * 6.28;
@@ -1600,22 +1607,6 @@
           ctx.stroke();
         }
 
-        /* The mark. A strip of red tape on one of the balls of paper, and
-           the only colour on the screen. */
-        if (it.marked) {
-          ctx.save();
-          ctx.rotate(0.38);
-          // the same glint, at the size the basket is drawn at
-          var pg = ctx.createLinearGradient(0, -8, 0, 8);
-          pg.addColorStop(0, 'rgba(0,0,0,0)');
-          pg.addColorStop(0.28, P.mark);
-          pg.addColorStop(0.5, P.markHi);
-          pg.addColorStop(0.72, P.mark);
-          pg.addColorStop(1, 'rgba(0,0,0,0)');
-          ctx.fillStyle = pg;
-          ctx.fillRect(-1.5, -8, 3, 16);
-          ctx.restore();
-        }
         ctx.restore();
 
         D.stencil(ctx, it.label, cx, cy + 44,

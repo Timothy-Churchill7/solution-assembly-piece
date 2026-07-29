@@ -19,7 +19,11 @@
      flaw      the share of those that will not pass at the assembly works */
 
   L.SHIFTS = [
-    { n: 1, duration: 62, spawn: 1.70, speed: 96,  target: 24, mood: 1.00, ret: 3.6, flaw: 0.14 },
+    /* Shift 1's flaw was 0.14, which is one fault in fourteen pieces. Once
+       an item could only ride in on a fault again, one fault could carry
+       only one of the shift's two part-borne tips and the other could
+       never appear. 0.16 is two. */
+    { n: 1, duration: 62, spawn: 1.70, speed: 96,  target: 24, mood: 1.00, ret: 3.6, flaw: 0.16 },
     { n: 2, duration: 66, spawn: 1.58, speed: 106, target: 28, mood: 0.90, ret: 3.4, flaw: 0.18 },
     { n: 3, duration: 70, spawn: 1.46, speed: 116, target: 33, mood: 0.78, ret: 3.2, flaw: 0.22 },
     { n: 4, duration: 72, spawn: 1.34, speed: 126, target: 38, mood: 0.64, ret: 2.9, flaw: 0.28 },

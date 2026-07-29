@@ -12,8 +12,8 @@ host unchanged.
 | key | at the station |
 | --- | --- |
 | `SPACE` / click the belt | stamp the part in the press zone |
-| `X` / click line 5 | take a piece off the return line |
-| click a taped piece | turn it over and read it |
+| `X` | take a piece off the return line |
+| click a piece on line 5 | look at it; it stays on the belt either way |
 | click the basket | empty it, and sort what is in it |
 | `D` | look at the yard camera (only if you bought one) |
 | `S` | scrap a part (from shift 3) |
@@ -43,14 +43,27 @@ These are the things the suite cannot judge.
    scrip and the foreman mentions it once. If emptying it ever feels
    automatic rather than like a decision to stop working, the channel has
    stopped working.
-4. **Can you find the glint without hunting for it?** It is the one marker
-   on a working shift: two pixels by nine, on a piece coming down line 5
-   and on one thing in the basket, brightest in the middle and gone at
-   both ends. It should read as light catching something that has been
-   marked, not as a label the game has attached for you. It has been four
-   sizes now — a redaction bar, a stripe, a strip of tape, and this — and
-   every reduction has been an improvement, but this is the first one
-   small enough that it could plausibly be missed on a busy shift.
+4. **Can you tell a warm split from a cold one at 1:1?** This is the thing
+   I most doubt. Measured off the canvas on shift 6, brightest pixel on
+   the stroke: bare, cold is `rgb(124,129,133)` and warm is
+   `rgb(140,131,129)` — the blue-over-red bias flips from +9 to −11, at
+   matched brightness, so the only difference is hue. Side by side and
+   enlarged it is unmistakable. On a moving belt at actual size, with your
+   attention on the press, I do not believe it is findable, and I have not
+   found a way to prove otherwise from the outside.
+
+   **The lamp is the answer to this, and that is deliberate.** With 50
+   scrip of light on the bench the same two strokes read
+   `rgb(162,169,173)` and `rgb(172,151,142)` — a swing of forty rather
+   than twenty, and plainly two different colours. It is the most honest
+   thing the lamp has ever done: it was sold as making faults take less
+   looking, and it now also decides whether the free channel is legible at
+   all.
+
+   The marker has been five things — a redaction bar, a stripe, a strip of
+   tape, a glint, and now nothing at all but the colour of the light off
+   the break. Every step has been a reduction and this is the first one
+   where I would not bet on a first-time player finding it unaided.
 5. **Read the eight endings back to back.** None may read as praise or as a
    scolding.
 6. **Read a clue with the shift running.** The line should slow enough to
@@ -153,8 +166,11 @@ their own interest now, because that is what the piece is about — the
 operator who never finds out is not being punished by the game, they are
 being described by it.
 
-Anything worth reading is marked with a strip of red tape. That is the
-whole of the signposting, and it is the only colour on a working shift.
+Every faulty piece sits crooked and carries a bright split — every one,
+every time. A few of those splits run **warm** instead of cold white, and
+that is the only signposting in the building. Nothing is drawn on top of a
+part any more: there is no tape, no glint, no icon. The light coming off
+the break has a different colour in it, and that is all.
 
 Five channels:
 
