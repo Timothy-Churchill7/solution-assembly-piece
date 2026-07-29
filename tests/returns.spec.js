@@ -20,12 +20,19 @@ const playShift = (page, n, policy, kit = []) =>
     g.run.ledger.owned = kit;
     g.run.shift = n;
     g.go('shift');
-    for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
-      g.tick(1 / 60);
+    for (let i = 0; i < 60 * 400 && !g.run.shiftLog.length; i++) {
+      /* He comes down to the station four fifths of the way through shift
+         4 now, so any harness that plays a shift to the hooter meets him
+         and has to answer before the shift can finish. */
+      if (g.screen === 'officer') { window.__clearOfficer(); continue; }
       if (g.screen !== 'shift') break;
+      g.tick(1 / 60);
+      if (g.screen !== 'shift') continue;
       if (policy !== 'press') {
+        // a slip riding the belt on its own is not stock and cannot be pulled
         const want = sc.returns.filter(
-          (r) => sc.inRetZone(r) && (policy === 'everything' || r.faulty));
+          (r) => !r.bare && sc.inRetZone(r) &&
+            (policy === 'everything' || r.faulty));
         if (want.length) { sc.pull(want[0].x); continue; }
       }
       sc.stamp(null);
@@ -76,17 +83,22 @@ test.describe('line 5', () => {
     const r = await page.evaluate(() => {
       const g = window.SOL.game, sc = window.SOL.screens.shift, E = window.SOL.econ;
       window.SOL.logic.resetRun(g.run);
-      g.run.shift = 6;
+      // shift 3, because it is one of the shifts that still puts a slip
+      // behind a piece on line 5 — shift 6's items are all basket, set and
+      // camera, so there would be nothing in the bay to look at
+      g.run.shift = 3;
       g.go('shift');
       let guard = 0;
       while (!sc.nearestReturn() && guard++ < 60 * 60) g.tick(1 / 60);
+      const cycleWant = E.cycle(g.run.ledger);
 
       sc.charge = 1;
       const pulled = sc.pull(null);
       const afterPull = sc.charge;
 
-      // a taped piece, since that is the only kind that can be looked at
-      while (!sc.nearestCarrier() && guard++ < 60 * 200) g.tick(1 / 60);
+      // a piece with a slip behind it, since that is the only kind that
+      // can be looked at
+      while (!sc.nearestCarrier() && guard++ < 60 * 400) g.tick(1 / 60);
       sc.charge = 1;
       const looked = sc.look(null);
       const afterLook = sc.charge;
@@ -103,7 +115,7 @@ test.describe('line 5', () => {
       const struck = sc.stamp(null);
       return {
         pulled, afterPull, looked, afterLook, afterMashing, why,
-        struck, afterStamp: sc.charge, cycle: E.cycle(g.run.ledger)
+        struck, afterStamp: sc.charge, cycle: cycleWant
       };
     });
     expect(r.pulled).toBe(true);
@@ -173,11 +185,14 @@ test.describe('doing the whole job', () => {
           g.run.ledger.owned = kit.slice();
           g.run.shift = n;
           g.go('shift');
-          for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
-            g.tick(1 / 60);
+          for (let i = 0; i < 60 * 400 && g.run.shiftLog.length < n; i++) {
+            if (g.screen === 'officer') { window.__clearOfficer(); continue; }
             if (g.screen !== 'shift') break;
+            g.tick(1 / 60);
+            if (g.screen !== 'shift') continue;
             if (policy === 'both') {
-              const w = sc.returns.filter((q) => sc.inRetZone(q) && q.faulty);
+              const w = sc.returns.filter(
+                (q) => !q.bare && sc.inRetZone(q) && q.faulty);
               if (w.length) { sc.pull(w[0].x); continue; }
             }
             sc.stamp(null);
@@ -189,7 +204,7 @@ test.describe('doing the whole job', () => {
       const heedless = run('press', []);
       const armed = run('press', ['arm']);
       return { attentive, heedless, armed,
-               pedal: E.item('pedal').cost, arm: E.item('arm').cost };
+               pedal: E.priceOf(null, 'pedal'), arm: E.priceOf(null, 'arm') };
     });
     const lost = r.attentive.earned - r.heedless.earned;
     expect(r.heedless.rejects).toBeGreaterThan(20);

@@ -54,7 +54,9 @@ test.describe('reading the run', () => {
     async ({ page }) => {
       await boot(page);
       const blind = await build(page, { shifts: honest(), awareness: 0 });
-      const uneasy = await build(page, { shifts: honest(), awareness: 5 });
+      // 'doubt' starts at 6 now, not 4: the registry went from 39 points to
+      // 43 and the bands were rescaled around REVEAL_MIN_AWARENESS of 10
+      const uneasy = await build(page, { shifts: honest(), awareness: 8 });
       expect(blind.ending.id).toBe('blind');
       // suspicion without the circular is its own ending, and not the same one
       expect(uneasy.ending.id).toBe('uneasy');

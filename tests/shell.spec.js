@@ -67,10 +67,13 @@ test.describe('shell', () => {
     async ({ page }) => {
       await boot(page);
 
-      /* Amber specifically. Red is a different thing and lives elsewhere:
-         it marks a piece with something on it and a paper in the basket.
-         Amber is only ever the rule and heading of a document already
-         open, and it must never appear on a running line. */
+      /* Amber specifically. The one other warm thing on a working screen
+         is the cream of a slip of paper, which is what marks an item now —
+         it sits well under this threshold and is meant to, because paper
+         is a colour the building would have and amber is a colour the
+         interface has. Amber is only ever the rule and heading of a
+         document already open, and it must never appear on a running
+         line. */
       const amberFraction = () => page.evaluate(() => {
         const c = document.getElementById('screen');
         const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
@@ -90,9 +93,10 @@ test.describe('shell', () => {
         const g = window.SOL.game, sc = window.SOL.screens.shift;
         window.SOL.logic.resetRun(g.run);
         g.run.ledger.owned = ['lamp', 'gauge', 'radio', 'camera'];
-        g.run.shift = 4;
+        // shift 3 is the one that has an item live on every channel at once
+        g.run.shift = 3;
         g.go('shift');
-        for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
+        for (let i = 0; i < 60 * 400 && g.screen === 'shift'; i++) {
           if (sc.nearestCarrier() && sc.dockUp) break;
           g.tick(1 / 60);
           if (i % 3 === 0) sc.stamp(null);

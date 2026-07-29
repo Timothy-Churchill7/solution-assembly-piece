@@ -56,6 +56,12 @@
        by having it shouted at you. */
     mark:     '#8c4a41',
     markLo:   '#5e2f2a',
+
+    /* Paper. The one warm colour on a working screen and the only thing
+       that says an item can be read. It is not a signal colour, it is the
+       colour of a docket in a building where everything else is steel. */
+    paper:    '#d8cfb4',
+    paperHi:  '#efe7cd',
     /* The centre of the glint. Brighter than `mark` on purpose: once the
        mark came down to two pixels by nine it stopped being paint on a
        part and became light catching one, and light is the one thing that

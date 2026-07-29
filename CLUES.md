@@ -10,8 +10,11 @@ To claude: use my words exactly, save for typos or small fixes, except when I su
 
 | channel | how it is encountered | free? |
 | --- | --- | --- |
-| `part` | a piece on line 5 with a **red accent** on it. Click the piece. | free |
-| `trash` | a bin in the corner of the station. Click it during the shift; a sorting window opens, and one balled-up paper has a **red accent**. Click that. | free, +2 scrip for doing it |
+| `part` | a piece on line 5 with a little slip of paper tucked behind it. Click the piece. | free |
+| `belt slip` | a slip of paper appears on lane 5. Click it. | free |
+| `background slip` | a slip of paper sitting on a machine somewhere in the background. Click it. | free |
+| `plane` | an advertising plane appears flying by out the window. Click it. | free |
+| `trash` | a bin in the corner of the station. Click it during the shift; a sorting window opens, and one balled-up paper has a few marks of text. Click that. | free, +2 scrip for doing it |
 | `radio` | the bench radio reads it out while you work. No prompt. | 60 scrip |
 | `dock` | the yard camera. Click the monitor when something is in it. | 95 scrip |
 | `officer` | a man from the works office asks you a question between shifts. One branch is information. | free, costs the upgrade |
@@ -26,12 +29,11 @@ To claude: use my words exactly, save for typos or small fixes, except when I su
 | `REVEAL` | the circular. Names it. | 6 |
 
 **Arithmetic constraint, so you know what weights do:** the circular comes
-out of the bin once cumulative weight reaches **8**, and not before shift 3.
-Tips are weight 0 on purpose — finding only tips never advances the story,
-which is what makes them safe to hand out freely. The two *free* channels
-(`part` + `trash`) must total ≥ 8 by the end of shift 3, or a player who
-buys nothing can never reach the reveal. Currently that path gives exactly 8.
+out of the bin once cumulative weight reaches **10**.
 
+When the user reaches 10 weight, the reveal presents itself as the next belt slip/background slip/trash/part clue that they see, overriding what was there before.
+
+The buy radio/camera hints should not appear if the user has already bought the radio/camera.
 ---
 
 ## Shift 1 — INTAKE · all tips, no story
@@ -40,87 +42,84 @@ buys nothing can never reach the reveal. Currently that path gives exactly 8.
 | --- | --- | --- | --- | --- |
 | `c1-fault` | TIP | part | 0 | This piece has a fault. Great job catching it, and keep an eye our for similar looking flaws in the future to keep the factory moving smoothly. |
 | `c1-pedal` | TIP | trash | 0 | The foot pedal gives the best return on investment. Without it, you won't be able to hit your quota by turn 4. |
-| `c1-bonus` | TIP | part | 0 | Make sure you hit the quota, because there's a 25 scrip bonus if you make it. |
+| `c1-bonus` | TIP | slip | 0 | Make sure you hit the quota, because there's a 25 scrip bonus if you make it. |
 
 ## Shift 2 — TOLERANCE · tips, and one thing that is a bit odd
 
 | id | tier | channel | wt | what it says |
 | --- | --- | --- | --- | --- |
-| `c2-arm` | TIP | trash | 0 | The sorting arm takes three faults in four off line 5 for you, and across a run it saves about what it costs. What you actually buy is not having to reach for line 5 all night. |
+| `c2-arm` | TIP | belt slip | 0 | The sorting arm takes three faults in four off line 5 for you. |
+| `c2-facilites` | ODD | background slip | 1 | *(ledger of where the products went last month)* Facility 1: 1202. Facility 2: 1283. Facility 3: 533. Facility 4: 8964|
+| `c2-buyradio` | ODD | belt slip | 0 | If you want to find out more about The Company, you should buy a radio and listen in.|
 | `c2-scrap` | TIP | part | 0 | A missed flaw costs The Company much more than scrip. It's a 2 scrip penalty for each one you miss. |
-| `c2-gauge` | TIP | radio | 0 | Buy Fredreich's electronics! Press F in the shop to see our exclusive product line. |
-| `c2-priority` | ODD | radio | 1 | Plant 7 moved to the priority list. Leave suspended for the quarter. |
+| `c2-plane` | TIP | plane | 1 | Buy Spielmann's electronics! Press F in the shop to get 20% off! |
+| `c2-priority` | ODD | radio | 2 | Plant 7 switched to priority 1. Leave & mail suspended for the quarter. |
 
 ## Shift 3 — REQUISITION · the last of the tips, and it starts
 
 | id | tier | channel | wt | what it says |
 | --- | --- | --- | --- | --- |
 | `c3-reading` | TIP | part | 0 | The line slows down while you read. Take your time! |
-| `c3-acceptance` | ODD | part | 3 | Last week's inspection results: clean, efficient, and industrial. |
-| `c3-tape` | ODD | trash | 2 | *(moved to the bin so the free path reaches 8 by shift 3)* The split has been taped over by somebody who wanted the piece to pass. On the tape: an acceptance stamp, a date, a serial, and a signature with an office after it. **SS. Eicke.** |
-| `c3-feeder` | TIP | trash | 0 | The auto-feeder stamps 45% of line 4 on its own. It costs more than two shifts' pay and it is the only thing that makes the last shift comfortable. Nobody here has ever bought the lot. |
+| `c3-buyradio` | ODD | belt slip | 0 | If you want to find out more about The Company, you should buy a radio and listen in.|
+| `c3-tape` | ODD | trash | 2 |  *(A crumpled up piece of paper with inspection results: Last week's inspection results: clean, efficient, and industrial. Below, an acceptance stamp, a date, a serial, and a signature with an office after it. **Officer Eicke.** )*|
+| `c3-plane` | TIP | plane | 0 | Buy Spielmann's electronics! Press F in the shop to get 20% off! |
+| `c3-feeder` | TIP | background slip | 1 | The auto-feeder stamps almost half of line 4 on its own. It's expensive but you won't be able to do your part to help The Company without it. |
+| `c3-buycamera` | ODD | part | 0 | If you want to find out more about operations, you should buy the dock camera and take a loot at the loading dock.|
+| `c3-dock` | ODD | dock | 2 or 3 if clicks | *(render this as a visual on the dock camera, not an interruption)* Alongside the normal white company trucks a fully black one comes in. *(If user clicks on it)* Darker boxes marked with Xs can be seen loading on. |
+| `c3-priority` | ODD | radio | 1 | Plant 7 is now highest priority. It is the bottleneck of The Company's solution. |
 
 ## Shift 4 — DOWNSTREAM · the officer, and the paperwork stops pretending
 
 | id | tier | channel | wt | what it says |
 | --- | --- | --- | --- | --- |
-| `c4-officer` | DAMNING | officer | 4 | *(only if you take the information branch — see below)* He tells you where the freight goes. A site code, a rail spur, no town. He says it the way a man says a thing he has decided to stop carrying. |
-| `c4-return` | ODD | part | 3 | Your collar, still on its shaft, keyed to a drive far heavier than this line was tooled for. Not a machine tool — fixed plant, bolted down, built to run continuously. The wear says months. |
-| `c4-dock` | ODD | dock | 3 | A lorry at the dock, tarpaulin roped over the bed, no company markings. A pennant on the wing — the kind only a state vehicle carries — and the device on it stays behind a fold the whole time. |
-| `c4-prefix` | ODD | trash | 2 | The series prefix changed in the spring. The old one is in the plant catalogue, three pages of it. The new one isn't in the catalogue at all. Prefixes like that come down from the customer. |
+| `c4-officer` | DAMNING | officer | 3 | *(only if you take the information branch — see below)* I can't tell you that. Do your part and stamp the widgets, or you'll sabatoge the whole operation. If you really want to know, buy a radio. |
+| `c4-dock` | ODD | dock | 2 or 3 | *(render this as a visual on the dock camera, not an interruption)* Alongside the normal white company trucks a fully black one comes in. *(If user clicks on it)* Darker boxes marked with Xs can be seen loading on. |
+| `c4-buyradio` | ODD | belt slip | 0 | If you want to find out more about The Company, you should buy a radio and listen in.|
+| `c4-radio` | ODD | radio | 2 | *(talk show)* Shall we discuss the state of things? What's there to discuss? Churchill is being a real pain in the ass, that's for sure. |
+| `c4-plane` | TIP | plane | 1 | Buy Fischer's electronics! Press F in the shop to get 20% off! |
+| `c4-prefix` | ODD | trash | 2 | *(an informal note between supervisors)* Leadership said not to question the prices, but at this rate we'll be bankrupt in a month.  |
 
 ## Shift 5 — CONSIGNMENT · no more tips
 
 | id | tier | channel | wt | what it says |
 | --- | --- | --- | --- | --- |
-| `c5-routing` | DAMNING | trash | 4 | Freight for the quarter on one page. Four destinations. Three are named works with towns. The fourth is a site code and a rail spur and no town at all — and it takes more than the other three together. |
-| `c5-handling` | DAMNING | radio | 3 | An open microphone in the works office. Consignments to the fourth destination are not to be discussed outside the premises. It's an instruction, and not the first time he's given it. |
-| `c5-tonnage` | DAMNING | dock | 3 | The weighbridge docket for the night's freight. The tonnage going to the fourth destination doesn't match any machine in the catalogue. Whatever it feeds, there is a great deal of it. |
+| `c5-facilites` | ODD | background slip | 2 | *(ledger of where the products went last month)* Facility 1: 0. Facility 2: 0. Facility 3: 0. [Redacted]: 12749|
+| `c5-buyradio` | ODD | belt slip | 1 | If you want to find out more about The Company, you should buy a radio and listen in.|
+| `c5-handling` | DAMNING | radio | 3 | Consignments to the fourth destination are not to be discussed outside the premises. |
+| `c5-dock` | ODD | dock | 2 or 3 | *(render this as a visual on the dock camera, not an interruption)* Alongside the normal white company trucks a fully black one comes in. *(If user clicks on it)* Darker boxes marked with Xs can be seen loading on. |
 
 ## Shift 6 — CONTINUITY
 
 | id | tier | channel | wt | what it says |
 | --- | --- | --- | --- | --- |
 | `c6-withdrawal` | DAMNING | trash | 5 | All quarterly records to be consolidated and the originals destroyed. The list is attached: routing schedule, acceptance forms, every piece of paper saying where any of this went. Production figures retained in full. |
-| `c6-hours` | DAMNING | part | 4 | A maintenance log for the fixed plant at the fourth destination. Your collars on it by the thousand, every month since the spring. The running hours never fall to zero. Not one night, not one Sunday, in nine months. |
-| `c6-manifest` | DAMNING | dock | 4 | The yard at four in the morning. Empty flat wagons going the other way — coming back from the fourth destination, and there is nothing on them. Whatever goes out there does not come back as anything. |
+| `c6-dock` | ODD | dock | 2 or 3 | *(render this as a visual on the dock camera, not an interruption)* Alongside the normal white company trucks a fully black one comes in. *(If user clicks on it)* Darker boxes marked with Xs can be seen loading on. |
+| `c6-radio` | ODD | radio | 2 | *(talk show)* Shall we discuss the state of things? Why, it just keeps getting worse! Russia was a disaster and now the Americans are joining. Don't speak of the Führer like that! |
 
 ## The circular
 
 | id | tier | channel | wt | what it says |
 | --- | --- | --- | --- | --- |
-| `reveal-circular` | REVEAL | trash | 6 |  (type: ripped letter showing a table with factory assignments.) Factory 5: The Eastern Front. Factory 6: The Western Front. Factory 7 (circled): **The Final Solution**. Factory 8: Algeria. |
+| `reveal-circular` | REVEAL | belt slip or trash | 6 |  (type: ripped letter showing a table with factory assignments, with the Nazi symbol SVG at the top) Factory 5: The Eastern Front. Factory 6: The Western Front. Factory 7 (circled): **The Final Solution**. Factory 8: Algeria. |
 
 ---
 
 ## The officer's question (shift 4)
 
-Between shifts a man from the works office puts a proposition. One
-question, two answers, no way back:
+Between shifts a man from the works stops by. You must pick your request:
+- ask where the products go *(the answer)*
+- ask for more responsiblity: more widgets will come through but your stamp will be upgraded to match *(the upgrade)*
 
 | branch | what you get |
 | --- | --- |
-| **THE UPGRADE** | Line 4 runs heavier for the rest of the quarter — more parts arrive, so a higher ceiling and more scrip. Nothing is said about the customer. |
-| **THE ANSWER** | He tells you where the freight goes (`c4-officer`, weight 4). The line stays as it is. |
+| **THE UPGRADE** | Line 4 runs heavier for the rest of the quarter — more parts arrive, so a higher ceiling and more scrip. Nothing is said about the customer. The stamping speed also increases to match it. |
+| **THE ANSWER** | (`c4-officer`, weight 4). The line stays as it is. |
 
 This is the whole thesis of the piece as a single click, and it is the only
 place the game ever makes the trade explicit. Open questions for you:
 
-- **Which shift?** 4 feels right — late enough to matter, early enough to
-  live with. 3 makes it the fulcrum of the run.
-- **How big should the upgrade be?** Big enough to hurt to refuse. I'd
-  suggest arrivals up ~15% for the remaining shifts, which is worth roughly
-  30–40 scrip across the run.
-- **Should he come back?** Once only, I think. A second offer would make it
-  a shop.
+- **Which shift?** 80% of the way through shift 4
+- **How big should the upgrade be?** 20% faster belt, 20% more widgets, 20% faster stamp cooldown
+- **Should he come back?** No
 
 ---
-
-## Counts
-
-| | current | proposed |
-| --- | --- | --- |
-| clues | 13 | 20 |
-| tips (weight 0) | 0 | 7 |
-| max awareness | 39 | 41 |
-| free path by end of shift 3 | 8 | 8 |

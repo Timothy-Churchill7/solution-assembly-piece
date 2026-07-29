@@ -103,20 +103,30 @@
      Clues used to ride the belt in amber crates with a pulsing tag and an
      OPEN prompt over them, and a lamp on the console when one was due. That
      is a game telling you where the story is. Nothing announces itself now.
-     Each item arrives through one of four channels and none of them lights
-     up:
+     Each item arrives through one of eight channels and none of them
+     lights up:
 
-       via 'part'   a faulty piece on line 5 whose split runs a tenth of
-                    the way towards red instead of cold white. Free. It
-                    costs the clock, and it stays on the belt either way.
+       via 'part'   a piece on line 5 with a slip of paper tucked in behind
+                    it. Click the piece.
+       via 'slip'   a slip riding line 5 on its own, with no part. Click it.
+       via 'bgslip' a slip left on a machine casing down the hall. Click it.
+       via 'plane'  an advertising banner behind a light aircraft, across
+                    the window band. Click it while it is up.
+       via 'trash'  the basket at the station, emptied during the shift.
+                    You are supposed to sort it. Nobody does.
        via 'radio'  the bench set, if it was bought, talking over the noise
                     while you work. Mostly adverts and weather.
        via 'dock'   the yard camera, if it was bought. Mostly an empty yard.
-       via 'trash'  the basket at the station, emptied during the shift.
-                    You are supposed to sort it. Nobody does.
+       via 'officer' the man from the works office, if you turned down his
+                    money to hear it.
 
      `at` is the fraction of the shift elapsed when it becomes available;
      `weight` is what reading it adds to what the player knows.
+
+     `unless` names a stores item that makes the slip pointless — the notes
+     telling you to buy a radio stop turning up once there is a radio on the
+     bench. `clickWeight` and `clickLines` belong to the yard camera: the
+     lorry is worth two for watching it and a third for clicking on it.
 
      The ladder is deliberately gentle at the bottom. The first things you
      can find are operating tips — how the bonus is really paid, what a
@@ -150,31 +160,29 @@
         {
           id: 'c1-fault', via: 'part', at: 0.26, weight: 0,
           kind: 'QUALITY NOTICE', tier: 'tip',
-          source: 'Slipped under the strap of a piece coming back down line 5.',
+          source: 'A slip tucked in behind a piece coming down line 5.',
           lines: [
-            "This piece has a fault. Good catch.",
-            "Keep an eye out for similar looking flaws in future to keep the " +
-            "factory moving smoothly. They sit crooked in the seat and carry " +
-            "a bright split corner to corner."
-          ]
-        },
-        {
-          id: 'c1-bonus', via: 'part', at: 0.62, weight: 0,
-          kind: 'PAYROLL NOTICE', tier: 'tip',
-          source: 'Wired to a returned piece, addressed to nobody in particular.',
-          lines: [
-            "Make sure you hit the quota. There is a 25 scrip bonus in it if " +
-            "you make the number, and nothing at all if you are one short.",
-            "It is the largest single part of a night's pay."
+            "This piece has a fault. Great job catching it, and keep an eye " +
+            "out for similar looking flaws in the future to keep the factory " +
+            "moving smoothly."
           ]
         },
         {
           id: 'c1-pedal', via: 'trash', at: 0, weight: 0,
           kind: 'STORES DOCKET', tier: 'tip',
-          source: 'Balled up and thrown in the bin, with the sums still on it.',
+          source: 'Balled up and thrown in the basket, with the sums still on it.',
           lines: [
-            "The foot pedal gives the best return on investment in the stores.",
-            "Without it you will not be able to hit your quota by shift 4."
+            "The foot pedal gives the best return on investment.",
+            "Without it, you won't be able to hit your quota by turn 4."
+          ]
+        },
+        {
+          id: 'c1-bonus', via: 'slip', at: 0.62, weight: 0,
+          kind: 'PAYROLL NOTICE', tier: 'tip',
+          source: 'A slip riding line 5 on its own, addressed to nobody.',
+          lines: [
+            "Make sure you hit the quota, because there's a 25 scrip bonus if " +
+            "you make it."
           ]
         }
       ]
@@ -189,45 +197,56 @@
       note: 'Target raised. No change to the rate of pay.',
       clues: [
         {
+          id: 'c2-arm', via: 'slip', at: 0.22, weight: 0,
+          kind: 'STORES DOCKET', tier: 'tip',
+          source: 'A slip riding line 5 on its own.',
+          lines: [
+            "The sorting arm takes three faults in four off line 5 for you."
+          ]
+        },
+        {
+          id: 'c2-facilites', via: 'bgslip', at: 0.30, weight: 1,
+          kind: 'DISTRIBUTION LEDGER', tier: 'odd',
+          source: 'Left on a machine casing halfway down the hall.',
+          lines: [
+            "Where the products went last month.",
+            "Facility 1: 1202.   Facility 2: 1283.   Facility 3: 533.   " +
+            "Facility 4: 8964"
+          ]
+        },
+        {
+          id: 'c2-buyradio', via: 'slip', at: 0.48, weight: 0, unless: 'radio',
+          kind: 'A NOTE IN PENCIL', tier: 'odd',
+          source: 'A slip riding line 5 on its own.',
+          lines: [
+            "If you want to find out more about The Company, you should buy a " +
+            "radio and listen in."
+          ]
+        },
+        {
           id: 'c2-scrap', via: 'part', at: 0.34, weight: 0,
           kind: 'QUALITY NOTICE', tier: 'tip',
-          source: 'Another of the pre-printed slips, on a piece coming back.',
+          source: 'Another of the pre-printed slips, behind a piece coming back.',
           lines: [
-            "A missed flaw costs the company a great deal more than scrip.",
-            "There is a 3 scrip penalty against your book for every one that " +
-            "gets past this station and has to be pulled at the works."
+            "A missed flaw costs The Company much more than scrip.",
+            "It's a 2 scrip penalty for each one you miss."
           ]
         },
         {
-          id: 'c2-arm', via: 'trash', at: 0, weight: 0,
-          kind: 'STORES DOCKET', tier: 'tip',
-          source: 'In the bin with the rest of the paper.',
+          id: 'c2-plane', via: 'plane', at: 0.55, weight: 1,
+          kind: 'A BANNER OVER THE YARD', tier: 'tip',
+          source: 'Behind a light aircraft, going west across the window band.',
           lines: [
-            "The sorting arm takes three faults in four off line 5 for you, " +
-            "and across a quarter it saves about what it costs.",
-            "What you are really buying is not having to reach for line 5 all " +
-            "night."
+            "Buy Spielmann's electronics! Press F in the shop to get 20% off!"
           ]
         },
         {
-          id: 'c2-gauge', via: 'radio', at: 0.30, weight: 0,
-          kind: 'ON THE BENCH SET', tier: 'tip',
-          source: 'An advertisement, read at speed between the weather and the football.',
-          lines: [
-            "Buy Friedrich's electronics! Bench comparators, gauge blocks, " +
-            "lamps for the close work.",
-            "Ask at the works stores between shifts and see our exclusive " +
-            "product line."
-          ]
-        },
-        {
-          id: 'c2-priority', via: 'radio', at: 0.62, weight: 1,
+          id: 'c2-priority', via: 'radio', at: 0.62, weight: 2,
           kind: 'ON THE BENCH SET', tier: 'odd',
           source: 'A works notice, read out flat by somebody who has read out forty today.',
           lines: [
-            "Plant 7 has been moved to the priority list. Leave is suspended " +
-            "for the quarter and applications will not be considered.",
-            "Then the football results, which take longer."
+            "Plant 7 switched to priority 1. Leave & mail suspended for the " +
+            "quarter."
           ]
         }
       ]
@@ -245,48 +264,76 @@
         {
           id: 'c3-reading', via: 'part', at: 0.20, weight: 0,
           kind: 'A NOTE IN THE SAME HAND', tier: 'tip',
-          source: 'Folded into the seat of a piece, in a fitter\'s pencil.',
+          source: 'Tucked in behind a piece, in a fitter\'s pencil.',
           lines: [
-            "The line slows right down while you have something in your hands.",
-            "Take your time over it. What it costs you is the clock, not the " +
-            "parts."
+            "The line slows down while you read. Take your time!"
           ]
         },
         {
-          id: 'c3-feeder', via: 'trash', at: 0, weight: 0,
-          kind: 'STORES DOCKET', tier: 'tip',
-          source: 'The last of the costings, screwed up with the rest.',
+          id: 'c3-buyradio', via: 'slip', at: 0.30, weight: 0, unless: 'radio',
+          kind: 'A NOTE IN PENCIL', tier: 'odd',
+          source: 'A slip riding line 5 on its own.',
           lines: [
-            "The auto-feeder stamps 45% of line 4 on its own.",
-            "It costs more than two shifts' pay and it is the only thing that " +
-            "makes the last shift comfortable. Nobody here has ever bought " +
-            "the whole list."
-          ]
-        },
-        {
-          id: 'c3-acceptance', via: 'part', at: 0.50, weight: 3,
-          kind: 'INSPECTION RESULTS', tier: 'odd',
-          source: 'Last week\'s figures, on a slip that should not be down here.',
-          lines: [
-            "Last week's inspection results: clean, efficient, and industrial.",
-            "Underneath, in the same print: consignments are not purchased. " +
-            "They are requisitioned, at a rate set by the office receiving " +
-            "them, with no order for the works to accept or refuse.",
-            "Only a government does that, and only to a supplier it does not " +
-            "consider a supplier."
+            "If you want to find out more about The Company, you should buy a " +
+            "radio and listen in."
           ]
         },
         {
           id: 'c3-tape', via: 'trash', at: 0, weight: 2,
-          kind: 'INSPECTION TAPE', tier: 'odd',
-          source: 'A strip of linen tape, peeled off something and dropped in the bin.',
+          kind: 'INSPECTION RESULTS', tier: 'odd',
+          source: 'A crumpled up piece of paper, smoothed out enough to read.',
           lines: [
-            "The split on a piece had been taped over by somebody who wanted " +
-            "it to pass. This is the tape.",
-            "Printed on it: an acceptance stamp, a date from the spring, a " +
-            "serial, and a signature with an office after it. SS. EICKE.",
-            "Nobody on this floor has ever been told who buys what we turn " +
-            "out, and now there is a name on it."
+            "Last week's inspection results: clean, efficient, and industrial.",
+            "Below it, an acceptance stamp, a date, a serial, and a signature " +
+            "with an office after it. OFFICER EICKE."
+          ]
+        },
+        {
+          id: 'c3-plane', via: 'plane', at: 0.42, weight: 0,
+          kind: 'A BANNER OVER THE YARD', tier: 'tip',
+          source: 'Behind a light aircraft, going west across the window band.',
+          lines: [
+            "Buy Spielmann's electronics! Press F in the shop to get 20% off!"
+          ]
+        },
+        {
+          id: 'c3-feeder', via: 'bgslip', at: 0.36, weight: 1,
+          kind: 'STORES DOCKET', tier: 'tip',
+          source: 'Left on a machine casing halfway down the hall.',
+          lines: [
+            "The auto-feeder stamps almost half of line 4 on its own.",
+            "It's expensive but you won't be able to do your part to help The " +
+            "Company without it."
+          ]
+        },
+        {
+          id: 'c3-buycamera', via: 'part', at: 0.55, weight: 0, unless: 'camera',
+          kind: 'A NOTE IN PENCIL', tier: 'odd',
+          source: 'Tucked in behind a piece coming down line 5.',
+          lines: [
+            "If you want to find out more about operations, you should buy the " +
+            "dock camera and take a look at the loading dock."
+          ]
+        },
+        {
+          id: 'c3-dock', via: 'dock', at: 0.30, weight: 2, clickWeight: 1,
+          kind: 'ON THE YARD CAMERA', tier: 'odd',
+          source: 'The dock, from the bench, in the small hours of the shift.',
+          lines: [
+            "Alongside the normal white company trucks a fully black one comes " +
+            "in."
+          ],
+          clickLines: [
+            "Darker boxes marked with Xs can be seen loading on."
+          ]
+        },
+        {
+          id: 'c3-priority', via: 'radio', at: 0.62, weight: 1,
+          kind: 'ON THE BENCH SET', tier: 'odd',
+          source: 'A works notice, read out between the weather and the football.',
+          lines: [
+            "Plant 7 is now highest priority. It is the bottleneck of The " +
+            "Company's solution."
           ]
         }
       ]
@@ -301,40 +348,51 @@
       note: 'Returned stock is mixed into the run.',
       clues: [
         {
-          id: 'c4-return', via: 'part', at: 0.28, weight: 3,
-          kind: 'RETURNED ASSEMBLY', tier: 'odd',
-          source: 'A piece that came back down line 5 with its mating part still on it.',
+          id: 'c4-dock', via: 'dock', at: 0.30, weight: 2, clickWeight: 1,
+          kind: 'ON THE YARD CAMERA', tier: 'odd',
+          source: 'The dock, from the bench, with the yard lights on.',
           lines: [
-            "Your collar, still on its shaft, and the shaft keyed to a drive " +
-            "far heavier than this line was ever tooled for.",
-            "This is not part of a machine tool. It is fixed plant: bolted " +
-            "down somewhere and built to run continuously.",
-            "The wear says months."
+            "Alongside the normal white company trucks a fully black one comes " +
+            "in."
+          ],
+          clickLines: [
+            "Darker boxes marked with Xs can be seen loading on."
+          ]
+        },
+        {
+          id: 'c4-buyradio', via: 'slip', at: 0.24, weight: 0, unless: 'radio',
+          kind: 'A NOTE IN PENCIL', tier: 'odd',
+          source: 'A slip riding line 5 on its own.',
+          lines: [
+            "If you want to find out more about The Company, you should buy a " +
+            "radio and listen in."
+          ]
+        },
+        {
+          id: 'c4-radio', via: 'radio', at: 0.50, weight: 2,
+          kind: 'ON THE BENCH SET', tier: 'odd',
+          source: 'A talk show, two men and no hurry, under the noise of the line.',
+          lines: [
+            "Shall we discuss the state of things?",
+            "What's there to discuss? Churchill is being a real pain in the " +
+            "ass, that's for sure."
+          ]
+        },
+        {
+          id: 'c4-plane', via: 'plane', at: 0.62, weight: 1,
+          kind: 'A BANNER OVER THE YARD', tier: 'tip',
+          source: 'Behind a light aircraft, going west across the window band.',
+          lines: [
+            "Buy Fischer's electronics! Press F in the shop to get 20% off!"
           ]
         },
         {
           id: 'c4-prefix', via: 'trash', at: 0, weight: 2,
-          kind: 'SERIES PREFIX', tier: 'odd',
-          source: 'A torn batch card, thrown out with the rest of the shift.',
+          kind: 'AN INFORMAL NOTE', tier: 'odd',
+          source: 'Between supervisors, balled up and thrown in with the swarf.',
           lines: [
-            "The series prefix changed in the spring. The old one is in the " +
-            "plant catalogue, three pages of it.",
-            "The new one is not in the catalogue at all. Prefixes like that " +
-            "come down from the customer, not up from us."
-          ]
-        },
-        {
-          id: 'c4-dock', via: 'dock', at: 0.36, weight: 3,
-          kind: 'ON THE YARD CAMERA', tier: 'odd',
-          source: 'The dock, from the bench, in the small hours of the shift.',
-          lines: [
-            "A lorry at the loading dock with a tarpaulin roped over the bed " +
-            "and two men working the straps. No company markings on it.",
-            "There is a pennant clipped to the wing — the kind only a state " +
-            "vehicle carries — and the device on it stays behind a fold of " +
-            "the tarpaulin the entire time it is in frame.",
-            "They load it without paperwork and one of them keeps watching " +
-            "the gate."
+            "Leadership said not to question the prices, but at this rate " +
+            "we'll be bankrupt in a month."
           ]
         }
       ]
@@ -350,14 +408,22 @@
       note: 'Routing is handled off the floor. Do not delay loading.',
       clues: [
         {
-          id: 'c5-routing', via: 'trash', at: 0, weight: 4,
-          kind: 'ROUTING SCHEDULE', tier: 'damning',
-          source: 'The consolidated sheet, folded twice and dropped in with the swarf.',
+          id: 'c5-facilites', via: 'bgslip', at: 0.26, weight: 2,
+          kind: 'DISTRIBUTION LEDGER', tier: 'odd',
+          source: 'Left on a machine casing halfway down the hall.',
           lines: [
-            "Freight for the whole quarter on one page. Four destinations.",
-            "Three are ordinary works, named, with towns beside them. The " +
-            "fourth is a site code and a rail spur and no town at all.",
-            "The fourth takes more than the other three put together."
+            "Where the products went last month.",
+            "Facility 1: 0.   Facility 2: 0.   Facility 3: 0.   " +
+            "[Redacted]: 12749"
+          ]
+        },
+        {
+          id: 'c5-buyradio', via: 'slip', at: 0.40, weight: 1, unless: 'radio',
+          kind: 'A NOTE IN PENCIL', tier: 'odd',
+          source: 'A slip riding line 5 on its own.',
+          lines: [
+            "If you want to find out more about The Company, you should buy a " +
+            "radio and listen in."
           ]
         },
         {
@@ -366,23 +432,19 @@
           source: 'An open microphone somewhere in the works office, under the music.',
           lines: [
             "Consignments to the fourth destination are not to be discussed " +
-            "outside the premises.",
-            "It is an instruction, and from the way he says it, not the first " +
-            "time he has given it.",
-            "The other man says he knows. He says it in the voice of somebody " +
-            "who decided a while ago not to ask."
+            "outside the premises."
           ]
         },
         {
-          id: 'c5-tonnage', via: 'dock', at: 0.30, weight: 3,
-          kind: 'ON THE YARD CAMERA', tier: 'damning',
-          source: 'The weighbridge, and the docket the driver holds up to sign.',
+          id: 'c5-dock', via: 'dock', at: 0.30, weight: 2, clickWeight: 1,
+          kind: 'ON THE YARD CAMERA', tier: 'odd',
+          source: 'The dock, from the bench, and nobody signing for anything.',
           lines: [
-            "The night's tonnage for the fourth destination, legible for a " +
-            "second while he signs for it.",
-            "It does not match any machine in the plant catalogue. It does not " +
-            "match all of them together.",
-            "Whatever it feeds, there is a great deal of it."
+            "Alongside the normal white company trucks a fully black one comes " +
+            "in."
+          ],
+          clickLines: [
+            "Darker boxes marked with Xs can be seen loading on."
           ]
         }
       ]
@@ -398,45 +460,38 @@
       note: 'File withdrawal begins at end of shift.',
       clues: [
         {
-          id: 'c6-hours', via: 'part', at: 0.34, weight: 4,
-          kind: 'MAINTENANCE RETURN', tier: 'damning',
-          source: 'Folded into the seat of a piece, by somebody who wanted it found.',
-          lines: [
-            "A maintenance log for the fixed plant at the fourth destination, " +
-            "and the parts consumed keeping it running.",
-            "Your collars are on it by the thousand, every month since the " +
-            "spring. This is where all of it has been going.",
-            "The running hours never fall to zero. Not one night, not one " +
-            "Sunday, in nine months."
-          ]
-        },
-        {
           id: 'c6-withdrawal', via: 'trash', at: 0, weight: 5,
           kind: 'WITHDRAWAL ORDER', tier: 'damning',
-          source: 'In the bin, torn across once, which is not how orders are destroyed.',
+          source: 'In the basket, torn across once, which is not how orders are destroyed.',
           lines: [
             "All quarterly records to be consolidated and the originals " +
             "destroyed.",
-            "The list is attached. The routing schedule is on it. The " +
-            "acceptance forms are on it. Every piece of paper that says where " +
-            "any of this went is on it.",
-            "Production figures are to be retained in full."
+            "The list is attached: routing schedule, acceptance forms, every " +
+            "piece of paper saying where any of this went.",
+            "Production figures retained in full."
           ]
         },
         {
-          /* Early in the shift, not late: the camera holds a scene for
-             DOCK_WINDOW seconds and a lorry that arrives at 0.58 of a
-             76-second shift is still in frame at the hooter, which means
-             it can be neither found nor written off. A test checks every
-             dock item now closes before the clock does. */
-          id: 'c6-manifest', via: 'dock', at: 0.30, weight: 4,
-          kind: 'ON THE YARD CAMERA', tier: 'damning',
+          id: 'c6-dock', via: 'dock', at: 0.30, weight: 2, clickWeight: 1,
+          kind: 'ON THE YARD CAMERA', tier: 'odd',
           source: 'The yard at four in the morning, and the rail spur beyond it.',
           lines: [
-            "Empty flat wagons coming the other way, back from the fourth " +
-            "destination.",
-            "Not a return load. Not scrap, not swarf, not anything at all.",
-            "Whatever goes out there does not come back as anything."
+            "Alongside the normal white company trucks a fully black one comes " +
+            "in."
+          ],
+          clickLines: [
+            "Darker boxes marked with Xs can be seen loading on."
+          ]
+        },
+        {
+          id: 'c6-radio', via: 'radio', at: 0.50, weight: 2,
+          kind: 'ON THE BENCH SET', tier: 'odd',
+          source: 'The same two men, later in the quarter, and less careful.',
+          lines: [
+            "Shall we discuss the state of things?",
+            "Why, it just keeps getting worse! Russia was a disaster and now " +
+            "the Americans are joining.",
+            "Don't speak of the F\u00fchrer like that!"
           ]
         }
       ]
@@ -457,19 +512,19 @@
 
   C.REVEAL = {
     id: 'reveal-circular',
-    via: 'trash',
+    via: 'any',
     reveal: true,
     weight: 6,
     tier: 'reveal',
-    kind: 'RIPPED HALF-SHEET',
-    source: 'At the bottom of the bin, under the swarf, torn off something larger.',
+    kind: 'RIPPED LETTER',
+    source: 'Torn off something larger, with a device printed at the head of it.',
+    seal: true,
     lines: [
-      "Half a table from the customer's office. One row per plant, and what " +
-      "each plant's quarter is assigned to. The other half is not here.",
+      "A table of factory assignments, under a printed device at the head of " +
+      "the sheet.",
       "FACTORY 5 — THE EASTERN FRONT.   FACTORY 6 — THE WESTERN FRONT.   " +
       "FACTORY 8 — ALGERIA.",
-      "FACTORY 7, and somebody has been round it twice in pencil: THE FINAL " +
-      "SOLUTION."
+      "FACTORY 7, circled: THE FINAL SOLUTION."
     ]
   };
 
@@ -480,18 +535,14 @@
   C.OFFICER_CLUE = {
     id: 'c4-officer',
     via: 'officer',
-    weight: 4,
+    weight: 3,
     tier: 'damning',
     kind: 'WHAT HE TOLD YOU',
     source: 'Said quietly, by the door, with nobody else on the floor.',
     lines: [
-      "The freight goes to a site code and a rail spur. No town beside it on " +
-      "any sheet in this building.",
-      "He gives you the code and the spur number and where on the map it " +
-      "would be if it were on a map.",
-      "He says it the way a man says a thing he has decided to stop " +
-      "carrying, and then he says the offer stands until the end of the " +
-      "quarter and you have had it."
+      "I can't tell you that. Do your part and stamp the widgets, or you'll " +
+      "sabotage the whole operation.",
+      "If you really want to know, buy a radio."
     ]
   };
 
@@ -511,6 +562,8 @@
   C.INQUIRY_RUNNING = 'THE CLOCK DOES NOT STOP FOR THIS';
   C.INQUIRY_CLOSE_EARLY = 'PUT IT BACK';
   C.INQUIRY_CLOSE_DONE = 'RETURN TO THE PRESS';
+  /* The one card in the game with a second look in it. */
+  C.INQUIRY_CLOSER = 'GO OVER AND LOOK PROPERLY';
   C.INQUIRY_UNREAD = 'PUT BACK UNREAD. IT DOES NOT COUNT AS HAVING LOOKED.';
 
   /* ---------- looking closely ----------
@@ -630,6 +683,10 @@
   C.STORE_OWNED = 'ON THE BENCH';
   C.STORE_SHORT = 'SHORT';
   C.STORE_LEAVE = 'CLOCK ON';
+  /* Shown only once the code has been used. Before that the stores say
+     nothing about it at all — a player who never looked up from the press
+     never learns there was anything to type. */
+  C.STORE_CODE_ON = 'SPIELMANN TRADE CODE APPLIED · 20% OFF THREE LINES';
   C.STORE_NOTE =
     'Scrip is paid against your book and spends here. It does not spend ' +
     'anywhere else.';
@@ -716,7 +773,21 @@
     { kind: 'paper', label: 'TORN SHEET' },
     { kind: 'swarf', label: 'TURNINGS' },
     { kind: 'paper', label: 'BALLED PAPER' },
-    { kind: 'swarf', label: 'SWARF' }
+    { kind: 'swarf', label: 'SWARF' },
+    { kind: 'paper', label: 'TALLY SLIP' },
+    { kind: 'swarf', label: 'TURNINGS' },
+    { kind: 'paper', label: 'WRAPPER' },
+    { kind: 'paper', label: 'DOCKET' },
+    { kind: 'swarf', label: 'SWARF' },
+    { kind: 'paper', label: 'TORN CORNER' },
+    { kind: 'swarf', label: 'FILINGS' },
+    { kind: 'paper', label: 'CARBON COPY' },
+    { kind: 'paper', label: 'BALLED PAPER' },
+    { kind: 'swarf', label: 'TURNINGS' },
+    { kind: 'paper', label: 'ROUTING SLIP' },
+    { kind: 'swarf', label: 'SWARF' },
+    { kind: 'paper', label: 'BATCH CARD' },
+    { kind: 'paper', label: 'CREASED SHEET' }
   ];
 
   /* ---------- the officer ----------
@@ -724,30 +795,27 @@
      anybody; he is a man from the works office with two things he can
      authorise and a preference about which one you take. */
 
-  C.OFFICER_HEADING = 'BEFORE YOU CLOCK ON';
+  C.OFFICER_HEADING = 'HE HAS COME DOWN TO THE STATION';
   C.OFFICER_TITLE = 'A MAN FROM THE WORKS OFFICE';
   C.OFFICER_BODY =
-    "He is waiting by the gate with a folder he does not open. He says the " +
-    "office is pleased with Station 4-C and that there is something they " +
-    "can do for you, once, and only one of them.\n\n" +
-    "They can put you on the heavier line for the rest of the quarter: more " +
-    "stock across the belt, and the piece rate goes from 1 to 1.5 scrip on " +
-    "every part you stamp between now and the end. Or he will answer the " +
-    "question he says everybody on this floor eventually asks, and tell you " +
-    "where the freight goes.\n\n" +
+    "The line is still running. He waits by the rail with a folder he does " +
+    "not open and says the office is pleased with Station 4-C, and that " +
+    "you may ask them for one thing.\n\n" +
+    "You can ask for more responsibility: more widgets will come through, " +
+    "and your stamp will be upgraded to match. Or you can ask where the " +
+    "products go.\n\n" +
     "He says it plainly, without weighting it either way, and waits. He " +
     "does not come back.";
-  C.OFFICER_UPGRADE = 'TAKE THE HEAVIER LINE';
-  C.OFFICER_ANSWER = 'ASK HIM WHERE IT GOES';
+  C.OFFICER_UPGRADE = 'ASK FOR MORE RESPONSIBILITY';
+  C.OFFICER_ANSWER = 'ASK WHERE THE PRODUCTS GO';
   C.OFFICER_UPGRADE_NOTE =
-    'Piece rate 1 to 1.5 scrip, and stock arrives about 15% faster, for the ' +
-    'last three shifts. Worth about 60 scrip. Nothing is said about the ' +
-    'customer.';
+    '20% more stock, 20% off the press cooldown, and the target goes up 20% ' +
+    'to match, from the next shift to the end of the quarter. Nothing is ' +
+    'said about the customer.';
   C.OFFICER_ANSWER_NOTE =
-    'He tells you where the freight goes. The line and the rate stay exactly ' +
-    'as they are.';
-  C.OFFICER_TAKEN = 'THE LINE WILL RUN HEAVIER FROM TONIGHT.';
-  C.OFFICER_CLOSE = 'CLOCK ON';
+    'You ask. The line and the target stay exactly as they are.';
+  C.OFFICER_TAKEN = 'THE LINE RUNS HEAVIER FROM THE NEXT SHIFT.';
+  C.OFFICER_CLOSE = 'BACK TO THE PRESS';
 
   /* ---------- end of shift ---------- */
 

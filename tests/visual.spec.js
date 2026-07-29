@@ -122,11 +122,11 @@ test('shots: an item read through', async ({ page }) => {
   await boot(page);
   await page.evaluate(() => {
     const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
-    g.run.shift = 6;
+    // shift 3: shift 6's items are all basket, bench set and yard camera
+    g.run.shift = 3;
     g.go('shift');
-    for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
-      const r = sc.nearestReturn();
-      if (r && r.clue) break;
+    for (let i = 0; i < 60 * 400 && g.screen === 'shift'; i++) {
+      if (sc.nearestCarrier()) break;
       g.tick(1 / 60);
       if (i % 3 === 0) sc.stamp(null);
     }
@@ -739,4 +739,70 @@ test('shots: the letter, reprimanding a run that did not', async ({ page }) => {
   });
   await still(page, 9);
   await shot(page, '40-letter-reprimand');
+});
+
+/* The three new channels, and the basket at twenty. */
+test('shots: a slip behind a piece and one riding alone', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => {
+    const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+    L.resetRun(g.run); g.run.shift = 2; g.go('shift');
+    for (let i = 0; i < 60 * 400 && g.screen === 'shift'; i++) {
+      g.tick(1 / 60);
+      if (sc.returns.some((r) => r.clue && sc.inRetZone(r))) break;
+      if (i % 3 === 0) sc.stamp(null);
+    }
+  });
+  await still(page);
+  await shot(page, '43-a-slip-on-line-5');
+});
+
+test('shots: the slip on the machine, and the aeroplane', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => {
+    const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+    L.resetRun(g.run); g.run.shift = 3; g.go('shift');
+    for (let i = 0; i < 60 * 400 && g.screen === 'shift'; i++) {
+      g.tick(1 / 60);
+      if (sc.bgUp && sc.planeUp) break;
+      if (i % 3 === 0) sc.stamp(null);
+    }
+    // it enters from off-stage left, so let it get to the middle of the band
+    for (let i = 0; i < 60 * 9 && sc.planeUp; i++) g.tick(1 / 60);
+  });
+  await still(page);
+  await shot(page, '44-machine-slip-and-plane');
+});
+
+test('shots: the basket, twenty things in it', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => {
+    const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+    L.resetRun(g.run); g.run.shift = 3; g.go('shift');
+    for (let i = 0; i < 60 * 30; i++) g.tick(1 / 60);
+    sc.openBin(g);
+    for (let k = 0; k < 4; k++) sc.sortItem(k, g);
+  });
+  await still(page);
+  await shot(page, '45-the-basket-of-twenty');
+});
+
+test('shots: the yard camera, with a second look in it', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => {
+    const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+    L.resetRun(g.run); g.run.ledger.owned = ['camera']; g.run.shift = 3;
+    g.go('shift');
+    for (let i = 0; i < 60 * 400 && g.screen === 'shift'; i++) {
+      g.tick(1 / 60);
+      if (sc.dockUp) break;
+      if (i % 3 === 0) sc.stamp(null);
+    }
+    // a glance, then going over to the black one: neither opens a card
+    sc.lookDock();
+    sc.lookLorry();
+    for (let i = 0; i < 30; i++) g.tick(1 / 60);
+  });
+  await still(page);
+  await shot(page, '46-the-second-look');
 });

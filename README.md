@@ -5,16 +5,14 @@ for. You stand at a finishing line in a components plant across six shifts,
 stamping parts to meet a quota and watching a second line for pieces that
 will not pass. The schedule rises every shift. Your hands do not.
 
-Nothing announces itself and nothing is drawn on top of anything. Every
-faulty piece sits crooked with a bright split across it; a few of those
-splits run warm instead of cold white, and that is the only thing in the
-building that tells you something is worth reading. What it marks arrives
-on the ordinary channels
-of a working night — a piece coming down the return line, the basket at
-your station, a bench radio, a camera pointed at the yard, a man from the
-works office who will answer one question or pay you not to ask it — and
-every one of them costs you output to use. The plant records output and
-nothing else.
+Nothing announces itself. What there is to find is a slip of cream paper,
+the only thing in the building that colour — tucked in behind a piece on
+the return line, riding the belt on its own, left on a machine casing down
+the hall, or strung behind an aeroplane crossing the windows. There is also
+the basket at your station, a bench radio, a camera pointed at the yard,
+and a man from the works office who will answer one question or pay you not
+to ask it. Every one of them costs you output to use. The plant records
+output and nothing else.
 
 There is no clean win. The ending is decided by how much you chose to know
 and what you did on the nights after you knew.

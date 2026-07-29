@@ -14,8 +14,10 @@ host unchanged.
 | `SPACE` / click the belt | stamp the part in the press zone |
 | `X` | take a piece off the return line |
 | click a piece on line 5 | look at it; it stays on the belt either way |
+| click a slip on the belt, a machine, or an aeroplane | read it |
 | click the basket | empty it, and sort what is in it |
 | `D` | look at the yard camera (only if you bought one) |
+| `F` in the stores | the advertiser's code, if you have read one of the banners |
 | `S` | scrap a part (from shift 3) |
 | `Q` | master stop — only once you have found out, and from shift 5 |
 
@@ -43,27 +45,22 @@ These are the things the suite cannot judge.
    scrip and the foreman mentions it once. If emptying it ever feels
    automatic rather than like a decision to stop working, the channel has
    stopped working.
-4. **Can you tell a warm split from a cold one at 1:1?** This is the thing
-   I most doubt. Measured off the canvas on shift 6, brightest pixel on
-   the stroke: bare, cold is `rgb(124,129,133)` and warm is
-   `rgb(140,131,129)` — the blue-over-red bias flips from +9 to −11, at
-   matched brightness, so the only difference is hue. Side by side and
-   enlarged it is unmistakable. On a moving belt at actual size, with your
-   attention on the press, I do not believe it is findable, and I have not
-   found a way to prove otherwise from the outside.
-
-   **The lamp is the answer to this, and that is deliberate.** With 50
-   scrip of light on the bench the same two strokes read
-   `rgb(162,169,173)` and `rgb(172,151,142)` — a swing of forty rather
-   than twenty, and plainly two different colours. It is the most honest
-   thing the lamp has ever done: it was sold as making faults take less
-   looking, and it now also decides whether the free channel is legible at
-   all.
-
-   The marker has been five things — a redaction bar, a stripe, a strip of
-   tape, a glint, and now nothing at all but the colour of the light off
-   the break. Every step has been a reduction and this is the first one
-   where I would not bet on a first-time player finding it unaided.
+4. **Is the paper findable without being a quest icon?** Cream at
+   `#d8cfb4` against a hall that runs `#1a1c1e` to `#8e9397`. It is the
+   only warm thing on a working screen and it stays under the threshold
+   the amber test uses, so it reads as an object in the building rather
+   than a piece of interface. Four of the eight channels are paper and
+   each puts it somewhere different — behind a piece, on the belt, on a
+   machine, behind an aeroplane — so the question is whether a player
+   learns *paper means read me* once and then finds all four.
+5. **Does the aeroplane read as being outside?** It crosses the clerestory
+   band and the glazing bars are redrawn over it, so it is behind the
+   glass. It is the only time in six shifts the game shows you there is an
+   outside, and it is carrying an advertisement.
+6. **Is twenty things in the basket a chore or a slog?** Twenty was chosen
+   because six was over before it registered as one. Twenty clicks with
+   the line throttled to 12% is about the right amount of tedium; thirty
+   would be punishment.
 5. **Read the eight endings back to back.** None may read as praise or as a
    scolding.
 6. **Read a clue with the shift running.** The line should slow enough to
@@ -128,88 +125,89 @@ fitted at the assembly works, found there, and docked at 3 scrip.
 
 ## Finding things out
 
-Twenty-two things can be read across a run. Eight of them are worth nothing
-at all — they are playing tips, mostly early, and they say plainly which
-purchase pays and how the press works. The other fourteen carry weight:
-**47** in total.
+Twenty-nine things can be read across a run, across **eight** channels.
+Weight tops out at 43 and the circular needs **10**.
 
-Two things stand between an operator and the circular, and they are
-different kinds of thing on purpose.
+| channel | how you meet it | free? |
+| --- | --- | --- |
+| `part` | a slip tucked in behind a piece on line 5 | free |
+| `slip` | a slip riding line 5 with no part under it | free |
+| `bgslip` | a slip left on a machine casing down the hall | free |
+| `plane` | a banner behind an aeroplane, across the clerestory | free |
+| `trash` | the basket at the station, emptied mid-shift | free, +2 scrip |
+| `radio` | the bench set, reading it out over the noise | 60 |
+| `dock` | the yard camera; 2 for watching, 3 if you go over | 95 |
 
-**Eight points of awareness**, which is roughly the free channels worked
-diligently from the third shift on, plus one thing you had to go out of
-your way for.
+| `officer` | the man from the works office, if you turn down his offer | costs the upgrade |
 
-**At least one item off a channel that cost you something.** The pieces on
-line 5 and the basket at your feet are free and always open; a run that
-uses only those never gets there, however diligent it is. Somewhere in what
-you have read there has to be an item off the radio (60), off the yard
-camera (95), or out of the mouth of the man from the works office (the 62
-scrip you turn down to ask him a question).
+**Nothing gates the circular but arithmetic.** The free channels are worth
+0/2/5/8/11/16 cumulatively; the bench set adds 3 by the end of shift 3 and
+the camera 2, or 3 if you click the black lorry rather than only watching
+it. Measured, driving the real screens:
 
-Measured, playing every available channel every shift:
-
-| what the run paid for | circular |
+| what the run did | circular |
 | --- | --- |
-| nothing — line 5 and the basket only | **never**, at 23 awareness |
-| the officer's answer, and no free reading | **never**, at 4 |
-| the radio | shift 4 |
-| the yard camera | shift 4 |
-| the officer's answer | shift 4 |
-| radio + camera + the answer | shift 4 |
+| line 5's pieces only, nothing else | **never** — and awareness stays at **0** |
+| everything free, bought nothing | shift 5 |
+| the bench set | shift 4 |
+| set and camera, lorry clicked, basket done late | shift 4 |
+| set and camera, lorry clicked, basket done **first thing** | **shift 3** |
 
-The earliest it can arrive is the fourth shift, and there is no path to it
-that costs nothing. That is a reversal: for most of this build's life the
-reveal was deliberately payable for free, so that it could never be said to
-sit behind a price. Finding out is a purchase the player makes against
-their own interest now, because that is what the piece is about — the
-operator who never finds out is not being punished by the game, they are
-being described by it.
+Two of those rows are worth dwelling on.
 
-Every faulty piece sits crooked and carries a bright split — every one,
-every time. A few of those splits run **warm** instead of cold white, and
-that is the only signposting in the building. Nothing is drawn on top of a
-part any more: there is no tape, no glint, no icon. The light coming off
-the break has a different colour in it, and that is all.
+**Line 5's pieces carry four items across the whole quarter and every one
+is a playing tip.** An operator who works the return line diligently and
+touches nothing else finishes a better worker and no wiser at all. That is
+the sharpest thing the weight table says and it is said in arithmetic
+rather than in prose.
 
-Five channels:
+**The last two rows differ only in when you empty the basket.** The
+circular replaces the next piece of paper after the count crosses ten.
+Empty the basket late and its points land after shift 3's last slip has
+gone by, so there is nothing left to carry it and it waits a shift. Empty
+it first thing and the shift's own aeroplane takes it. Same purchases,
+same reading, one shift apart, entirely on when you did the chore. That
+was not designed; it fell out of the rule and it is worth keeping.
 
-- **a taped piece on line 5** — free. Clicking it turns it over; it does
-  *not* take it off the belt, so you still have to reach for it afterwards
-- **the basket at the station** — free, and it pays 2 scrip. Emptying it
-  opens a sorting window mid-shift; one item in it is taped
-- **the bench radio (60)** — reads its item out over the ordinary
-  programme, in the same voice, with no prompt
-- **the yard camera (95)** — a lorry is at the dock for 26 seconds and then
-  is not
-- **the man from the works office** — once, before the fourth shift, and
-  only if you turn down the money
+An earlier build had an explicit rule that the free path could never reach
+the circular at all. It is gone. It turned a difference of degree into a
+wall, and the table above says the same thing more honestly.
 
-The circular is at the bottom of the basket and nowhere else, so a player
-who never empties it never sees it whatever else they buy. But the basket
-alone is not enough either — three tests state that rule once from each
-side.
+### The yard camera is a picture, not a card
+
+The only channel that never opens anything over the hall. Four lorries at
+the dock: three of the company's own, pale and marked, and one that is
+not — unmarked, unlit, black end to end. Clicking the monitor reads the
+picture. Clicking the **black one** is the second look, worth a third
+point, and puts three crates on the apron with a cross chalked on each.
+
+It costs no cycle and no clock. What ninety-five scrip buys is having to
+be looking in a third direction while the press runs, and the seconds your
+eyes were in the wrong corner — not a card that stops the shift to read
+three sentences at you, which is what it used to be.
+
+### The advertiser's code
+
+A light aircraft crosses the clerestory once or twice a quarter dragging a
+banner for an electronics firm. Read one and `F` in the stores takes **20%
+off** the bench set, the sorting arm and the yard monitor — 60/40/95
+becomes 48/32/76, which is 39 scrip, most of a lamp. It does nothing at
+all until a banner has actually been read, and the stores never mention
+it. It is the only thing in the game that pays cash for looking at
+something with no bearing on the quota.
 
 ### The one question asked out loud
 
-Before the fourth shift a man from the works office offers one of two
-things and will not be drawn on the other. Measured over the last three
-shifts:
+He comes down to the station **four fifths of the way through shift 4**,
+with the line running — not between shifts, where he used to wait. Ask for
+more responsibility and from the next shift the line runs 20% heavier, the
+press cooldown drops 20%, and the target rises 20% to match. Ask where the
+products go and he tells you, worth 3, and nothing else changes.
 
-| | pay, shifts 4–6 | run total |
-| --- | --- | --- |
-| take the heavier line | 104 · 82 · 83 | 510 |
-| ask him where it goes | 84 · 61 · 62 | 448 |
-
-Sixty-two scrip is a lamp and a gauge, or most of a camera. It is a real
-offer and the screen states both sides of it in figures before you choose.
-
-This was broken when it was first built and is worth recording. The upgrade
-was written purely as more stock arriving — and the press cooldown, not the
-belt, is what caps output, so the extra stock went by unstamped and the
-offer paid **nothing whatever**. The trade only became a trade when it was
-moved onto the piece rate, which goes 1 → 1.5 for the rest of the quarter.
-A test now asserts the gap.
+CLUES.md first specified 50% / 50% / 60%. That measured out at roughly
+four foot pedals, free, which would have made the 110-scrip pedal
+pointless and the stores a formality. 20/20/20 is about one good purchase,
+which is what a trade needs to be.
 
 ### What reading costs
 
@@ -299,8 +297,16 @@ is the only acknowledgement the piece ever offers.
 - **The basket can be missed entirely.** It is mentioned once, by the
   foreman, before the first shift, and listed on the key card at the foot
   of the screen while it still has anything in it. A player who ignores
-  both will finish the run without the circular and get the blind ending,
-  which is a legitimate outcome but not one they chose.
+  both loses the whole `trash` channel — 9 of the 43 points.
+- **The `part` channel is now all tips and no story.** Four items across
+  six shifts, every one weight 0. That is a defensible statement about
+  what the return line teaches you, but it also means the first channel a
+  player masters is the one that never pays, and I do not know whether
+  that reads as an argument or as an anticlimax.
+- **Twenty clicks is a lot of clicks.** The basket is the longest single
+  interaction in the game and it happens six times. It is meant to feel
+  like a chore; whether it crosses into feeling like filler is exactly the
+  kind of thing the suite cannot tell me.
 - **The dock monitor covers one machine's asset number** on the right of
   the hall. Cosmetic; the monitor is a fitting on the wall and reads as one.
 - **The pedal makes the whole run comfortable.** Once it is on the bench no
@@ -324,15 +330,17 @@ is the only acknowledgement the piece ever offers.
 
 ## What the suite covers
 
-167 tests. The load-bearing ones, if you only read a few:
+177 tests. The load-bearing ones, if you only read a few:
 
 - `econ.spec.js` — the schedule outruns a pair of unaided hands
 - `returns.spec.js` — nothing but a stamp touches the cooldown, and exactly
   two purchases change the count
-- `inquiry.spec.js` — all five channels are reachable, cost something, and
-  can be missed; nothing carries tape that cannot be read
+- `inquiry.spec.js` — all eight channels are reachable, cost something,
+  and can be missed; and the four rows of the reveal ladder above
+- `stores-code.spec.js` — the advertiser's code, the lorry's second look,
+  and the buy-a-radio notes going quiet once you own a radio
 - `ending.spec.js` — the count, the bonus and the book decide nothing
 - `layout.spec.js` — every posted notice fits between the rails
-- `shell.spec.js` — the only red on a working shift is tape on something
-  readable; the seal and the real name appear on exactly one screen;
-  nothing from the novel
+- `shell.spec.js` — no amber on a running line, and the paper marker stays
+  under that threshold; the seal and the real name appear on exactly one
+  screen; nothing from the novel

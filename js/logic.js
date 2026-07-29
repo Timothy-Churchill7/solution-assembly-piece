@@ -119,9 +119,17 @@
     list.forEach(function (c) { L.CLUES.push(c); });
   });
 
-  /* The four channels. Nothing in the build lights up to tell you an item
-     is available; the channel is where it will be if you go and look. */
-  L.CHANNELS = ['part', 'radio', 'dock', 'trash', 'officer'];
+  /* The eight channels. Nothing in the build lights up to tell you an item
+     is available; the channel is where it will be if you go and look. Four
+     of them put a slip of cream paper somewhere on the screen — behind a
+     piece, riding line 5 alone, on a machine casing down the hall, or on a
+     banner behind an aeroplane — and the rest are the basket, the bench
+     set, the yard camera and the man from the works office. */
+  L.CHANNELS = ['part', 'slip', 'bgslip', 'plane', 'trash',
+                'radio', 'dock', 'officer'];
+
+  /* The four that are a piece of paper you can see and click. */
+  L.PAPER_CHANNELS = ['part', 'slip', 'bgslip', 'plane'];
 
   /* Tips are weight 0 and carry no story at all — they are how to work the
      press, what a fault looks like, which thing in the stores is worth the
@@ -142,12 +150,21 @@
     return !item || E.owns(ledger, item);
   };
 
+  /* Whether an item is still worth putting out. The notes telling you to
+     buy a radio are pointless once there is a radio on the bench, and a
+     game that keeps handing them over after the fact is a game that has
+     not been paying attention to the player. */
+  L.clueLive = function (c, ledger) {
+    return !c.unless || !E.owns(ledger, c.unless);
+  };
+
   /* Clues of one channel, for one shift, in the order they become
-     available. `trash` items have no time of their own: the bin is emptied
-     at the end of the shift and that is when they are there. */
-  L.cluesVia = function (n, via) {
+     available. `trash` items have no time of their own: the basket is
+     emptied during the shift and that is when they are there. */
+  L.cluesVia = function (n, via, ledger) {
     return (L.CLUES_BY_SHIFT[n] || []).filter(function (c) {
-      return (c.via || 'part') === via;
+      return (c.via || 'part') === via &&
+        (!ledger || L.clueLive(c, ledger));
     });
   };
 
@@ -175,11 +192,29 @@
   L.OFFICER_CLUE = C ? C.OFFICER_CLUE : null;
   if (L.OFFICER_CLUE) L.CLUES.push(L.OFFICER_CLUE);
 
-  L.OFFICER_SHIFT = 4;          // he is waiting when you clock off shift 3
-  L.UPGRADE_SPAWN = 0.87;       // ~15% more stock arriving, for the rest of it
+  /* He comes to the station four fifths of the way through the fourth
+     shift, not between shifts. That matters: the offer is made while the
+     line is running and the clock is going, so taking it or turning it
+     down is a thing done at the bench with work waiting, which is where
+     every other decision in this game is made. */
+  L.OFFICER_SHIFT = 4;
+  L.OFFICER_AT = 0.80;
 
-  L.officerDue = function (run) {
-    return !!run && !run.officerAnswered && run.shift === L.OFFICER_SHIFT;
+  /* The heavier line: a fifth more stock arriving, a fifth more of it
+     stampable, and a fifth off the cooldown. Sized against the foot pedal
+     on purpose — the pedal is the run's central purchase at 110 scrip and
+     15% of the cooldown, so an upgrade much past this would hand the
+     player the pedal and more, for nothing, and the stores would stop
+     being a decision. CLUES.md first specified 50/50/60, which measured
+     out at roughly four pedals free. */
+  L.UPGRADE_SPAWN = 0.833;      // ~20% more stock arriving
+  L.UPGRADE_CYCLE = 0.80;       // ~20% off the press cooldown
+  L.UPGRADE_TARGET = 1.20;      // and the number goes up to match
+
+  L.officerDue = function (run, shift) {
+    if (!run || run.officerAnswered || run.shift !== L.OFFICER_SHIFT) return false;
+    if (!shift) return true;
+    return shift.timeLeft <= shift.cfg.duration * (1 - L.OFFICER_AT);
   };
 
   /* The shift as it is actually run, which is the schedule unless the
@@ -191,72 +226,71 @@
     var out = {};
     Object.keys(cfg).forEach(function (k) { out[k] = cfg[k]; });
     out.spawn = cfg.spawn * L.UPGRADE_SPAWN;
+    out.target = Math.round(cfg.target * L.UPGRADE_TARGET);
     return out;
   };
 
-  L.REVEAL_FROM_SHIFT = 4;
+  /* No shift floor. CLUES.md used to carry one and dropped it, and the
+     arithmetic makes it redundant: the most anybody can have by the end of
+     shift 2 is 4, so the circular cannot physically arrive before shift 3
+     whatever this number says. Kept at 1 so that the only thing gating it
+     is the count, which is the whole design. */
+  L.REVEAL_FROM_SHIFT = 1;
 
-  /* Two things stand between an operator and the circular, and they are
-     different kinds of thing on purpose.
+  /* What stands between an operator and the circular is arithmetic, and
+     nothing else. Ten points of weight, out of a possible forty-one.
 
-     The first is arithmetic. Eight of the twenty-two items are playing
-     tips and weigh nothing at all, which is the whole point of them: a
-     shift spent finding out how to work the press faster is a shift that
-     has taught you nothing about the customer, and the count has to agree.
-     Eight is roughly the free channels used diligently from the third
-     shift on, plus one thing you had to go out of your way for. */
-  L.REVEAL_MIN_AWARENESS = 8;
+     The free channels — the slips, the pieces, the basket — are worth
+     0/2/5/8/11/16 cumulatively across the six shifts, so a run that buys
+     nothing crosses ten during the fifth shift. The bench set is worth
+     three by the end of shift 3 and the yard camera two, or three if you
+     click the black lorry rather than only watching it. So:
 
-  /* The second is that one of those things has to have cost you something
-     you could have kept. The pieces on line 5 and the basket at your feet
-     are free and always open; a run that uses only those never gets there,
-     however diligent it is. Somewhere in what you have read there must be
-     an item off the radio, off the yard camera, or out of the mouth of the
-     man from the works office — sixty scrip, ninety-five, or the sixty-two
-     you turned down to ask him a question.
+       shift 3   both bought, and the lorry clicked                      11
+       shift 4   either one of them bought                           13 / 14
+       shift 5   nothing bought at all                                    11
 
-     This was the other way round for most of the build's life: the reveal
-     was deliberately payable for nothing, so that it could never be said
-     to sit behind a price. That is a defensible design and it is not this
-     one. Finding out has to be a purchase the player made against their
-     own interest, because that is what the piece is about — the operator
-     who never finds out is not being punished by the game, they are being
-     described by it. */
-  L.PAID_CHANNELS = ['radio', 'dock', 'officer'];
+     which is the whole gate. There is no separate rule saying the reveal
+     must be paid for; buying simply brings it forward two shifts, and the
+     weights were set so that it would.
 
-  L.hasPaidSource = function (run) {
-    if (!run) return false;
-    for (var i = 0; i < run.cluesSeen.length; i++) {
-      var c = L.clue(run.cluesSeen[i]);
-      if (c && L.PAID_CHANNELS.indexOf(c.via) >= 0) return true;
-    }
-    return false;
-  };
+     An earlier build had an explicit paid-source requirement that made the
+     free path never reach it at all. That is gone: it turned a difference
+     of degree into a wall, and the table above says the same thing more
+     honestly. */
+  L.REVEAL_MIN_AWARENESS = 10;
 
   L.canReveal = function (run, shift) {
     if (!L.REVEAL || !run || run.revealed) return false;
     if (run.cluesSeen.indexOf(L.REVEAL.id) >= 0) return false;
     if (!shift || shift.n < L.REVEAL_FROM_SHIFT) return false;
-    if (!L.hasPaidSource(run)) return false;
     return run.awareness >= L.REVEAL_MIN_AWARENESS;
   };
 
-  /* ---------- the bin by the door ----------
-     Every shift ends at it. Sorting it costs you the hooter — the office
-     docks for being on the floor after it — and most shifts it turns up
-     nothing at all. It is the only channel that is free, always open, and
-     never worth it on the balance of probability. */
+  /* Once the count is there, the circular is simply the next piece of
+     paper the player picks up — behind a piece, riding line 5, on a
+     machine casing, or in the basket, whichever comes first. It takes that
+     slip's place rather than arriving alongside it.
+
+     It used to live at the bottom of the basket and nowhere else, which
+     meant a player who read everything on the floor and never emptied the
+     bin could pass the threshold and never be told. Any hand that reaches
+     for paper now finds it. */
+  L.revealTakesOver = function (run, shift) {
+    return L.canReveal(run, shift);
+  };
+
+  /* ---------- the basket at the station ----------
+     Emptied during the shift, not after it. Sorting it costs you the time,
+     and most shifts it turns up nothing but paper and swarf. */
 
   /* Everything in the basket tonight, in the order it is lying in it. An
      array rather than one item: a shift can put two papers in there and
      handing over only the first made the second unreachable for the whole
-     run.
-
-     The circular is under all of it and takes the night when it is there,
-     because a basket that gives it up gives up nothing else. */
+     run. */
   L.trashFor = function (run, shift) {
     if (L.canReveal(run, shift)) return [L.REVEAL];
-    return L.cluesVia(shift.n, 'trash').filter(function (c) {
+    return L.cluesVia(shift.n, 'trash', run.ledger).filter(function (c) {
       return run.cluesSeen.indexOf(c.id) < 0;
     });
   };
@@ -308,10 +342,29 @@
   L.isRead = function (clue, t) { return t >= L.readTime(clue); };
 
   /* Idempotent by clue id: an item read twice teaches nothing twice. */
+  /* The extra line on a yard-camera item, and the extra point it carries.
+     Watching the black lorry come in is worth two; going over and clicking
+     on it, so you see what is actually going into it, is worth a third.
+     It is the only item in the game that pays for a second look. */
+  L.lookCloser = function (run, open) {
+    if (!open || !open.clue || !open.clue.clickLines || open.closer) return false;
+    open.closer = true;
+    // it only counts if the item itself counted — an unread card pays
+    // nothing, and looking closer at an unread card pays nothing either
+    if (run && run.cluesSeen.indexOf(open.clue.id) >= 0) {
+      run.awareness += (open.clue.clickWeight || 0);
+    }
+    return true;
+  };
+
   L.recordClue = function (run, shift, clue) {
     if (!clue || run.cluesSeen.indexOf(clue.id) >= 0) return false;
     run.cluesSeen.push(clue.id);
     run.awareness += clue.weight;
+    /* Reading one of the aeroplane banners is what makes the code in the
+       stores work. Nothing else does, and nothing in the stores mentions
+       it until it has. */
+    if (clue.via === 'plane') run.sawAd = true;
     if (clue.reveal) { run.revealed = true; run.revealedOn = shift ? shift.n : null; }
     if (shift) shift.opened.push(clue.id);
     return true;
@@ -322,9 +375,9 @@
      plus the reveal itself. Below that the player has suspicions and no
      more than suspicions, which is the honest description of it. */
   L.AWARENESS_TIERS = [
-    { id: 'sure',  min: 26 },
-    { id: 'know',  min: 9 },    // REVEAL_MIN_AWARENESS + REVEAL.weight
-    { id: 'doubt', min: 4 },
+    { id: 'sure',  min: 28 },
+    { id: 'know',  min: 16 },   // REVEAL_MIN_AWARENESS + REVEAL.weight
+    { id: 'doubt', min: 6 },
     { id: 'trace', min: 1 },
     { id: 'none',  min: 0 }
   ];
@@ -352,6 +405,7 @@
       scrapped: 0,       // parts deliberately destroyed
       cluesSeen: [],     // ids of inquiry items opened, in order
       awareness: 0,      // points accumulated from those items
+      sawAd: false,      // an aeroplane banner has been read, so F works
       upgraded: false,   // the officer's heavier line was taken
       officerAnswered: false,  // he has been answered, one way or the other
       revealed: false,   // the circular was read through

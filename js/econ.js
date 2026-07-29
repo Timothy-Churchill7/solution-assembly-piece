@@ -85,13 +85,45 @@
     { id: 'feeder', cost: 240 }
   ];
 
+  /* ---------- the advertiser's code ----------
+     A light aircraft crosses the window band once or twice a quarter
+     dragging a banner for an electronics firm, and the banner says to
+     press F in the shop for twenty per cent off. It is a real code and it
+     really works, on the three things that firm makes: the bench set, the
+     sorting arm and the yard monitor.
+
+     It does nothing until the player has actually read one of the banners.
+     That is the point of it — the discount is the reward for having looked
+     up from the press at something with no bearing on the quota, which is
+     the same muscle every other channel in this game asks for, offered
+     once with a plain cash value attached. */
+  E.DISCOUNT_ITEMS = ['radio', 'arm', 'camera'];
+  E.DISCOUNT = 0.20;
+
+  E.discounted = function (ledger, id) {
+    return !!ledger && !!ledger.discount && E.DISCOUNT_ITEMS.indexOf(id) >= 0;
+  };
+
+  E.priceOf = function (ledger, id) {
+    var base = null;
+    for (var i = 0; i < E.CATALOGUE.length; i++) {
+      if (E.CATALOGUE[i].id === id) { base = E.CATALOGUE[i].cost; break; }
+    }
+    if (base == null) return null;
+    return E.discounted(ledger, id) ? Math.round(base * (1 - E.DISCOUNT)) : base;
+  };
+
   /* Copy lives in content.js; this joins the two so the catalogue can be
-     rendered from one list. */
-  E.items = function () {
+     rendered from one list. Pass the ledger and the prices come back as
+     the player would actually be charged them. */
+  E.items = function (ledger) {
     return E.CATALOGUE.map(function (it) {
       var copy = (C && C.STORE_ITEMS && C.STORE_ITEMS[it.id]) || {};
       return {
-        id: it.id, cost: it.cost,
+        id: it.id,
+        cost: E.priceOf(ledger, it.id),
+        list: it.cost,
+        cut: E.discounted(ledger, it.id),
         name: copy.name || it.id.toUpperCase(),
         note: copy.note || '',
         blurb: copy.blurb || ''
@@ -99,8 +131,8 @@
     });
   };
 
-  E.item = function (id) {
-    var all = E.items();
+  E.item = function (id, ledger) {
+    var all = E.items(ledger);
     for (var i = 0; i < all.length; i++) if (all[i].id === id) return all[i];
     return null;
   };
@@ -115,6 +147,7 @@
       owned: [],     // item ids on the bench
       earned: 0,     // paid in across the run
       spent: 0,      // paid back out to the stores
+      discount: false, // the advertiser's code has been entered
       pay: []        // one breakdown per shift, in order
     };
   };
@@ -124,7 +157,7 @@
   };
 
   E.canBuy = function (ledger, id) {
-    var it = E.item(id);
+    var it = E.item(id, ledger);
     if (!it) return 'unknown';
     if (E.owns(ledger, id)) return 'owned';
     if (!ledger || ledger.scrip < it.cost) return 'funds';
@@ -133,7 +166,7 @@
 
   E.buy = function (ledger, id) {
     if (E.canBuy(ledger, id) !== true) return false;
-    var it = E.item(id);
+    var it = E.item(id, ledger);
     ledger.scrip -= it.cost;
     ledger.spent += it.cost;
     ledger.owned.push(id);

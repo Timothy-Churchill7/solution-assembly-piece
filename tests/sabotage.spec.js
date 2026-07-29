@@ -24,14 +24,17 @@ const playShift = (page, n, opts = {}) =>
     if (opts.revealed) g.run.revealed = true;
     g.run.shift = n;
     g.go('shift');
-    for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
+    const logged = g.run.shiftLog.length;
+    for (let i = 0; i < 60 * 400 && g.run.shiftLog.length === logged; i++) {
+      // he comes down to the station four fifths of the way through shift 4
+      if (g.screen === 'officer') { window.__clearOfficer(); continue; }
+      if (g.screen !== 'shift') break;
       if (opts.read && !sc.open) {
-        const car = sc.nearestReturn();
-        if (car && car.clue) sc.look(null);
+        if (sc.nearestCarrier()) sc.look(null);
         else if (sc.dockUp) sc.lookDock();
       }
       g.tick(1 / 60);
-      if (g.screen !== 'shift') break;
+      if (g.screen !== 'shift') continue;
       if (sc.open && sc.open.read) sc.closeInquiry();
       if (sc.open || opts.idle) continue;
       if (opts.scrap) sc.scrap(null);

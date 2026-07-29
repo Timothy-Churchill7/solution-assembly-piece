@@ -32,7 +32,7 @@
     ctx.restore();
 
     // clerestory band: weak daylight, heavily grimed
-    var by = 122, bh = 74;
+    var by = S.CLERESTORY.y, bh = S.CLERESTORY.h;
     ctx.save();
     for (var i = 0; i < 8; i++) {
       var pitch = (w - 60) / 8;
@@ -267,6 +267,29 @@
     D.stencil(ctx, 'M-' + (100 + Math.floor(D.rnd(seed) * 800)), x + 18, y + h - 16,
       { size: 10, color: 'rgba(150,164,175,0.42)', track: 2.2 });
   }
+  /* The window band, published because the aeroplane has to fly behind
+     the glazing rather than in front of it. */
+  S.CLERESTORY = { y: 122, h: 74, count: 8, inset: 30, gap: 26 };
+
+  /* Redraw the muntins and the frames over a strip, so anything drawn
+     inside the band reads as being on the far side of the glass. */
+  S.reglaze = function (ctx, w, mood) {
+    var by = S.CLERESTORY.y, bh = S.CLERESTORY.h;
+    var pitch = (w - 2 * S.CLERESTORY.inset) / S.CLERESTORY.count;
+    for (var i = 0; i < S.CLERESTORY.count; i++) {
+      var x = S.CLERESTORY.inset + i * pitch, ww = pitch - S.CLERESTORY.gap;
+      ctx.fillStyle = 'rgba(0,0,0,0.62)';
+      ctx.fillRect(x + ww / 2 - 1.5, by, 3, bh);
+      for (var m = 1; m < 3; m++) ctx.fillRect(x, by + bh * m / 3 - 1, ww, 2);
+      ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x - 1.5, by - 1.5, ww + 3, bh + 3);
+      ctx.strokeStyle = 'rgba(190,205,216,' + (0.07 * mood) + ')';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x - 3.5, by - 3.5, ww + 7, bh + 7);
+    }
+  };
+
   S.machineBlock = machineBlock;
 
   /* Receding floor: converging seams toward a low vanishing point. */

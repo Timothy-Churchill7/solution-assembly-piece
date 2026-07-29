@@ -49,9 +49,11 @@
       }
     },
 
-    /* More stock for the rest of the quarter. It is a real advantage and
-       the game does not pretend otherwise: a heavier line is worth about
-       thirty scrip across the shifts that are left. */
+    /* More stock, a faster press, and a target raised to match, from the
+       next shift on. It is applied at the shift boundary rather than in
+       the middle of the one he interrupts, because a quota that changes
+       number while the clock is running is a bug as far as the player is
+       concerned, whatever the fiction says. */
     takeUpgrade: function (g) {
       if (g.run.officerAnswered) return false;
       g.run.officerAnswered = true;
@@ -72,9 +74,11 @@
       return true;
     },
 
+    /* Back to the press, and to the shift he interrupted — not to the
+       stores and not to a fresh shift. */
     close_: function (g) {
       SOL.audio.confirm && SOL.audio.confirm();
-      g.go('stores');
+      g.go('shift', { resume: true });
     },
 
     /* ----- render ----- */

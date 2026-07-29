@@ -215,29 +215,31 @@
     var y = LAY.retPartY + r.bob;
     var faulty = r.faulty;
 
+    /* Tucked in behind the piece, so it shows past the edge of it — drawn
+       first, and deliberately not centred, because a slip somebody has
+       pushed in behind a part does not sit square. */
+    if (r.clue && !r.bare) drawSlip(ctx, r.x + 11, y - 7, 20, 15, 0.22, false);
+
+    if (r.bare) {
+      // no part at all: the slip is the whole of what is on the belt
+      drawSlip(ctx, r.x, y, 26, 19, -0.12, false);
+      return;
+    }
+
     S.widget(ctx, r.x, y, 1.05, r.form, faulty
       ? { hi: '#81868a', mid: '#494e52', lo: '#181a1c', rot: 0.32 }
       : { hi: '#8e9397', mid: '#52575b', lo: '#1a1c1e' });
 
     if (faulty) {
-      /* The split, raked by whatever light there is — and on a piece with
-         something on it, the same split running warm instead of cold. Not
-         a mark laid on top of the part: the light coming off the break has
-         a different colour in it, and that is the whole tell. Brightness
-         is deliberately identical, so the only difference is hue and the
-         eye cannot fall back on "that one is brighter".
-
-         Measured off the canvas on shift 6, brightest pixel on the stroke:
-         bare, cold is rgb(124,129,133) and warm is rgb(140,131,129) — the
-         blue-over-red bias flips from +9 to -11, which is a real change
-         and a small one. With the lamp it is rgb(162,169,173) against
-         rgb(172,151,142), a swing of forty. Fifty scrip of light is what
-         turns this from something you might catch into something you can
-         work by, which is the most honest thing the lamp has ever done. */
+      /* The split, raked by whatever light there is, and identical on
+         every fault. It carried the information tell for one revision —
+         warm on the pieces with something on them — and the measurement
+         said that was a two-per-cent chroma difference on a 1.4-pixel
+         line, which is not a tell. The paper does that job now, and the
+         split has gone back to meaning one thing only: this will not
+         pass. */
       ctx.save();
-      ctx.strokeStyle = r.clue
-        ? 'rgba(247,201,181,' + (kit.lamp ? 0.62 : 0.34) + ')'
-        : 'rgba(232,242,249,' + (kit.lamp ? 0.62 : 0.34) + ')';
+      ctx.strokeStyle = 'rgba(232,242,249,' + (kit.lamp ? 0.62 : 0.34) + ')';
       ctx.lineWidth = kit.lamp ? 1.8 : 1.4;
       ctx.beginPath();
       ctx.moveTo(r.x - 13, y + 7);
@@ -294,6 +296,51 @@
      balanced on a shelf. */
   var BIN = { x: 330, w: 112, y: LAY.apronY + 26, h: 54 };
 
+  /* How long an aeroplane takes to cross the window band. Long enough to
+     notice out of the corner of the eye and short enough that noticing is
+     not the same as having time to spare. */
+  var PLANE_WINDOW = 22;
+
+  /* Where a slip left on the plant sits: on the casing of the machine row
+     behind line 5, clear of the press and of both belts. */
+  var BGSLIP = { x: 168, y: LAY.floorY - 44, w: 34, h: 24 };
+
+  /* The aeroplane crosses the clerestory itself — the glazed band high on
+     the far wall — not the strip of console underneath it. Drawn inside
+     the band and then glazed back over, so it is unmistakably outside the
+     building, which is the only time this game ever shows you that there
+     is an outside. */
+  var PLANE = { y: 122 + 74 / 2, w: 46, h: 14 };
+
+  /* A slip of cream paper. The only warm thing on any working screen, and
+     the only signal the game gives that something can be read: no icon, no
+     prompt, no colour but the colour of paper in a grey building.
+
+     It replaces, in order, an amber crate, a strip of red tape, a red
+     glint and a warm tint inside a fault's split. Every one of those was
+     either a label the game had stuck on the world or too faint to find.
+     Paper is neither: it is an object that belongs in a factory, it is
+     legible at a glance because nothing else in the hall is that colour,
+     and it does not claim the piece it is behind is special. */
+  function drawSlip(ctx, x, y, w, h, rot, hot) {
+    ctx.save();
+    ctx.translate(x, y);
+    if (rot) ctx.rotate(rot);
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.fillRect(-w / 2 + 1.5, -h / 2 + 2, w, h);
+    ctx.fillStyle = hot ? P.paperHi : P.paper;
+    ctx.fillRect(-w / 2, -h / 2, w, h);
+    // a fold and two lines of something written on it, at this size just texture
+    ctx.fillStyle = 'rgba(96,88,72,0.42)';
+    for (var i = 0; i < 3; i++) {
+      ctx.fillRect(-w / 2 + 3, -h / 2 + 4 + i * 4, w - 6 - (i === 2 ? 5 : 0), 1);
+    }
+    ctx.strokeStyle = 'rgba(58,52,42,0.45)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(-w / 2 + 0.5, -h / 2 + 0.5, w - 1, h - 1);
+    ctx.restore();
+  }
+
   function drawBin(ctx, sorted, hover) {
     var x = BIN.x, y = BIN.y, w = BIN.w, h = BIN.h;
     // the basket: a tapered wire thing, seen from slightly above
@@ -349,7 +396,10 @@
   /* The sorting window. Six things in the basket; each goes in one of two
      places and it does not matter which, because they both go to the same
      skip. One of them has a red mark on it. */
-  var SORT = { x: 268, w: W - 536, top: 100, row: 118 };
+  /* Twenty things rather than six, on five columns. It is a chore, and a
+     chore with six items in it was over before the player had registered
+     that it was one. */
+  var SORT = { x: 132, w: W - 264, top: 96, row: 96, cols: 5 };
 
   /* The operator's own station: the foreground band you stand behind. */
   function drawApron(ctx, sh) {
@@ -508,8 +558,11 @@
      out of the way of everything and in a third direction from the press,
      which is the point of it — one more place a pair of eyes has to be. */
   var DOCK = { x: W - 232, y: 306, w: 196, h: 104 };
+  /* Where the black one ended up this frame, so the hit region and the
+     drawing cannot drift apart. */
+  var BLACK = { x: 0, y: 0, w: 71, h: 26 };
 
-  function drawDock(ctx, t, has, hover) {
+  function drawDock(ctx, t, has, hover, read, closer) {
     D.plate(ctx, DOCK.x - 8, DOCK.y - 8, DOCK.w + 16, DOCK.h + 32,
       { top: '#373c3f', bot: '#1c1e20', r: 2 });
     D.rivetsAround(ctx, DOCK.x - 8, DOCK.y - 8, DOCK.w + 16, DOCK.h + 32, 8, 2.2);
@@ -545,74 +598,90 @@
     ctx.fillRect(DOCK.x + DOCK.w - 44, horizon - 40, 40, 40);
 
     if (has) {
-      /* A lorry backed up to the dock, a tarpaulin roped over the bed, two
-         men working the straps, and a pennant on the wing. The device on
-         the pennant is behind a fold of the tarpaulin the whole time it is
-         in frame: there is no insignia anywhere in this build, only the
-         fact that one is being kept out of the light. */
-      var bx = DOCK.x + 16, by = horizon - 34;
-      ctx.fillStyle = 'rgba(2,3,4,0.98)';
-      ctx.fillRect(bx, by + 6, 96, 28);          // covered bed
-      ctx.fillRect(bx + 96, by + 14, 30, 20);    // cab
-      ctx.beginPath();                            // wheels
-      ctx.arc(bx + 22, by + 34, 6, 0, 6.3);
-      ctx.arc(bx + 78, by + 34, 6, 0, 6.3);
-      ctx.arc(bx + 116, by + 34, 6, 0, 6.3);
-      ctx.fill();
-      // the tarpaulin: slack, roped, catching the gate lamp along the ridge
-      ctx.strokeStyle = 'rgba(196,212,224,0.30)';
-      ctx.lineWidth = 1.4;
-      ctx.beginPath();
-      ctx.moveTo(bx + 2, by + 12);
-      ctx.lineTo(bx + 34, by + 6);
-      ctx.lineTo(bx + 68, by + 11);
-      ctx.lineTo(bx + 94, by + 8);
-      ctx.stroke();
-      ctx.strokeStyle = 'rgba(150,166,178,0.18)';
-      ctx.lineWidth = 1;
-      for (var rp = 0; rp < 4; rp++) {
+      /* The night's freight, from above the dock. Three of the company's
+         own lorries, pale in the gate lamp and marked as company lorries
+         are, and one that is not: unmarked, unlit, black from end to end.
+
+         The whole item is this picture. It used to open a card over the
+         hall and stop the shift to read three sentences at you, which made
+         ninety-five scrip buy an interruption. CLUES.md is explicit that
+         the camera is a visual and not an interruption, and it is right:
+         the thing the camera is for is that you have to be looking at it. */
+      var lorry = function (bx, by, dark, boxes) {
+        var body = dark ? 'rgba(2,3,4,0.98)' : 'rgba(150,162,172,0.82)';
+        var trim = dark ? 'rgba(24,28,31,0.9)' : 'rgba(196,210,220,0.9)';
+        ctx.fillStyle = body;
+        ctx.fillRect(bx, by + 5, 44, 15);        // bed
+        ctx.fillRect(bx + 44, by + 9, 15, 11);   // cab
+        ctx.fillStyle = trim;
+        if (!dark) {
+          // company markings, at this size two strokes and a panel line
+          ctx.fillRect(bx + 5, by + 10, 16, 2);
+          ctx.fillRect(bx + 5, by + 14, 10, 1.5);
+        }
+        ctx.fillStyle = dark ? 'rgba(1,2,3,1)' : 'rgba(120,132,142,0.9)';
         ctx.beginPath();
-        ctx.moveTo(bx + 12 + rp * 24, by + 8);
-        ctx.lineTo(bx + 12 + rp * 24, by + 32);
-        ctx.stroke();
-      }
+        ctx.arc(bx + 11, by + 20, 3.2, 0, 6.3);
+        ctx.arc(bx + 36, by + 20, 3.2, 0, 6.3);
+        ctx.arc(bx + 53, by + 20, 3.2, 0, 6.3);
+        ctx.fill();
+        /* What is going into the black one, once somebody has gone over to
+           the monitor to look. Crates, and a cross chalked on each. */
+        if (boxes) {
+          /* Stacked on the apron behind the tailgate, clear of the lorry
+             parked alongside — they were tucked in on the near side first
+             and the white one in front of them covered every one. */
+          for (var q = 0; q < 3; q++) {
+            var qx = bx + 3 + q * 11, qy = by - 11 + (q % 2) * 2;
+            ctx.fillStyle = 'rgba(18,21,23,0.98)';
+            ctx.fillRect(qx, qy, 9, 8);
+            ctx.strokeStyle = 'rgba(150,164,175,0.55)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(qx + 1.5, qy + 1.5); ctx.lineTo(qx + 7.5, qy + 6.5);
+            ctx.moveTo(qx + 7.5, qy + 1.5); ctx.lineTo(qx + 1.5, qy + 6.5);
+            ctx.stroke();
+          }
+        }
+      };
 
-      // the pennant on the wing, and the fold that is across it
-      var px2 = bx + 126, py2 = by + 6;
-      ctx.fillStyle = 'rgba(3,5,6,0.9)';
-      ctx.fillRect(px2, py2 - 4, 1.5, 16);
-      ctx.fillStyle = 'rgba(140,155,167,0.55)';
-      ctx.beginPath();
-      ctx.moveTo(px2 + 1, py2 - 3);
-      ctx.lineTo(px2 + 20, py2 + 3);
-      ctx.lineTo(px2 + 1, py2 + 9);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = 'rgba(2,3,4,0.94)';
-      ctx.fillRect(px2 + 5, py2 - 5, 9, 17);
+      /* All four on the apron, in front of the wall and inside the pool
+         the gate lamp throws, in two ranks of two. They were laid out
+         across the horizon line to begin with, which put half of them in
+         the sky and the rest behind the wall. */
+      // both ranks inside the tube: the front one overflowed the bottom
+      // of the picture by the depth of its wheels
+      var backY = horizon + 4, frontY = horizon + 30;
+      lorry(DOCK.x + 12, backY, false);
+      lorry(DOCK.x + 96, backY, false);
+      lorry(DOCK.x + 12, frontY, false);
+      // and the one that is not one of theirs, nearest the camera
+      lorry(DOCK.x + 96, frontY, true, closer);
+      BLACK.x = DOCK.x + 96; BLACK.y = frontY;
 
-      // headlamps on, throwing across the apron: the change in the picture
-      // has to be visible from the press, not only when looked at
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      var hg = ctx.createRadialGradient(bx + 132, by + 24, 2, bx + 132, by + 24, 62);
-      hg.addColorStop(0, 'rgba(214,228,238,0.40)');
-      hg.addColorStop(1, 'rgba(214,228,238,0)');
-      ctx.fillStyle = hg;
-      ctx.beginPath(); ctx.arc(bx + 132, by + 24, 62, 0, 6.3); ctx.fill();
-      ctx.restore();
-      ctx.fillStyle = 'rgba(232,242,249,0.85)';
-      ctx.fillRect(bx + 128, by + 20, 4, 4);
-
-      // two men at the straps, working, lit down one side by the gate lamp
+      // two men at the straps of the black one, working
       var sway = Math.sin(t * 1.6) * 2;
-      [[bx - 14, sway], [bx - 28, -sway]].forEach(function (m) {
+      [[DOCK.x + 86, sway], [DOCK.x + 78, -sway]].forEach(function (m) {
         ctx.fillStyle = 'rgba(1,2,3,1)';
-        ctx.fillRect(m[0], by + 14 + m[1], 6, 20);
-        ctx.beginPath(); ctx.arc(m[0] + 3, by + 11 + m[1], 3.4, 0, 6.3); ctx.fill();
-        ctx.fillStyle = 'rgba(196,212,224,0.16)';
-        ctx.fillRect(m[0] + 5, by + 14 + m[1], 1, 20);
+        ctx.fillRect(m[0], frontY + 6 + m[1], 4, 14);
+        ctx.beginPath(); ctx.arc(m[0] + 2, frontY + 4 + m[1], 2.4, 0, 6.3); ctx.fill();
       });
+
+      // a rim of the gate lamp down its near side, so it is a shape in the
+      // dark rather than a hole in the picture
+      ctx.fillStyle = 'rgba(150,166,178,0.34)';
+      ctx.fillRect(DOCK.x + 96, frontY + 4, 63, 1.2);
+      ctx.fillRect(DOCK.x + 96, frontY + 5, 1.4, 15);
+
+      /* A hairline round it once it has been noticed, so a player who has
+         read the picture can find the thing they are being asked to click
+         on. Before that there is nothing but the picture. */
+      if (read && !closer) {
+        ctx.strokeStyle = hover === 'lorry'
+          ? 'rgba(226,238,246,0.6)' : 'rgba(196,212,224,0.26)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(DOCK.x + 92.5, frontY + 0.5, 71, 26);
+      }
     }
 
     // tube: scanlines and a slow band, so it reads as a picture of a place
@@ -633,12 +702,15 @@
       : (has ? 'rgba(206,220,230,' + (0.24 + 0.30 * live) + ')' : 'rgba(0,0,0,0.85)');
     ctx.lineWidth = has ? 2 : 1.5;
     ctx.strokeRect(DOCK.x + 0.5, DOCK.y + 0.5, DOCK.w - 1, DOCK.h - 1);
-    D.stencil(ctx, has ? C.DOCK_ALERT : C.DOCK_LABEL, DOCK.x, DOCK.y + DOCK.h + 15,
+    /* One string on this line, not two. The alert used to go out as a
+       transient notice at the same anchor as well, and the two printed
+       through each other for the six seconds they overlapped. */
+    D.stencil(ctx, (has && !read) ? C.DOCK_ALERT : C.DOCK_LABEL,
+      DOCK.x, DOCK.y + DOCK.h + 15,
       { size: 8, track: 1.8, color: has ? P.text : P.faint });
-    if (has) {
-      D.stencil(ctx, C.DOCK_HINT, DOCK.x + DOCK.w, DOCK.y + DOCK.h + 15,
-        { size: 8, track: 1.8, color: P.dim, align: 'right' });
-    }
+    /* The key hint used to sit on this line too, right-aligned, and on a
+       196-pixel plate the two met in the middle. It is on the key card at
+       the foot of the screen and that is enough. */
   }
 
   /* ---------- screen ---------- */
@@ -658,10 +730,17 @@
     flashes: [],
     hits: [],
     lastAction: null,
-    carry: null,     // a part-channel clue waiting for a fault to ride in on
+    carry: null,     // a part-channel clue waiting for a piece to ride in on
     carryQ: [],      // the rest of them, in schedule order
+    slipQ: [],       // slips that ride line 5 with no part under them
+    bgQ: [],         // slips left on a machine casing down the hall
+    bgUp: null,      // the one currently lying there, if any
+    planeQ: [],      // banners behind an aeroplane
+    planeUp: null,   // the one currently crossing the window band
     dockQ: [],       // yard-camera items, in schedule order
     dockUp: null,    // the one currently in frame, if any
+    dockRead: false, // the picture has been looked at properly
+    dockCloser: false, // and somebody went over to the black one
     radioQ: [],      // bench-set items, in schedule order
     ambient: null,   // { clue, t, shown, read } playing over the noise
     filler: 0,       // index into the radio's ordinary programme
@@ -682,6 +761,14 @@
     binDone: false,  // the basket has been emptied this shift
 
     enter: function (opts, g) {
+      /* The man from the works office interrupts the fourth shift rather
+         than waiting for the end of it, so there has to be a way back to a
+         shift already in progress. Everything below this line rebuilds the
+         shift from nothing, which is exactly wrong for that case. */
+      if (opts && opts.resume && this.shift && !this.shift.over) {
+        SOL.audio.lineOn && SOL.audio.lineOn();
+        return;
+      }
       var n = (g.run && g.run.shift) || 1;
       this.shift = L.newShift(n, g.run);
       this.run = g.run;
@@ -728,11 +815,18 @@
         return list.map(function (c) { return { clue: c, at: c.at * cfg.duration }; })
           .sort(function (a, b) { return a.at - b.at; });
       }
-      this.carryQ = due(L.cluesVia(n, 'part'));
-      this.dockQ = due(L.cluesVia(n, 'dock'));
-      this.radioQ = due(L.cluesVia(n, 'radio'));
+      this.carryQ = due(L.cluesVia(n, 'part', led));
+      this.slipQ = due(L.cluesVia(n, 'slip', led));
+      this.bgQ = due(L.cluesVia(n, 'bgslip', led));
+      this.planeQ = due(L.cluesVia(n, 'plane', led));
+      this.dockQ = due(L.cluesVia(n, 'dock', led));
+      this.radioQ = due(L.cluesVia(n, 'radio', led));
       this.carry = null;
       this.dockUp = null;
+      this.dockRead = false;
+      this.dockCloser = false;
+      this.bgUp = null;
+      this.planeUp = null;
       this.ambient = null;
       this.filler = n * 3;
       this.fillerT = 4.0;
@@ -740,7 +834,8 @@
          whatever is left over when the hooter goes, and the trash screen
          asks logic for it then. */
       this.shift.marksSeen =
-        this.carryQ.length + this.dockQ.length + this.radioQ.length
+        this.carryQ.length + this.slipQ.length + this.bgQ.length +
+        this.planeQ.length + this.dockQ.length + this.radioQ.length
         + L.trashFor(g.run, this.shift).length;
       /* Whatever is in the basket and never looked at is written off at the
          hooter, exactly as an unread piece on line 5 is. */
@@ -795,12 +890,48 @@
         this.spawnT += cfg.spawn;
       }
 
-      /* Something to find on line 5. It waits for a fault to ride in and
-         goes out on that — so the piece carrying it is a piece you had a
-         reason to touch anyway, and the choice is only ever whether to
-         take it off or turn it over first. */
+      /* Something to find on line 5, tucked in behind the next piece to
+         come along. A fault is likelier to be the one carrying it — a
+         piece somebody has already had reason to handle — but it is not
+         required, so a sound piece can have a slip behind it and a fault
+         can have nothing. */
       if (!this.carry && this.carryQ.length && this.carryQ[0].at <= elapsed) {
         this.carry = this.carryQ.shift().clue;
+      }
+      /* A slip riding line 5 on its own, with no part under it at all. It
+         is released on the same belt and travels at the same speed, and
+         if it reaches the end of the line it goes out with everything
+         else. */
+      if (this.slipQ.length && this.slipQ[0].at <= elapsed) {
+        this.releaseSlip(this.slipQ.shift().clue);
+      }
+      /* A slip left on a machine casing down the hall. It stays where it
+         was put — nobody is coming to collect it — so this one is the only
+         item in the game that waits for the player rather than the other
+         way round. */
+      if (!this.bgUp && this.bgQ.length && this.bgQ[0].at <= elapsed) {
+        this.bgUp = this.bgQ.shift().clue;
+      }
+      /* An aeroplane across the window band with an advertising banner
+         behind it. It crosses once and does not come back. */
+      if (!this.planeUp && this.planeQ.length && this.planeQ[0].at <= elapsed) {
+        this.planeUp = this.planeQ.shift().clue;
+        this.planeT = 0;
+      }
+      if (this.planeUp) {
+        this.planeT += dt;
+        if (this.planeT > PLANE_WINDOW) {
+          if (!this.open || this.open.clue !== this.planeUp) sh.marksPassed++;
+          this.planeUp = null;
+        }
+      }
+
+      /* The man from the works office, four fifths of the way through the
+         fourth shift. He interrupts the shift rather than waiting for the
+         end of it. */
+      if (L.officerDue(this.run, sh) && !this.open && !this.bin) {
+        g.go('officer');
+        return;
       }
 
       this.beltPhase += cfg.speed * ldt;
@@ -869,20 +1000,17 @@
       if (!this.dockUp && this.dockQ.length && this.dockQ[0].at <= elapsed) {
         this.dockUp = this.dockQ.shift().clue;
         this.dockT = 0;
-        /* Said once, beside the monitor, if the monitor is on the bench.
-           A player who paid for the camera is told there is something to
-           look at; a player who did not is told nothing, because there is
-           nothing on their bench to tell them. */
-        if (this.kit.dock) {
-          this.pendingSay = { text: C.DOCK_ALERT, secs: 6.0, at: 'dock' };
-        }
+        /* The alert is the monitor's own label changing, and nothing else.
+           A transient notice at the same anchor collided with it. */
       }
       if (this.dockUp) {
         this.dockT += dt;
         // the lorry is loaded and gone, whether or not anybody looked
         if (this.dockT > L.DOCK_WINDOW) {
-          if (!this.open || this.open.clue !== this.dockUp) sh.marksPassed++;
+          if (!this.dockRead) sh.marksPassed++;
           this.dockUp = null;
+          this.dockRead = false;
+          this.dockCloser = false;
         }
       }
 
@@ -1058,8 +1186,14 @@
 
          The arm never takes a piece with something on it. A machine that
          sorts by the obvious would have put it straight in the skip. */
+      /* A slip goes in behind whatever comes along, with a fault three
+         times likelier to be the one carrying it — somebody who has
+         already had a piece in their hands is likelier to have left
+         something behind it — but never required. So a sound piece can
+         have a slip and a fault can have nothing, and neither of the two
+         things you are watching for predicts the other. */
       var clue = null;
-      if (faulty && this.carry) {
+      if (this.carry && D.rnd(i * 6.7 + this.shift.n * 3) < (faulty ? 0.75 : 0.25)) {
         clue = this.carry;
         this.carry = null;
       }
@@ -1109,9 +1243,26 @@
        taken off it, so whatever this cost, it is still costing. */
     read_: function (clue) {
       if (!clue || this.open) return false;
+      /* Once the count is there, the circular is simply the next piece of
+         paper the player picks up, and it takes that slip's place rather
+         than arriving beside it. Only paper does this: the bench set and
+         the yard camera are not things you can find a letter in. */
+      if (L.PAPER_CHANNELS.indexOf(clue.via) >= 0 &&
+          L.revealTakesOver(this.run, this.shift)) {
+        clue = L.REVEAL;
+      }
       this.open = { clue: clue, t: 0, shown: 0, read: false };
       this.lastAction = 'open';
       SOL.audio.paper && SOL.audio.paper();
+      return true;
+    },
+
+    /* Some cards have a second look in them. The yard camera is the only
+       one: the lorry is worth two for watching it come in and a third for
+       going over to the monitor and clicking on it. */
+    lookCloser: function (g) {
+      if (!L.lookCloser(g.run, this.open)) return false;
+      SOL.audio.reveal && SOL.audio.reveal();
       return true;
     },
 
@@ -1233,7 +1384,7 @@
     nearestReturn: function () {
       var best = null, bd = Infinity, self = this;
       this.returns.forEach(function (r) {
-        if (!self.inRetZone(r)) return;
+        if (r.bare || !self.inRetZone(r)) return;
         var d = Math.abs(r.x - RET_MID);
         if (d < bd) { bd = d; best = r; }
       });
@@ -1246,6 +1397,8 @@
     pull: function (atX) {
       if (this.open) { this.lastAction = 'reading'; return false; }
       var r = atX == null ? this.nearestReturn() : this.returnAt(atX);
+      // a slip is not stock and there is nothing to take off
+      if (r && r.bare) r = null;
       if (!r) { this.lastAction = 'noreturn'; return false; }
       this.returns = this.returns.filter(function (q) { return q !== r; });
       /* Nothing here touches the press cooldown. Taking a piece off costs
@@ -1271,9 +1424,10 @@
     look: function (atX) {
       if (this.open) { this.lastAction = 'reading'; return false; }
       var r = atX == null ? this.nearestCarrier() : this.returnAt(atX);
-      /* Only a taped piece can be investigated. There is nothing to turn
-         over on an ordinary one — the tape is the whole signal, and a look
-         that found nothing would just be a worse way of pulling. */
+      /* Only a piece with a slip behind it can be read. There is nothing
+         to turn over on an ordinary one — the paper is the whole signal,
+         and a look that found nothing would just be a worse way of
+         pulling. */
       if (!r || !r.clue) {
         this.lastAction = 'nolook';
         this.say(C.LOOK_EMPTY, 1.8, 'line5');
@@ -1293,9 +1447,54 @@
       return true;
     },
 
-    /* The yard camera. No cycle cost — it is bolted to your bench and you
-       only turned your head. What it costs is the reading, and ninety-five
-       scrip that could have been a foot pedal. */
+    /* A slip riding line 5 with nothing under it. It is released on the
+       same belt, travels at the same speed, and goes out at the end of the
+       line like everything else if nobody picks it up. */
+    releaseSlip: function (clue) {
+      /* Deliberately not counted in shift.returns. That number is what the
+         line released and what the operator is answerable for; a slip of
+         paper riding the belt is neither, and counting it made every
+         accounting test on line 5 disagree with logic.returnCount. */
+      this.returns.push({
+        i: this.retIdx, x: LAY.retSpawnX, form: 0,
+        bob: (D.rnd(this.retIdx * 5.7) - 0.5) * 4,
+        faulty: false, armable: false, bare: true, clue: clue, past: false
+      });
+    },
+
+    /* The slip left on a machine casing down the hall. Nobody is coming to
+       collect it, so unlike everything else in the game it waits. */
+    lookBg: function () {
+      if (this.open) { this.lastAction = 'reading'; return false; }
+      if (!this.bgUp) { this.lastAction = 'nobg'; return false; }
+      var clue = this.bgUp;
+      this.bgUp = null;
+      this.shift.looked++;
+      this.lastAction = 'found';
+      return this.read_(clue);
+    },
+
+    /* The banner behind the aeroplane. It crosses the window band once. */
+    lookPlane: function () {
+      if (this.open) { this.lastAction = 'reading'; return false; }
+      if (!this.planeUp) { this.lastAction = 'noplane'; return false; }
+      var clue = this.planeUp;
+      this.planeUp = null;
+      this.shift.looked++;
+      this.lastAction = 'found';
+      return this.read_(clue);
+    },
+
+    /* The yard camera, and the one channel that is a picture rather than a
+       document. Looking at it does not stop the shift and does not open a
+       card over the hall: you turn your head, you see four lorries and one
+       of them is not one of theirs, and the line goes on running behind
+       you. CLUES.md is explicit that this is a visual and not an
+       interruption, and it is right — the thing ninety-five scrip buys is
+       having to be looking, not having something read out at you.
+
+       It costs no cycle and no clock. What it costs is the ninety-five,
+       and the seconds your eyes were in the wrong corner. */
     lookDock: function () {
       if (this.open) { this.lastAction = 'reading'; return false; }
       if (!this.kit || !this.kit.dock) { this.lastAction = 'nodock'; return false; }
@@ -1304,10 +1503,26 @@
         this.say(C.DOCK_IDLE, 1.8, 'dock');
         return false;
       }
-      var clue = this.dockUp;
-      this.dockUp = null;
+      if (this.dockRead) { this.lastAction = 'dockseen'; return false; }
+      this.dockRead = true;
+      this.shift.looked++;
       this.lastAction = 'found';
-      return this.read_(clue);
+      L.recordClue(this.run, this.shift, this.dockUp);
+      SOL.audio.turn && SOL.audio.turn();
+      return true;
+    },
+
+    /* Going over to the monitor rather than glancing at it from the press.
+       The black one is the only thing in the game worth a second look, and
+       it is worth exactly one point. */
+    lookLorry: function () {
+      if (this.open || !this.dockUp || !this.dockRead || this.dockCloser) {
+        return false;
+      }
+      this.dockCloser = true;
+      this.run.awareness += (this.dockUp.clickWeight || 0);
+      SOL.audio.reveal && SOL.audio.reveal();
+      return true;
     },
 
     /* Nearest unstamped part inside the press zone to the given x. */
@@ -1384,6 +1599,14 @@
     endShift: function (g) {
       var sh = this.shift;
       if (sh.over) return;
+      /* A slip on a machine casing is the one thing in the game that waits
+         — nothing comes to take it away — so it has to be written off here
+         instead. Left out, three items a run were counted as put within
+         reach and never counted as missed, and the two figures on the
+         sheet stopped adding up. */
+      if (this.bgUp) { sh.marksPassed++; this.bgUp = null; }
+      sh.marksPassed += this.bgQ.length;
+      this.bgQ = [];
       /* The bin is emptied during the shift now, not after it, so the
          hooter goes straight to the sheet. There used to be a screen here
          with a man explaining that sorting the rubbish was pointless. */
@@ -1422,6 +1645,7 @@
 
       if (this.open) {
         if (hit && hit.id === 'close') this.closeInquiry();
+        if (hit && hit.id === 'closer') this.lookCloser(g);
         return;
       }
       if (this.bin) {
@@ -1433,7 +1657,10 @@
       }
       if (hit && hit.id === 'bin') { this.openBin(g); return; }
       if (hit && hit.id === 'stop') { this.stopLine(g); return; }
+      if (hit && hit.id === 'lorry') { this.lookLorry(); return; }
       if (hit && hit.id === 'dock') { this.lookDock(); return; }
+      if (hit && hit.id === 'bgslip') { this.lookBg(); return; }
+      if (hit && hit.id === 'plane') { this.lookPlane(); return; }
       /* Line 5, and clicking it only ever looks. Taking a piece off is X
          and nothing but X.
 
@@ -1463,10 +1690,45 @@
         mood: cfg.mood, lamps: 4, floorY: LAY.floorY, still: g.frozen
       });
 
+      /* An aeroplane across the window band, drawn against the hall and
+         under everything else. It is small, it is far away, and it is the
+         only thing in the game that happens outside the building. */
+      if (this.planeUp) {
+        var pt = D.clamp(this.planeT / PLANE_WINDOW, 0, 1);
+        var px = -80 + pt * (W + 160);
+        ctx.save();
+        ctx.globalAlpha = 0.85;
+        // the aircraft: a dark speck, no detail at this distance
+        ctx.fillStyle = 'rgba(28,32,35,0.95)';
+        ctx.fillRect(px - 6, PLANE.y - 1.5, 12, 3);
+        ctx.fillRect(px - 1.5, PLANE.y - 5, 3, 10);
+        // and the banner it is dragging
+        drawSlip(ctx, px + 30, PLANE.y + 1, PLANE.w, PLANE.h, 0.03,
+          g.hoverId === 'plane');
+        // put the glass back in front of it
+        S.reglaze(ctx, W, cfg.mood);
+        ctx.restore();
+        this.hits.push({
+          x: px - 16, y: PLANE.y - 18, w: PLANE.w + 74, h: 36, id: 'plane'
+        });
+      }
+
       // line 5 first: it is upstage, so everything else is drawn over it
       drawReturnLine(ctx, t, cfg, this.kit && this.kit.lamp, this.retPhase);
       for (var r = 0; r < this.returns.length; r++) {
         drawReturn(ctx, this.returns[r], t, this.kit || {});
+      }
+
+      /* A slip left on a machine casing down the hall, behind line 5 and
+         well away from anything the player has to hit in a hurry. It does
+         not move and nothing takes it away. */
+      if (this.bgUp) {
+        drawSlip(ctx, BGSLIP.x, BGSLIP.y, BGSLIP.w, BGSLIP.h, -0.06,
+          g.hoverId === 'bgslip');
+        this.hits.push({
+          x: BGSLIP.x - BGSLIP.w, y: BGSLIP.y - BGSLIP.h,
+          w: BGSLIP.w * 2, h: BGSLIP.h * 2, id: 'bgslip'
+        });
       }
 
       drawPressFrame(ctx);
@@ -1521,8 +1783,42 @@
       this.drawStation(ctx, t, g);
       this.drawHud(ctx, t, g);
       if (this.kit && this.kit.dock) {
-        drawDock(ctx, t, !!this.dockUp, g.hoverId === 'dock');
+        drawDock(ctx, t, !!this.dockUp,
+          g.hoverId === 'lorry' ? 'lorry' : g.hoverId,
+          this.dockRead, this.dockCloser);
         this.hits.push({ x: DOCK.x, y: DOCK.y, w: DOCK.w, h: DOCK.h, id: 'dock' });
+
+        /* What the picture says, on a plate under the monitor, for as long
+           as the lorry is in the yard. It went out as transient notices at
+           first and three of them — the alert, the item, the second look —
+           landed on the same anchor within a few seconds and printed
+           through each other. A caption that belongs to the monitor is
+           also simply where a caption belongs. */
+        if (this.dockUp && this.dockRead) {
+          var cap = [this.dockUp.lines[0]];
+          if (this.dockCloser) cap.push(this.dockUp.clickLines[0]);
+          var capOpt = { size: 10, lineHeight: 14, color: P.text };
+          var rows = [];
+          cap.forEach(function (line) {
+            rows = rows.concat(D.wrap(ctx, line, DOCK.w - 16, capOpt));
+          });
+          var capH = rows.length * 14 + 16;
+          var capY = DOCK.y + DOCK.h + 28;
+          D.plate(ctx, DOCK.x - 8, capY, DOCK.w + 16, capH,
+            { top: '#25292c', bot: '#16181a', r: 2 });
+          rows.forEach(function (line, k) {
+            D.txt(ctx, line, DOCK.x, capY + 18 + k * 14, capOpt);
+          });
+        }
+        /* The black one is its own target once the picture has been read,
+           and it sits in front of the monitor's own region so a click on
+           it is a click on it and not on the screen generally. */
+        if (this.dockUp && this.dockRead && !this.dockCloser) {
+          this.hits.unshift({
+            x: BLACK.x - 4, y: BLACK.y - 4, w: BLACK.w + 8, h: BLACK.h + 8,
+            id: 'lorry'
+          });
+        }
       }
       if (this.open) this.drawInquiry(ctx, t, g);
       else if (this.bin) this.drawSort(ctx, t, g);
@@ -1542,7 +1838,7 @@
     drawSort: function (ctx, t, g) {
       var b = this.bin;
       var nx = SORT.x, nw = SORT.w, px = nx + 44, pw = nw - 88;
-      var rows = Math.ceil(b.items.length / 3);
+      var rows = Math.ceil(b.items.length / SORT.cols);
       var nh = SORT.top + rows * SORT.row + 26 + 46 + 26;
       var ny = Math.round((H - nh) / 2) + 8;
       this.card = { x: nx, y: ny, w: nw, h: nh };
@@ -1564,11 +1860,11 @@
       y += 12;
       D.seam(ctx, px, y, pw);
 
-      var cw = Math.floor(pw / 3);
+      var cw = Math.floor(pw / SORT.cols);
       b.items.forEach(function (it, i) {
         if (it.gone) return;
-        var cx = px + (i % 3) * cw + cw / 2;
-        var cy = ny + SORT.top + Math.floor(i / 3) * SORT.row + 44;
+        var cx = px + (i % SORT.cols) * cw + cw / 2;
+        var cy = ny + SORT.top + Math.floor(i / SORT.cols) * SORT.row + 30;
         var hot = g.hoverId === 'sort:' + i;
 
         // the thing itself: a ball of paper, or a curl of swarf
@@ -1585,7 +1881,7 @@
           ctx.beginPath();
           for (var k = 0; k < 9; k++) {
             var a = (k / 9) * 6.28;
-            var rr = 24 + D.rnd(i * 5.1 + k) * 9;
+            var rr = 17 + D.rnd(i * 5.1 + k) * 6;
             ctx[k ? 'lineTo' : 'moveTo'](Math.cos(a) * rr, Math.sin(a) * rr);
           }
           ctx.closePath(); ctx.fill();
@@ -1601,7 +1897,7 @@
           ctx.lineWidth = 2.4;
           ctx.beginPath();
           for (var q = 0; q < 30; q++) {
-            var aa = q * 0.42, rr2 = 4 + q * 0.8;
+            var aa = q * 0.42, rr2 = 3 + q * 0.56;
             ctx[q ? 'lineTo' : 'moveTo'](Math.cos(aa) * rr2, Math.sin(aa) * rr2 * 0.7);
           }
           ctx.stroke();
@@ -1609,11 +1905,11 @@
 
         ctx.restore();
 
-        D.stencil(ctx, it.label, cx, cy + 44,
-          { size: 8.5, track: 1.8, align: 'center',
+        D.stencil(ctx, it.label, cx, cy + 32,
+          { size: 7.5, track: 1.2, align: 'center',
             color: hot ? P.text : 'rgba(112,120,127,0.95)' });
 
-        this.hits.push({ x: cx - 42, y: cy - 42, w: 84, h: 92, id: 'sort:' + i });
+        this.hits.push({ x: cx - 34, y: cy - 28, w: 68, h: 66, id: 'sort:' + i });
       }, this);
 
       var b2 = { x: px - 14, y: ny + nh - 46 - 26, w: 250, h: 46, id: 'binclose' };
@@ -1701,7 +1997,9 @@
       var bodyH = rows.reduce(function (a, n) { return a + n * 22 + 12; }, 0);
       // the footnote's room is always reserved, so the card cannot change
       // size underneath the player as lines surface
-      var nh = 78 + 26 + 24 + bodyH + 18 + 40 + 26 + 22;
+      // the second look, when there is one, gets its own row's worth
+      var nh = 78 + 26 + 24 + bodyH + 18 + 40 + 26 + 22 +
+        (clue.clickLines ? 46 : 0);
       var ny = Math.max(LAY.hudY + LAY.hudH + 10, LAY.beltY - 22 - nh);
 
       Screens._notice(ctx, nx, ny, nw, nh, C.INQUIRY_HEADING);
@@ -1730,6 +2028,23 @@
           size: lineOpt.size, lineHeight: lineOpt.lineHeight,
           color: P.text, alpha: 0.15 + 0.85 * a
         }) + 2;
+      }
+
+      /* The second look. Only the yard camera has one, and only once the
+         card itself has been read to the end — a closer look at something
+         you did not finish reading is not a closer look at anything. */
+      if (clue.clickLines && o.read) {
+        if (o.closer) {
+          y = D.para(ctx, clue.clickLines[0], px, y + 12, pw, {
+            size: lineOpt.size, lineHeight: lineOpt.lineHeight, color: P.text
+          }) + 2;
+        } else {
+          var cb = { x: px - 14, y: y + 12, w: 300, h: 34, id: 'closer' };
+          Screens._control(ctx, cb, C.INQUIRY_CLOSER,
+            g.hoverId === 'closer' ? 'hover' : 'idle', { size: 11 });
+          this.hits.push(cb);
+          y = cb.y + cb.h + 4;
+        }
       }
 
       // what it is costing, in the plant's own units, updated live

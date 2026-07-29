@@ -69,7 +69,11 @@ test.describe('clue data', () => {
     await boot(page);
     const r = await page.evaluate(() => {
       const L = window.SOL.logic;
-      const bad = L.CLUES.filter((c) => L.CHANNELS.indexOf(c.via) < 0).map((c) => c.id);
+      /* The circular is 'any' on purpose: it is not a channel of its own,
+         it takes the place of the next piece of paper the player picks up,
+         whichever channel that was going to arrive on. */
+      const bad = L.CLUES.filter(
+        (c) => c.via !== 'any' && L.CHANNELS.indexOf(c.via) < 0).map((c) => c.id);
       const used = {};
       L.CHANNELS.forEach((v) => {
         used[v] = L.CLUES.filter((c) => c.via === v).length;
@@ -235,9 +239,9 @@ test.describe('looking closely at line 5', () => {
      in on a piece you already had a reason to touch, so the decision is
      never "go and look for the story", it is "take this off, or turn it
      over first". If a carrier ever fails to appear the channel is dead. */
-  test('every part-borne item reaches the bay with tape on it', async ({ page }) => {
+  test('every part-borne item reaches the bay behind a piece', async ({ page }) => {
     await boot(page);
-    for (const n of [1, 3, 4, 6]) {
+    for (const n of [1, 2, 3]) {
       const r = await page.evaluate((n) => {
         const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
         L.resetRun(g.run);
@@ -249,11 +253,14 @@ test.describe('looking closely at line 5', () => {
         for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
           g.tick(1 / 60);
           sc.returns.forEach((r) => {
+            // bare slips ride the same belt and belong to another channel
+            if (r.bare) return;
             if (r.clue && carried.indexOf(r.clue.id) < 0) {
               carried.push(r.clue.id);
-              /* Tape and fault are separate signals. A taped piece may or
-                 may not also be faulty, but the arm must never take one:
-                 a machine that sorts by the obvious would have binned it. */
+              /* Paper and fault are separate signals. A piece with a slip
+                 behind it may or may not also be faulty, but the arm must
+                 never take one: a machine that sorts by the obvious would
+                 have binned it. */
               if (r.armable) carried.push('ARM WOULD TAKE: ' + r.clue.id);
             }
           });
@@ -309,11 +316,13 @@ test.describe('looking closely at line 5', () => {
      never got the chance to make are the bill. */
   test('the clock runs at full speed while the line does not', async ({ page }) => {
     await boot(page);
-    await enterShift(page, 4);
+    // shift 3, which is one of the shifts that still puts a slip behind a
+    // piece; shift 4's items are all slip, plane, set, camera and basket
+    await enterShift(page, 3);
     const r = await page.evaluate(() => {
       const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
       let guard = 0;
-      while (!(sc.nearestReturn() && sc.nearestReturn().clue) && guard++ < 60 * 200) {
+      while (!sc.nearestCarrier() && guard++ < 60 * 400) {
         g.tick(1 / 60);
         sc.stamp(null);
       }
@@ -506,24 +515,30 @@ test.describe('the bench set and the yard camera', () => {
         while (!sc.dockUp && guard++ < 60 * 120) g.tick(1 / 60);
         const arrived = !!sc.dockUp;
         const opened = sc.lookDock();
-        const kind = sc.open ? sc.open.clue.kind : null;
-        for (let i = 0; i < Math.ceil((L.readTime(sc.open.clue) + 0.5) * 60); i++) {
-          g.tick(1 / 60);
-        }
-        sc.closeInquiry();
-        return { early, arrived, opened, kind, awareness: g.run.awareness, window: L.DOCK_WINDOW };
+        /* Nothing is opened over the hall — the camera is a picture. What
+           changes is that the black one is now a thing you can click. */
+        const card = !!sc.open;
+        const again = sc.lookDock();
+        return {
+          early, arrived, opened, card, again,
+          awareness: g.run.awareness, window: L.DOCK_WINDOW
+        };
       });
       expect(r.early.up).toBe(false);
       expect(r.early.ok).toBe(false);
       expect(r.early.why).toBe('dockidle');
       expect(r.arrived).toBe(true);
       expect(r.opened).toBe(true);
+      expect(r.card).toBe(false);
+      expect(r.again).toBe(false);          // it is looked at once
       expect(r.awareness).toBeGreaterThan(0);
     });
 
   test('a lorry nobody looked at is loaded and gone', async ({ page }) => {
     await boot(page);
-    await enterShift(page, 4, ['camera']);
+    // shift 3: shift 4 is the one the works office interrupts, and a
+    // harness that sits through DOCK_WINDOW there meets him instead
+    await enterShift(page, 3, ['camera']);
     const r = await page.evaluate(() => {
       const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
       let guard = 0;
@@ -587,7 +602,7 @@ test.describe('the basket at the station', () => {
       });
       expect(r.before.done).toBe(false);
       expect(r.opened).toBe(true);
-      expect(r.items).toBe(6);
+      expect(r.items).toBe(20);
       // exactly one thing in it is marked, on a shift that has something
       expect(r.marked).toBe(1);
       expect(r.rate).toBeLessThan(0.3);
@@ -626,8 +641,8 @@ test.describe('the basket at the station', () => {
       sc.closeInquiry();
       return { opens, openedIt, kind, beforeMark, after: g.run.cluesSeen.slice() };
     });
-    // five ordinary things, none of which is anything
-    expect(r.opens).toEqual([false, false, false, false, false]);
+    // nineteen ordinary things, none of which is anything
+    expect(r.opens).toEqual(new Array(19).fill(false));
     expect(r.openedIt).toBe(true);
     expect(r.after).toContain('c1-pedal');
   });
@@ -710,7 +725,12 @@ test.describe('the reveal', () => {
       });
       expect(r.says).toBe(true);
       expect(r.inShiftClues).toBe(false);   // belongs to no shift
-      expect(r.via).toBe('trash');          // and to the bottom of the bin
+      /* Not a channel of its own: it takes the place of the next piece of
+         paper the player reaches for, on whichever channel that was going
+         to be. It lived at the bottom of the basket and nowhere else for a
+         while, which meant a player who read everything on the floor and
+         never emptied the bin could pass the threshold and never be told. */
+      expect(r.via).toBe('any');
       expect(r.heaviest).toBe(true);
     });
 
@@ -724,7 +744,10 @@ test.describe('the reveal', () => {
         g.run.shift = n;
         g.go('shift');
         // head down, press only: the basket is never touched
-        for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
+        for (let i = 0; i < 60 * 400 && g.run.shiftLog.length < n; i++) {
+          // he comes down to the station whether or not you are looking up
+          if (g.screen === 'officer') { window.__clearOfficer(); continue; }
+          if (g.screen !== 'shift') break;
           g.tick(1 / 60);
           if (g.screen === 'shift') sc.stamp(null);
         }
@@ -792,107 +815,121 @@ test.describe('the reveal', () => {
     expect(r.tier).toBe('know');
   });
 
-  /* Neither free channel reaches it, on its own or together. Line 5 cannot
-     even carry it — the circular is at the bottom of the basket and there
-     is no other way to it — and the basket hands it over only to somebody
-     who has also paid for a source. The three tests below are the whole of
-     that rule, stated once from each side. */
-  test('line 5 on its own never comes to it', async ({ page }) => {
-    await boot(page);
-    const r = await page.evaluate(() => {
-      const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
-      L.resetRun(g.run);
-      for (let n = 1; n <= L.SHIFT_COUNT; n++) {
-        g.run.shift = n;
-        g.go('shift');
-        for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
-          const car = sc.nearestReturn();
-          if (car && car.clue && !sc.open) sc.look(car.x);
-          g.tick(1 / 60);
-          if (sc.open && sc.open.read) sc.closeInquiry();
-          if (g.screen === 'shift' && !sc.open) sc.stamp(null);
-        }
+  /* What actually stands between an operator and the circular is ten
+     points of weight and nothing else. The free channels are worth
+     0/2/5/8/11/16 across the six shifts; the bench set adds three by the
+     end of shift 3 and the yard camera two, or three if you click the
+     black lorry rather than only watching it. So buying brings the
+     circular forward two shifts and that is the whole of the difference.
+
+     A build in between this one and the first had an explicit rule that
+     the free path could never reach it at all. The four tests below are
+     what replaced that rule: the ladder, measured, from each rung. */
+
+  /* Play a whole run under a policy and report when the circular landed. */
+  const runFor = (page, kit, opts = {}) => page.evaluate(({ kit, opts }) => {
+    const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+    L.resetRun(g.run);
+    window.__officerPolicy = opts.officer || 'upgrade';
+    let guard = 0;
+    g.go('brief');
+    while (g.screen !== 'menu' && !g.run.finished && guard++ < 60 * 1500) {
+      if (g.screen === 'brief') { window.SOL.screens.brief.begin_(g); continue; }
+      if (g.screen === 'summary') { window.SOL.screens.summary.advance(g); continue; }
+      if (g.screen === 'officer') { window.__clearOfficer(); continue; }
+      if (g.screen === 'stores') {
+        g.run.ledger.owned = kit.slice();
+        window.SOL.screens.stores.leave_(g); continue;
       }
-      return {
-        revealed: g.run.revealed,
-        awareness: g.run.awareness,
-        binsSorted: g.run.binsSorted,
-        canStop: L.canStop(g.run, L.newShift(6))
-      };
+      if (g.screen !== 'shift') break;
+      if (opts.basket !== false && !sc.binDone && !sc.bin && !sc.open) {
+        window.__emptyBin(opts.binEarly === true);
+      }
+      if (opts.line5 !== false) {
+        /* Bare slips ride the same belt but they are the `slip` channel,
+           not the pieces. `parts: false` reads only what is tucked in
+           behind an actual piece. */
+        const car = sc.returns.find(
+          (r) => r.clue && sc.inRetZone(r) && (opts.parts !== false || !r.bare));
+        if (car && !sc.open) sc.look(car.x);
+      }
+      if (opts.paper !== false) {
+        if (sc.bgUp && !sc.open) sc.lookBg();
+        if (sc.planeUp && !sc.open) sc.lookPlane();
+      }
+      /* The camera is a picture, not a card: looking is a glance and the
+         second look is a click on the black one, neither of which opens
+         anything over the hall. */
+      if (sc.dockUp && !sc.open) { sc.lookDock(); sc.lookLorry(); }
+      g.tick(1 / 60);
+      if (sc.open && sc.open.read) sc.closeInquiry();
+      if (g.screen === 'shift' && !sc.open && sc.candidate()) sc.stamp(null);
+    }
+    window.__officerPolicy = 'upgrade';
+    return {
+      on: g.run.revealedOn, revealed: g.run.revealed,
+      awareness: g.run.awareness, binsSorted: g.run.binsSorted,
+      owned: g.run.ledger.owned.slice(), min: L.REVEAL_MIN_AWARENESS
+    };
+  }, { kit, opts });
+
+  /* Line 5 carries four items across the whole quarter and every one of
+     them is a playing tip. An operator who works the return line and
+     nothing else finishes the run a better worker and no wiser at all,
+     which is the sharpest thing the weight table says. */
+  test('line 5 on its own teaches you the job and nothing else',
+    async ({ page }) => {
+      await boot(page);
+      const r = await runFor(page, [],
+        { basket: false, paper: false, parts: false, officer: 'upgrade' });
+      expect(r.binsSorted).toBe(0);
+      expect(r.awareness).toBe(0);
+      expect(r.revealed).toBe(false);
+      expect(r.on).toBe(null);
     });
-    expect(r.binsSorted).toBe(0);
-    expect(r.awareness).toBeGreaterThan(0);
-    expect(r.revealed).toBe(false);
-    // and with it, walking off the line stays shut for the whole quarter
-    expect(r.canStop).toBe('unreasoned');
+
+  test('everything free, bought nothing: the circular comes on shift 5',
+    async ({ page }) => {
+      await boot(page);
+      const r = await runFor(page, []);
+      expect(r.owned).toEqual([]);
+      expect(r.revealed).toBe(true);
+      expect(r.on).toBe(5);
+    });
+
+  test('the bench set brings it forward to shift 4', async ({ page }) => {
+    await boot(page);
+    const r = await runFor(page, ['radio']);
+    expect(r.revealed).toBe(true);
+    expect(r.on).toBe(4);
   });
 
-  test('the basket on its own never comes to it either', async ({ page }) => {
-    await boot(page);
-    const r = await page.evaluate(() => {
-      const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
-      L.resetRun(g.run);
-      for (let n = 1; n <= L.SHIFT_COUNT; n++) {
-        g.run.shift = n;
-        g.go('shift');
-        for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
-          if (!sc.binDone && !sc.bin && !sc.open) window.__emptyBin();
-          g.tick(1 / 60);
-          if (sc.open && sc.open.read) sc.closeInquiry();
-          if (g.screen === 'shift' && !sc.open) sc.stamp(null);
-        }
-      }
-      return {
-        revealed: g.run.revealed, on: g.run.revealedOn,
-        binsSorted: g.run.binsSorted, awareness: g.run.awareness
-      };
-    });
-    // every basket in the quarter, emptied and sorted, and it is still not
-    // the basket that decides this
-    expect(r.binsSorted).toBe(6);
-    expect(r.awareness).toBeGreaterThan(0);
-    expect(r.revealed).toBe(false);
-    expect(r.on).toBe(null);
-  });
+  /* The earliest the game will give it up, and it is a narrow door: both
+     purchases on the bench from the first stores visit, the black lorry
+     clicked rather than only watched, and the basket emptied at the START
+     of shift 3 rather than the end of it.
 
-  /* Both free channels, worked without a single miss for the whole
-     quarter, and still nothing. This is the load-bearing one. An operator
-     who never spends anything on finding out never finds out — not because
-     the game is withholding a reward, but because that is the position the
-     piece is describing. It ran the other way for most of the build's life
-     and the reversal is deliberate. */
-  test('the two free channels together are never enough', async ({ page }) => {
-    await boot(page);
-    const r = await page.evaluate(() => {
-      const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
-      L.resetRun(g.run);
-      for (let n = 1; n <= L.SHIFT_COUNT; n++) {
-        g.run.shift = n;
-        g.go('shift');
-        for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
-          if (!sc.binDone && !sc.bin && !sc.open) window.__emptyBin();
-          const car = sc.nearestReturn();
-          if (car && car.clue && !sc.open) sc.look(car.x);
-          g.tick(1 / 60);
-          if (sc.open && sc.open.read) sc.closeInquiry();
-          if (g.screen === 'shift' && !sc.open) sc.stamp(null);
-        }
-      }
-      return {
-        revealed: g.run.revealed, on: g.run.revealedOn,
-        owned: g.run.ledger.owned.length, tier: L.awarenessTier(g.run),
-        awareness: g.run.awareness, min: L.REVEAL_MIN_AWARENESS,
-        paid: L.hasPaidSource(g.run)
-      };
+     That last one surprised me and it is worth writing down. The circular
+     replaces the next piece of paper after the count crosses ten. Empty
+     the basket late and its two points land after the last slip of shift 3
+     has already gone by, so there is nothing left for the circular to
+     arrive on and it waits for shift 4. Empty it first thing and the same
+     two points land early enough that the shift's own aeroplane can carry
+     it. Same purchases, same reading, one shift apart, entirely on when
+     you did the chore. */
+  test('everything bought, the lorry clicked and the basket done early',
+    async ({ page }) => {
+      await boot(page);
+      const early = await runFor(page, ['radio', 'camera'], { binEarly: true });
+      expect(early.revealed).toBe(true);
+      expect(early.on).toBe(3);
+      expect(early.awareness).toBeGreaterThanOrEqual(early.min);
+
+      // the same run with the basket left until the end of each shift
+      const late = await runFor(page, ['radio', 'camera']);
+      expect(late.revealed).toBe(true);
+      expect(late.on).toBe(4);
     });
-    expect(r.owned).toBe(0);
-    expect(r.paid).toBe(false);
-    // the count is well past the threshold; it is the source that is missing
-    expect(r.awareness).toBeGreaterThan(r.min);
-    expect(r.revealed).toBe(false);
-    expect(r.on).toBe(null);
-    expect(r.tier).toBe('know');
-  });
 });
 
 test.describe('awareness bands', () => {

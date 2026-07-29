@@ -80,7 +80,7 @@
       Screens._headerRail(ctx, C.PLANT_NAME,
         rec ? 'AFTER SHIFT ' + rec.n : 'BETWEEN SHIFTS');
 
-      var items = E.items();
+      var items = E.items(g.run && g.run.ledger);
       var nx = CARD.x, nw = CARD.w, px = nx + 44, pw = nw - 88;
       var nh = TOP_BLOCK + BOOK_H + 20 + items.length * ROW_H + 18
              + NOTES_H + 14 + BUTTON_H + 22;
@@ -233,9 +233,24 @@
         this.leave_(g);
         return;
       }
+      /* The advertiser's code. It works only if the player has actually
+         read one of the banners — otherwise F is a key that does nothing,
+         and nothing in the stores hints that it should do anything. */
+      if (e.key === 'f' || e.key === 'F') { this.code_(g); return; }
       // 1..7 buy straight off the list, in the order it is printed
       var n = parseInt(e.key, 10);
       if (n >= 1 && n <= E.CATALOGUE.length) this.buy(E.CATALOGUE[n - 1].id, g);
+    },
+
+    code_: function (g) {
+      var led = g.run && g.run.ledger;
+      if (!led || !g.run.sawAd || led.discount) {
+        SOL.audio.turn && SOL.audio.turn();
+        return false;
+      }
+      led.discount = true;
+      SOL.audio.confirm && SOL.audio.confirm();
+      return true;
     },
 
     pointer: function (x, y, type, g) {
