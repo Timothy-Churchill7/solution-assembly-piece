@@ -125,13 +125,16 @@
      END OF SHIFT
      ===================================================================== */
 
-  function signOff(rec) {
-    if (rec.stopped) return C.SUMMARY_LINES.stopped;
-    if (rec.rating === 'ABOVE SCHEDULE') return C.SUMMARY_LINES.above;
-    if (rec.rating === 'ON SCHEDULE') return C.SUMMARY_LINES.on;
-    if (rec.rating === 'BEHIND SCHEDULE') return C.SUMMARY_LINES.behind;
-    return C.SUMMARY_LINES.short;
-  }
+  /* There is no sign-off line any more. The sheet used to close with a
+     sentence about how the night had gone — the number is good, the number
+     is short, the crates go out anyway — and it was the one place the game
+     told the player what to make of its own figures. The figures are on the
+     card and RECORDED AS is on the card; a paragraph underneath explaining
+     them was the office talking, and the office does not talk.
+
+     The stopped case went with it, which is the only one I would think
+     twice about: a line walked off is now recorded in the header and the
+     rating and nowhere else. */
 
   /* The sheet that goes upstairs, and the sheet that does not.
 
@@ -177,9 +180,12 @@
          the same size. The plant does not consider it a separate subject. */
       sheet.push([C.SUMMARY_ROWS.pay, '+' + rec.pay.total, false]);
 
-      var own = [[C.AWARENESS_ROW, C.AWARENESS_LABELS[rec.tier]]];
-      /* Seconds, not parts. The line crawls while you read, so almost
-         nothing slips the press — what reading costs is the clock. */
+      /* WHAT YOU HAVE SEEN is gone from the top of this column. It named
+         the band the player's awareness had reached — a trace, a doubt,
+         enough to be sure — which is the game scoring their curiosity back
+         at them on a plant document. The plant has no such column and this
+         card is the plant's. What the player knows is theirs to carry. */
+      var own = [];
       if (rec.marksPassed > 0) own.push([C.SUMMARY_ROWS.marksPassed, String(rec.marksPassed)]);
       if (rec.pulled > 0) own.push([C.SUMMARY_ROWS.pulled, String(rec.pulled)]);
       /* Good stock taken off in error. Nobody upstairs will ever know, and
@@ -210,15 +216,12 @@
       var colW = Math.floor((pw - SUM.gap) / 2);
       var col = this.columns(rec);
 
-      var signOpt = { size: 13.5, color: P.dim, lineHeight: 23 };
-      var signLines = D.wrap(ctx, signOff(rec), pw, signOpt).length;
-
       // whichever column is taller sets the height of the pair
       var sheetH = col.sheet.length * SUM.row + 10 + 44;
       var ownH = 26 + col.own.length * SUM.awRow;
       var colH = Math.max(sheetH, ownH);
 
-      var nh = SUM.top + colH + 20 + signLines * 23 + 24 + SUM.button + 26;
+      var nh = SUM.top + colH + 26 + SUM.button + 26;
       var ny = Math.round((H - nh) / 2) + 8;
       this.card = { x: nx, y: ny, w: nw, h: nh };
       Screens._notice(ctx, nx, ny, nw, nh, C.SUMMARY_HEADING);
@@ -262,11 +265,16 @@
          of them: on an ordinary shift there is one line here and six over
          there, and top-aligning left a hole in the corner of the card.
          Centred, it reads as a note in the margin, which is what it is. */
+      /* Nothing at all on a shift where nothing happened. The heading and
+         its rule used to be drawn regardless, so an uneventful shift got a
+         column header with no column under it. */
       var ry = top + Math.round((colH - ownH) / 2);
-      ctx.fillStyle = 'rgba(104,114,122,0.55)';
-      ctx.fillRect(qx - 22, ry - 18, 2, 8 + col.own.length * SUM.awRow + 18);
-      D.stencil(ctx, C.AWARENESS_HEADING, qx, ry - 4,
-        { size: 9.5, track: 3.2, color: P.faint });
+      if (col.own.length) {
+        ctx.fillStyle = 'rgba(104,114,122,0.55)';
+        ctx.fillRect(qx - 22, ry - 18, 2, 8 + col.own.length * SUM.awRow + 18);
+        D.stencil(ctx, C.AWARENESS_HEADING, qx, ry - 4,
+          { size: 9.5, track: 3.2, color: P.faint });
+      }
       ry += 26;
       col.own.forEach(function (r) {
         D.stencil(ctx, r[0], qx, ry, { size: 10, track: 2.2, color: P.dim });
@@ -275,10 +283,9 @@
         ry += SUM.awRow;
       });
 
-      // ----- full width again: the sign-off, and the sample if it caught you
-      y = top + colH + 8;
-      D.seam(ctx, px, y - 14, pw);
-      y = D.para(ctx, signOff(rec), px, y + 12, pw, signOpt);
+      /* No full-width rule down here any more. It used to separate the two
+         columns from the sign-off paragraph; with the paragraph gone it was
+         a line ruled under nothing. */
 
       var b = { x: px - 14, y: ny + nh - 72, w: 280, h: 46, id: 'continue' };
       Screens._control(ctx, b, last ? C.SUMMARY_FINAL : C.SUMMARY_CONTINUE,

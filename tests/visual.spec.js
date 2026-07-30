@@ -818,10 +818,9 @@ test('shots: the yard camera, with a second look in it', async ({ page }) => {
   await shot(page, '46-the-second-look');
 });
 
-/* The pair the circular is put out as, once the count is there: one on the
-   machine casing and one on the belt, both larger and lighter than any
-   ordinary slip, and neither of them going anywhere. */
-test('shots: the pair the circular arrives as', async ({ page }) => {
+/* The slip the circular arrives as: an ordinary slip on an ordinary casing
+   with one corner of it in red, and nothing else to distinguish it. */
+test('shots: the slip the circular arrives as', async ({ page }) => {
   await boot(page);
   await page.evaluate(() => {
     const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
@@ -829,15 +828,14 @@ test('shots: the pair the circular arrives as', async ({ page }) => {
     g.run.awareness = L.REVEAL_MIN_AWARENESS;
     g.run.shift = 4;
     g.go('shift');
-    for (let i = 0; i < 60 * 400 && g.screen === 'shift'; i++) {
+    for (let i = 0; i < 60 * 40 && g.screen === 'shift'; i++) {
       g.tick(1 / 60);
-      const it = sc.returns.find((r) => r.reveal && sc.inRetZone(r));
-      if (it && sc.revealBg) break;
+      if (sc.revealBg) break;
       sc.stamp(null);
     }
   });
   await still(page);
-  await shot(page, '47-the-pair');
+  await shot(page, '47-the-marked-slip');
 });
 
 /* And the circular itself, on the customer's own letterhead. */

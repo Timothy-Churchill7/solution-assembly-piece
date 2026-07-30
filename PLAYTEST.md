@@ -63,12 +63,13 @@ These are the things the suite cannot judge.
    because six was over before it registered as one. Twenty *drags* with
    the line throttled to 12% is about the right amount of tedium; thirty
    would be punishment.
-7. **Is the circular's pair too obvious?** It is the one thing in the build
-   allowed to be conspicuous: bigger, lighter, with a faint halo, and two
-   of them. Everything else is dropped paper you have to be looking for.
-   The argument for it is that by the time it is on the floor the player has
-   read ten points' worth and earned being told plainly — but it is a
-   deliberate break in the rule the other twenty-eight items keep.
+7. **Can you find the circular's slip?** It is an ordinary slip on an
+   ordinary casing with one corner in red, and it never moves. It was
+   oversized and haloed for a revision, which made it the only thing in the
+   build that pointed at itself; this keeps the rule the other
+   twenty-eight items keep, at the cost of being genuinely findable only by
+   somebody who looks down the hall. It waits indefinitely, which is what
+   makes that fair.
 8. **Can you tell paper from swarf without labels?** Nothing in the basket
    is named any more — the label used to read BATCH CARD or SWARF under
    each one, which turned the sort into reading twenty words rather than
@@ -197,30 +198,29 @@ it was briefly not true — see below.
 
 ### How the circular actually arrives
 
-The moment the count reaches ten, the game puts out **a pair of slips of
-its own**: one on a machine casing down the hall and one riding line 5,
-both half again the size of an ordinary slip and lit rather than dull.
-Whichever the player reaches for first is the one they read, and the other
-goes with it. Neither can be missed by bad luck — the one on the belt is
-released again behind itself if it reaches the end of the line, and the one
-on the casing does not go anywhere at all. It is on the floor from the
-moment it is earned until it is taken.
+The moment the count reaches ten, **one slip appears on a machine casing**
+down the hall. It looks like any other slip — same size, same stock, no
+glow — except that one corner of it is red. Nothing comes to collect it, so
+it lies there for the rest of that shift and every shift after it until
+somebody walks over. A test drives three shifts without touching it and
+finds it still there.
 
-This replaced two earlier designs, and the second failed in a way worth
-recording. The circular used to live at the bottom of the basket, which
-meant a player who read everything on the floor and never did the chore
-could pass the threshold and never be told. So it was changed to take the
-place of the next ordinary slip instead — and that needed one to exist. The
-notes telling you to buy a radio are most of what the `slip` channel
-carries, and they stop turning up once there is a radio on the bench, so a
-radio owner had **no eligible slip at all** in shift 4 and buying the set
-could actually *delay* the reveal. The ladder went flat: 3 if you bought
-everything and emptied the basket first thing, 5 otherwise, with nothing in
-between.
+Three earlier designs, and what was wrong with each:
 
-A pair of its own cannot be crowded out, cannot be eaten by another item,
-and does not care when you did the chore. The ladder above is graded again
-and basket timing no longer moves it.
+- **At the bottom of the basket.** A player who read everything on the floor
+  and never did the chore could pass the threshold and never be told.
+- **Taking the place of the next ordinary slip.** That needed one to exist,
+  and the buy-a-radio notes are most of what the `slip` channel carries —
+  they stop once you own a radio. So a radio owner had no eligible slip in
+  shift 4 and buying the set could *delay* the reveal. The ladder went flat.
+- **A pair, on the casing and on the belt, both oversized and haloed.** Two
+  problems. The belt half has to be caught as it goes past, which turns the
+  one moment of the game that should not be a reflex test into one; and the
+  size and the halo made it the only thing in the build that points at
+  itself.
+
+One slip, one corner of red, and it waits. The ladder is graded and nothing
+about it depends on luck or reflex.
 
 ### The basket is a drag, not a click
 
@@ -384,11 +384,12 @@ is the only acknowledgement the piece ever offers.
 
 ## What the suite covers
 
-184 tests. The load-bearing ones, if you only read a few:
+186 tests. The load-bearing ones, if you only read a few:
 
 - `econ.spec.js` — the schedule outruns a pair of unaided hands
-- `returns.spec.js` — nothing but a stamp touches the cooldown, and exactly
-  two purchases change the count
+- `returns.spec.js` — nothing but a stamp touches the cooldown, exactly two
+  purchases change the count, and taking a piece off line 5 leaves the slip
+  behind it on the belt
 - `inquiry.spec.js` — all eight channels are reachable, cost something,
   and can be missed; and the four rows of the reveal ladder above
 - `stores-code.spec.js` — the advertiser's code, the lorry's second look,

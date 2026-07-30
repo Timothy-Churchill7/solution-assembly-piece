@@ -285,3 +285,59 @@ test.describe('what the kit actually does', () => {
     });
 
 });
+
+test.describe('doing the job does not destroy the paper', () => {
+  /* X is the correct reach on a faulty piece, and it used to take whatever
+     was tucked in behind it out of the game — silently, and possibly before
+     the player had registered that anything was there. Nothing here should
+     punish a correct action with a loss it never announced. The slip drops
+     onto the belt where the piece was and carries on down the line. */
+  test('taking a piece off leaves the slip behind it on the belt',
+    async ({ page }) => {
+      await boot(page);
+      const r = await page.evaluate(() => {
+        const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+        L.resetRun(g.run);
+        g.run.shift = 2;      // a shift that puts a slip behind a piece
+        g.go('shift');
+        /* A piece with a slip behind it, not a bare slip riding the belt —
+           `nearestCarrier` will hand back either, and only the first is
+           something you can take off. */
+        const findCarrier = () => sc.returns.find(
+          (q) => q.clue && !q.bare && sc.inRetZone(q));
+        let guard = 0;
+        while (!findCarrier() && guard++ < 60 * 400) {
+          g.tick(1 / 60);
+          sc.stamp(null);
+        }
+        const carrier = findCarrier();
+        const want = carrier.clue.id;
+        const at = carrier.x;
+        const before = sc.shift.marksPassed;
+
+        const pulled = sc.pull(carrier.x);
+
+        // the piece is gone from the line and the paper is not
+        const pieceGone = sc.returns.indexOf(carrier) < 0;
+        const slip = sc.returns.find((q) => q.bare && q.clue && q.clue.id === want);
+        const readable = !!slip && sc.inRetZone(slip);
+        const opened = readable ? sc.look(slip.x) : false;
+
+        return {
+          pulled, pieceGone, dropped: !!slip,
+          nearWhereItWas: slip ? Math.abs(slip.x - at) < 2 : false,
+          writtenOff: sc.shift.marksPassed - before,
+          opened, readId: sc.open ? sc.open.clue.id : null, want
+        };
+      });
+      expect(r.pulled).toBe(true);
+      expect(r.pieceGone).toBe(true);
+      expect(r.dropped).toBe(true);
+      expect(r.nearWhereItWas).toBe(true);
+      // and it was not counted as having gone by, because it has not
+      expect(r.writtenOff).toBe(0);
+      // and it is still the same item, still readable
+      expect(r.opened).toBe(true);
+      expect(r.readId).toBe(r.want);
+    });
+});

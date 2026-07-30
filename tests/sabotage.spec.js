@@ -298,7 +298,8 @@ test.describe('the run', () => {
           if (!sc.binDone && !sc.bin && !sc.open) window.__emptyBin(true);
           const car = sc.returns.find((q) => q.clue && sc.inRetZone(q));
           if (car && !sc.open) sc.look(car.x);
-          if (sc.bgUp && !sc.open) sc.lookBg();
+          // the circular is a casing slip too, and only that now
+          if ((sc.bgUp || sc.revealBg) && !sc.open) sc.lookBg();
           if (sc.planeUp && !sc.open) sc.lookPlane();
           // the second look at the black one is the camera's third point
           if (sc.dockUp && !sc.open) { sc.lookDock(); sc.lookLorry(); }

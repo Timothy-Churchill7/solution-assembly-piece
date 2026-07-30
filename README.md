@@ -5,8 +5,8 @@ for. You stand at a finishing line in a components plant across six shifts,
 stamping parts to meet a quota and watching a second line for pieces that
 will not pass. The schedule rises every shift. Your hands do not.
 
-Nothing announces itself. What there is to find is a slip of cream paper,
-the only thing in the building that colour — tucked in behind a piece on
+Nothing announces itself. What there is to find is a slip of paper, the
+only warm thing in a grey building and barely warm at that — tucked in behind a piece on
 the return line, riding the belt on its own, left on a machine casing down
 the hall, or strung behind an aeroplane crossing the windows. There is also
 the basket at your station, a bench radio, a camera pointed at the yard,

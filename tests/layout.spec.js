@@ -105,9 +105,10 @@ test.describe('posted notices fit between the rails', () => {
     // the case really is the full one, or the test is proving nothing
     expect(r.usable).toBe(39);
     expect(r.cols.sheet.length).toBe(6);
-    /* Six, not seven: the seconds-spent-reading row is gone with the rest
-       of that feature. */
-    expect(r.cols.own.length).toBe(6);
+    /* Five. It was seven with the seconds-spent-reading row, six without
+       it, and five now that WHAT YOU HAVE SEEN has gone from the head of
+       the column too. */
+    expect(r.cols.own.length).toBe(5);
     fits(r.card, 'summary');
     expect(r.button.y + r.button.h).toBeLessThanOrEqual(r.card.y + r.card.h);
   });
@@ -126,8 +127,11 @@ test.describe('posted notices fit between the rails', () => {
       return { card: sc.card, cols: sc.columns(g.run.shiftLog[0]) };
     });
     fits(r.card, 'summary, empty');
-    // nothing happened worth recording, so the right-hand column is one row
-    expect(r.cols.own.length).toBe(1);
+    /* Nothing happened worth recording, so the right-hand column is empty
+       — it used to always carry WHAT YOU HAVE SEEN, which meant a shift in
+       which nothing happened still had a column telling the player what
+       they knew. */
+    expect(r.cols.own.length).toBe(0);
   });
 });
 

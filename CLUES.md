@@ -72,7 +72,7 @@ The buy radio/camera hints should not appear if the user has already bought the 
 
 | id | tier | channel | wt | what it says |
 | --- | --- | --- | --- | --- |
-| `c4-officer` | DAMNING | officer | 3 | *(only if you take the information branch — see below)* I can't tell you that. Do your part and stamp the widgets, or you'll sabatoge the whole operation. If you really want to know, buy a radio. |
+| `c4-officer` | DAMNING | officer | 3 | *(only if you take the information branch — see below)* I can't tell you that. Do your part and stamp the widgets, or you'll sabatoge the whole operation. Don't scrap anything. If you really want to know, buy a radio. |
 | `c4-dock` | ODD | dock | 2 or 3 | *(render this as a visual on the dock camera, not an interruption)* Something's happening in the loading dock. |
 | `c4-buyradio` | ODD | belt slip | 0 | If you want to find out more about The Company, you should buy a radio and listen in.|
 | `c4-radio` | ODD | radio | 2 | *(talk show)* Shall we discuss the state of things? What's there to discuss? Churchill is being a real pain in the ass, that's for sure. |

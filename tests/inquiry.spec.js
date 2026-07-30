@@ -803,7 +803,8 @@ test.describe('the reveal', () => {
           if (!sc.binDone && !sc.bin && !sc.open) window.__emptyBin(true);
           const r = sc.returns.find((q) => q.clue && sc.inRetZone(q));
           if (r && !sc.open) sc.look(r.x);
-          if (sc.bgUp && !sc.open) sc.lookBg();
+          // the circular is a casing slip too, and only that now
+          if ((sc.bgUp || sc.revealBg) && !sc.open) sc.lookBg();
           if (sc.planeUp && !sc.open) sc.lookPlane();
           if (sc.dockUp && !sc.open) { sc.lookDock(); sc.lookLorry(); }
           g.tick(1 / 60);
@@ -871,7 +872,8 @@ test.describe('the reveal', () => {
         if (car && !sc.open) sc.look(car.x);
       }
       if (opts.paper !== false) {
-        if (sc.bgUp && !sc.open) sc.lookBg();
+        // the circular is a casing slip too, and only that now
+          if ((sc.bgUp || sc.revealBg) && !sc.open) sc.lookBg();
         if (sc.planeUp && !sc.open) sc.lookPlane();
       }
       /* The camera is a picture, not a card: looking is a glance and the
@@ -953,59 +955,75 @@ test.describe('the reveal', () => {
     expect(late.on).toBe(early.on);
   });
 
-  /* Neither half can be missed by bad luck. The one on the belt is
-     released again behind itself if it reaches the end of the line, and
-     the one on the casing does not go anywhere at all — so the pair is on
-     the floor from the moment it is earned until it is taken. */
-  test('the pair waits, and either half opens it', async ({ page }) => {
+  /* It cannot be missed by bad luck. Nothing comes to collect a slip left
+     on a machine casing, so once the count is there it is lying on the
+     floor until it is picked up — through the rest of the shift and every
+     shift after it.
+
+     It was a pair for one revision: the same letter offered twice, on the
+     casing and on the belt. The belt half was the wrong half. A thing that
+     has to be caught as it goes past turns the one moment of the game that
+     should not be a reflex test into one. */
+  test('the circular waits on the casing, and only there', async ({ page }) => {
     await boot(page);
-    for (const half of ['belt', 'casing']) {
-      const r = await page.evaluate((half) => {
-        const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
-        L.resetRun(g.run);
-        g.run.awareness = L.REVEAL_MIN_AWARENESS;
-        g.run.shift = 3;
+    const r = await page.evaluate(() => {
+      const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+      L.resetRun(g.run);
+      g.run.awareness = L.REVEAL_MIN_AWARENESS;
+      g.run.shift = 3;
+      g.go('shift');
+
+      // a long time on the floor, and nothing on the belt ever carries it
+      let onBelt = 0, up = 0;
+      for (let i = 0; i < 60 * 60 && g.screen === 'shift'; i++) {
+        g.tick(1 / 60);
+        if (sc.revealBg) up++;
+        if (sc.returns.some((q) => q.clue && q.clue.reveal)) onBelt++;
+        sc.stamp(null);
+      }
+      const stillThere = sc.revealBg;
+      const took = sc.lookBg();
+      return {
+        up, onBelt, stillThere, took,
+        opened: !!sc.open,
+        isReveal: !!(sc.open && sc.open.clue.reveal),
+        gone: !sc.revealBg,
+        // and it is not written off at the hooter the way other items are
+        passed: sc.shift.marksPassed
+      };
+    });
+    expect(r.up).toBeGreaterThan(60 * 50);   // there for essentially the whole shift
+    expect(r.onBelt).toBe(0);                // and never on line 5
+    expect(r.stillThere).toBe(true);
+    expect(r.took).toBe(true);
+    expect(r.opened).toBe(true);
+    expect(r.isReveal).toBe(true);
+    expect(r.gone).toBe(true);
+  });
+
+  /* And it survives the shift it was earned on: a player who never walks
+     over to the casing finds it still there on the next one. */
+  test('the circular carries over to the next shift', async ({ page }) => {
+    await boot(page);
+    const r = await page.evaluate(() => {
+      const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+      L.resetRun(g.run);
+      g.run.awareness = L.REVEAL_MIN_AWARENESS;
+      const seen = [];
+      for (const n of [3, 4, 5]) {
+        g.run.shift = n;
         g.go('shift');
-        // let the one on the belt run the whole length of line 5 twice over
-        let releases = 0, seen = false;
-        for (let i = 0; i < 60 * 120 && g.screen === 'shift'; i++) {
+        for (let i = 0; i < 60 * 20 && g.screen === 'shift'; i++) {
+          if (g.screen === 'officer') { window.__clearOfficer(); continue; }
           g.tick(1 / 60);
-          const onBelt = sc.returns.filter((r) => r.reveal).length;
-          if (onBelt && !seen) { releases++; seen = true; }
-          if (!onBelt) seen = false;
           sc.stamp(null);
-          if (releases >= 2 && sc.returns.some((r) => r.reveal)) break;
         }
-        const bothUp = sc.revealBg && sc.returns.some((r) => r.reveal);
-        if (half === 'belt') {
-          // it is read in the inspection bay like anything else on line 5
-          let wait = 0;
-          while (wait++ < 60 * 120 && g.screen === 'shift') {
-            const it = sc.returns.find((r) => r.reveal && sc.inRetZone(r));
-            if (it) { sc.look(it.x); break; }
-            g.tick(1 / 60);
-            sc.stamp(null);
-          }
-        } else {
-          sc.lookBg();
-        }
-        return {
-          releases, bothUp,
-          opened: !!sc.open,
-          isReveal: !!(sc.open && sc.open.clue.reveal),
-          // and the other half went with it
-          bgLeft: sc.revealBg,
-          beltLeft: sc.returns.some((r) => r.reveal),
-          passed: sc.shift.marksPassed
-        };
-      }, half);
-      expect(r.bothUp, half).toBe(true);
-      expect(r.releases, half).toBeGreaterThanOrEqual(2);
-      expect(r.opened, half).toBe(true);
-      expect(r.isReveal, half).toBe(true);
-      expect(r.bgLeft, half).toBe(false);
-      expect(r.beltLeft, half).toBe(false);
-    }
+        seen.push(sc.revealBg);
+      }
+      return { seen, revealed: g.run.revealed };
+    });
+    expect(r.seen).toEqual([true, true, true]);
+    expect(r.revealed).toBe(false);   // never picked up, so never read
   });
 });
 

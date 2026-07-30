@@ -221,10 +221,8 @@
     if (r.clue && !r.bare) drawSlip(ctx, r.x + 10, y - 6, 15, 11, 0.22, false);
 
     if (r.bare) {
-      // no part at all: the slip is the whole of what is on the belt, and
-      // the circular's own is half again as big and lit
-      if (r.reveal) drawSlip(ctx, r.x, y, 32, 24, -0.10, false, true);
-      else drawSlip(ctx, r.x, y, 20, 15, -0.12, false);
+      // no part at all: the slip is the whole of what is on the belt
+      drawSlip(ctx, r.x, y, 20, 15, -0.12, false);
       return;
     }
 
@@ -324,26 +322,35 @@
      Paper is neither: it is an object that belongs in a factory, it is
      legible at a glance because nothing else in the hall is that colour,
      and it does not claim the piece it is behind is special. */
-  function drawSlip(ctx, x, y, w, h, rot, hot, lit) {
+  function drawSlip(ctx, x, y, w, h, rot, hot, mark) {
     ctx.save();
     ctx.translate(x, y);
     if (rot) ctx.rotate(rot);
-    /* The circular's pair carries a little of the hall's light off its
-       edge, which is the only halo anywhere in the build. */
-    if (lit) {
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      var hg = ctx.createRadialGradient(0, 0, w * 0.4, 0, 0, w * 1.5);
-      hg.addColorStop(0, 'rgba(226,216,184,0.22)');
-      hg.addColorStop(1, 'rgba(226,216,184,0)');
-      ctx.fillStyle = hg;
-      ctx.beginPath(); ctx.arc(0, 0, w * 1.5, 0, 6.3); ctx.fill();
-      ctx.restore();
-    }
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
     ctx.fillRect(-w / 2 + 1.5, -h / 2 + 2, w, h);
-    ctx.fillStyle = lit ? P.paperLit : (hot ? P.paperHi : P.paper);
+    ctx.fillStyle = hot ? P.paperHi : P.paper;
     ctx.fillRect(-w / 2, -h / 2, w, h);
+    /* The circular's slip is an ordinary slip with a corner of it in red —
+       a tab, a bit of tape, a clerk's flag, whatever the player decides it
+       is. It was half again the size and haloed for one revision, which
+       made it the only thing in the build that pointed at itself. This is
+       the smallest mark that can still be seen. */
+    if (mark) {
+      ctx.fillStyle = P.markLo;
+      ctx.beginPath();
+      ctx.moveTo(w / 2 - 6, -h / 2);
+      ctx.lineTo(w / 2, -h / 2);
+      ctx.lineTo(w / 2, -h / 2 + 6);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = P.mark;
+      ctx.beginPath();
+      ctx.moveTo(w / 2 - 4.5, -h / 2);
+      ctx.lineTo(w / 2, -h / 2);
+      ctx.lineTo(w / 2, -h / 2 + 4.5);
+      ctx.closePath();
+      ctx.fill();
+    }
     // a fold and two lines of something written on it, at this size just texture
     ctx.fillStyle = 'rgba(58,52,42,0.5)';
     var rows = h >= 15 ? 3 : 2, step = Math.max(3, (h - 6) / rows);
@@ -757,7 +764,6 @@
     bgQ: [],         // slips left on a machine casing down the hall
     bgUp: null,      // the one currently lying there, if any
     revealBg: false, // the circular's own slip, on the machine casing
-    revealSlip: null,// and its twin, riding line 5
     planeQ: [],      // banners behind an aeroplane
     planeUp: null,   // the one currently crossing the window band
     dockQ: [],       // yard-camera items, in schedule order
@@ -850,7 +856,6 @@
       this.dockCloser = false;
       this.bgUp = null;
       this.revealBg = false;
-      this.revealSlip = null;
       this.planeUp = null;
       this.ambient = null;
       this.filler = n * 3;
@@ -955,19 +960,15 @@
         }
       }
 
-      /* The circular, once the count is there. A slip on the machine
-         casing and a slip on the belt, both of them larger and lighter
-         than an ordinary one, and neither of them going anywhere: if the
-         one on the belt reaches the end of the line another is released
-         behind it. Nothing about this can be missed by bad luck, only by
-         not looking up, which is the one thing the whole piece is about. */
+      /* The circular, once the count is there: one slip, on the machine
+         casing, and nothing on the belt. It was a pair for one revision —
+         the same letter offered twice so it could not be missed — and the
+         belt half was the wrong half: a thing that has to be caught as it
+         goes past, in the one moment of the game that should not be a
+         reflex test. The casing does not move and nobody comes to collect
+         it. It waits. */
       if (!this.run.revealed && L.revealDue(this.run, sh)) {
         this.revealBg = true;
-        var onBelt = this.returns.some(function (r) { return r.reveal; });
-        if (!onBelt) {
-          this.releaseSlip(L.REVEAL);
-          this.returns[this.returns.length - 1].reveal = true;
-        }
       }
 
       /* A thing dropped in the wrong chute, shaking itself off and going
@@ -1039,10 +1040,8 @@
             this.flashes.push({ t: 1.4, x: LAY.retZoneX0 - 24, y: LAY.retPartY, kind: 'reject' });
           }
           /* Whatever was on it goes out of the building on it. There is no
-             second chance and no notice that there was a first one — except
-             for the circular, which is released again behind this one and
-             is not counted as gone by. */
-          if (r.clue && !r.reveal) { sh.marksPassed++; r.clue = null; }
+             second chance and no notice that there was a first one. */
+          if (r.clue) { sh.marksPassed++; r.clue = null; }
         }
         if (r.x > LAY.retExitX) rkeep.push(r);
       }
@@ -1503,6 +1502,21 @@
       if (r && r.bare) r = null;
       if (!r) { this.lastAction = 'noreturn'; return false; }
       this.returns = this.returns.filter(function (q) { return q !== r; });
+
+      /* Whatever was tucked in behind it stays on the belt. Lifting a piece
+         off used to take the slip with it, so doing the job — which is what
+         X is for — silently destroyed a thing the player might not have
+         known was there. Nothing in the game should punish a correct reach
+         with a loss it never announced. The paper drops onto the belt where
+         the piece was and carries on down the line, and it can still be
+         read, or missed, on its own terms. */
+      if (r.clue) {
+        this.releaseSlip(r.clue);
+        var dropped = this.returns[this.returns.length - 1];
+        dropped.x = r.x;
+        dropped.bob = r.bob;
+      }
+
       /* Nothing here touches the press cooldown. Taking a piece off costs
          the second it takes and the part that may go by while you are up
          there, and that is all it has ever needed to cost. */
@@ -1526,7 +1540,6 @@
     look: function (atX) {
       if (this.open) { this.lastAction = 'reading'; return false; }
       var r = atX == null ? this.nearestCarrier() : this.returnAt(atX);
-      if (r && r.reveal) return this.takeReveal();
       /* Only a piece with a slip behind it can be read. There is nothing
          to turn over on an ordinary one — the paper is the whole signal,
          and a look that found nothing would just be a worse way of
@@ -1579,13 +1592,11 @@
       return this.read_(clue);
     },
 
-    /* Either half of the pair, and both go with it. There is only one
-       circular and it does not matter which hand found it. */
+    /* The circular, off the casing where it was left. */
     takeReveal: function () {
       if (this.open || this.run.revealed) return false;
       this.run.revealTaken = true;
       this.revealBg = false;
-      this.returns = this.returns.filter(function (r) { return !r.reveal; });
       this.shift.looked++;
       this.lastAction = 'found';
       return this.read_(L.REVEAL);
@@ -1846,12 +1857,12 @@
          well away from anything the player has to hit in a hurry. It does
          not move and nothing takes it away. */
       if (this.revealBg) {
-        // the circular's own, on the same casing and impossible to take for
-        // one of the ordinary ones
-        drawSlip(ctx, BGSLIP.x, BGSLIP.y - 4, 40, 29, -0.05,
+        // the same slip as any other, with one corner of it in red
+        drawSlip(ctx, BGSLIP.x, BGSLIP.y, BGSLIP.w, BGSLIP.h, -0.06,
           g.hoverId === 'bgslip', true);
         this.hits.push({
-          x: BGSLIP.x - 34, y: BGSLIP.y - 34, w: 68, h: 62, id: 'bgslip'
+          x: BGSLIP.x - BGSLIP.w, y: BGSLIP.y - BGSLIP.h,
+          w: BGSLIP.w * 2, h: BGSLIP.h * 2, id: 'bgslip'
         });
       } else if (this.bgUp) {
         drawSlip(ctx, BGSLIP.x, BGSLIP.y, BGSLIP.w, BGSLIP.h, -0.06,
@@ -2034,9 +2045,19 @@
         if (it.kind === 'paper') {
           /* A ball of paper. The one with something on it is the same warm
              cast as a slip on the line — nothing else marks it. */
-          ctx.fillStyle = it.marked
-            ? (hot ? 'rgba(201,183,175,0.7)' : 'rgba(174,157,150,0.56)')
-            : (hot ? 'rgba(196,190,178,0.66)' : 'rgba(168,163,152,0.5)');
+          /* The one with something written on it is a tenth lighter than
+             the rest, and nothing else marks it. Stated as arithmetic off a
+             single base rather than as two hand-picked triples, because it
+             was hand-picked before and came out about three per cent apart
+             — a difference that existed in the source and not on the
+             screen. */
+          var base = hot ? [196, 190, 178] : [168, 163, 152];
+          var lift = it.marked ? 1.10 : 1;
+          ctx.fillStyle = 'rgba(' +
+            Math.round(base[0] * lift) + ',' +
+            Math.round(base[1] * lift) + ',' +
+            Math.round(base[2] * lift) + ',' +
+            (hot ? 0.66 : 0.5) + ')';
           ctx.beginPath();
           for (var k = 0; k < 9; k++) {
             var a = (k / 9) * 6.28;

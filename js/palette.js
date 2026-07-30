@@ -66,14 +66,12 @@
        rather than as something dropped and left. This is old paper in a
        badly lit building: still the only warm thing on the screen, but you
        have to be looking at the belt to catch it. */
-    paper:    '#a1957a',
-    paperHi:  '#c6b995',
-    /* The circular's own pair, and the one thing in the build that is
-       allowed to be conspicuous. Everything else is dropped paper you have
-       to be looking for; this is a letter somebody left where it would be
-       found, and by the time it is on the floor the player has earned being
-       told plainly. */
-    paperLit: '#e8dfc2',
+    /* Pulled thirty per cent of the way to its own grey, twice over now.
+       The first cut was #d8cfb4, near the value of the brightest metal in
+       the hall, which read as a lit panel; then #a1957a; and this. Warm
+       enough to be the only warm thing on the screen and no warmer. */
+    paper:    '#9c9481',
+    paperHi:  '#c0b79e',
     /* The centre of the glint. Brighter than `mark` on purpose: once the
        mark came down to two pixels by nine it stopped being paint on a
        part and became light catching one, and light is the one thing that
