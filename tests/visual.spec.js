@@ -713,13 +713,19 @@ test('shots: the ending, a run that knew and quietly did not', async ({ page }) 
    machine rather than printed on it, and the letter has to read as a form
    nobody thought twice about sending. */
 
+/* Figures that actually resolve to the branch being shown. This used to
+   force the id on top of whatever `resolveLetter` computed, so the
+   commended shot carried 78% under a heading that needs 85 — the game was
+   right and the screenshot was lying about it. */
 const letterShot = (page, id) => page.evaluate((id) => {
   const g = window.SOL.game, L = window.SOL.logic;
   L.resetRun(g.run);
-  g.run.stamped = 198; g.run.rejects = 14;
+  if (id === 'commended') { g.run.stamped = 215; g.run.rejects = 14; }
+  else if (id === 'noted') { g.run.stamped = 175; g.run.rejects = 14; }
+  else { g.run.stamped = 70; g.run.rejects = 14; }
   g.go('letter');
-  const sc = window.SOL.screens.letter;
-  sc.res = Object.assign(L.resolveLetter(g.run), { id: id });
+  const got = window.SOL.screens.letter.res.id;
+  if (got !== id) throw new Error('letter shot wanted ' + id + ', got ' + got);
 }, id);
 
 test('shots: the letter, thanking a run that delivered', async ({ page }) => {

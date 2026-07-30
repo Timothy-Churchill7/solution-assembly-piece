@@ -260,7 +260,8 @@
         "Order volume is up again. A scrap chute has been fitted at your " +
         "station for parts that come through visibly out of true. Use it " +
         "sparingly. A scrapped part counts against the shift exactly as a " +
-        "missed one does.",
+        "missed one does. But scrapping good parts will hurt the company " +
+        "and slow down our operations. It\u2019s basically sabotage.",
       note: 'Scrap chute live. Press S on a part in the zone.',
       clues: [
         {
@@ -518,10 +519,8 @@
     reveal: true,
     weight: 6,
     tier: 'reveal',
-    kind: 'RIPPED LETTER',
-    /* Short on purpose: the device is struck over the right-hand end of
-       the head of the sheet, and a longer line ran straight under it. */
-    source: 'Torn across once. Half a table.',
+    kind: 'FACTORY DESTINATIONS',
+    source: null,
     seal: true,
     /* Three lines and no narration. It used to open by saying there was a
        table under a printed device at the head of the sheet, which is a
@@ -563,7 +562,6 @@
      The only place in the build that gets colour. */
 
   C.INQUIRY_HEADING = 'ITEM OPENED';
-  C.INQUIRY_COST = 'SHIFT SPENT READING';
   /* It read THE LINE DOES NOT STOP FOR THIS, and then THE CLOCK DOES NOT
      STOP FOR THIS, and each stopped being true in turn — first when the
      line started crawling while you read, then when the clock was put on
@@ -839,8 +837,6 @@
     missed: 'PASSED UNFINISHED',
     scrapped: 'SCRAPPED',
     rating: 'RECORDED AS',
-    lostToInquiry: 'PASSED WHILE YOU WERE READING',
-    readSecs: 'SECONDS SPENT READING',
     marksPassed: 'WENT BY WITHOUT A LOOK',
     looked: 'PIECES TURNED OVER',
     usable: 'PARTS THAT WILL WORK',
@@ -909,10 +905,8 @@
         "satisfactory conduct of the station named. Deliveries were received " +
         "in the quantities scheduled and within the quarter allowed.\n\n" +
         "The station is thanked for its part in the work of The Final " +
-        "Solution. Not every service is a visible one. The schedule was " +
-        "kept, and it was kept in part here, at this bench, by you.\n\n" +
-        "No further action is required of the operator, whose name has been " +
-        "entered against a satisfactory notation."
+        "Solution. The F\u00fchrer thanks you for helping execute his " +
+        "ultimate plan."
     },
     noted: {
       title: 'CONTRACT CLOSED · WITH REMARK',
@@ -935,11 +929,7 @@
         "what was contracted was never delivered, or was delivered in a " +
         "condition that could not be fitted.\n\n" +
         "The work of The Final Solution was held up at the receiving site " +
-        "while replacements were obtained. Whether this was incapacity or " +
-        "something else is a question for the works and not for this " +
-        "office.\n\n" +
-        "The operator's notation has been altered and the quarter's bonus " +
-        "is not payable."
+        "due to your actions in this factory."
     }
   };
 

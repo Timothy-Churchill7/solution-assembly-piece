@@ -903,7 +903,6 @@
       var ldt = dt * rate;
 
       sh.timeLeft -= ldt;
-      if (this.open) sh.readSecs += dt;
       if (sh.timeLeft <= 0) {
         sh.timeLeft = 0;
         // a basket nobody got to is a thing nobody found
@@ -998,7 +997,6 @@
         // while you are still reading, which is the whole point of it.
         if (!p.stamped && !p.escaped && p.x > LAY.zoneX1) {
           p.escaped = true;
-          if (reading) sh.lostToInquiry++;
         }
         if (p.x >= LAY.exitX) {
           if (!p.stamped) sh.missed++;
@@ -2204,16 +2202,13 @@
         }
       }
 
-      // what it is costing, in the plant's own units, updated live
+      /* There is no cost readout any more. It counted the seconds spent
+         with a card open, and once the clock was put on the same rate as
+         the belt those seconds stopped costing anything — so a running
+         total of them was a bill for nothing, sitting in the corner of
+         every document in the game telling the player off. */
       var by = ny + nh - 82;
       D.seam(ctx, px, by - 12, pw);
-      /* What it is costing, live, in the only unit that still moves while
-         you read: the clock. Parts passing was the old figure and it now
-         reads zero almost always, because the line is barely turning. */
-      D.stencil(ctx, C.INQUIRY_COST, px + pw, by + 14,
-        { size: 9.5, track: 2.4, color: P.faint, align: 'right' });
-      D.txt(ctx, Math.floor(this.shift.readSecs) + 's', px + pw, by + 38,
-        { size: 20, weight: 600, color: P.mid, align: 'right' });
 
       var b = { x: px - 14, y: by, w: 268, h: 42, id: 'close' };
       Screens._control(ctx, b, o.read ? C.INQUIRY_CLOSE_DONE : C.INQUIRY_CLOSE_EARLY,
@@ -2250,7 +2245,7 @@
         return D.wrap(ctx, str, nw - 108, lineOpt).length;
       });
       var bodyH = rows.reduce(function (a, n) { return a + n * 21 + 14; }, 0);
-      var nh = 120 + bodyH + 30 + 44 + 26;
+      var nh = (clue.source ? 120 : 102) + bodyH + 30 + 44 + 26;
       var ny = Math.round((H - nh) / 2) + 6;
       this.card = { x: nx, y: ny, w: nw, h: nh };
 
@@ -2282,10 +2277,15 @@
 
       D.txt(ctx, clue.kind, px, y,
         { size: 15, weight: 600, family: 'sans', color: INK, track: 3.2 });
-      y += 18;
-      D.stencil(ctx, clue.source, px, y,
-        { size: 9, track: 1.5, color: 'rgba(70,66,58,0.85)' });
-      y += 22;
+      // no subtitle on this one: the heading is the whole of the head
+      y += clue.source ? 18 : 4;
+      if (clue.source) {
+        D.stencil(ctx, clue.source, px, y,
+          { size: 9, track: 1.5, color: 'rgba(70,66,58,0.85)' });
+        y += 22;
+      } else {
+        y += 18;
+      }
       ctx.fillStyle = 'rgba(70,66,58,0.35)';
       ctx.fillRect(px, y, nw - 108, 1);
       y += 12;
@@ -2334,11 +2334,6 @@
         { size: 12, weight: 600, family: 'sans', color: INK, track: 2.6 });
       this.hits.push(b);
 
-      D.stencil(ctx, C.INQUIRY_COST, nx + nw - 54, ny + nh - 62,
-        { size: 9, track: 2.2, color: 'rgba(70,66,58,0.8)', align: 'right' });
-      D.txt(ctx, Math.floor(this.shift.readSecs) + 's', nx + nw - 54,
-        ny + nh - 40,
-        { size: 18, weight: 600, color: INK, align: 'right' });
     },
 
     drawHud: function (ctx, t, g) {

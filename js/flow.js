@@ -180,9 +180,6 @@
       var own = [[C.AWARENESS_ROW, C.AWARENESS_LABELS[rec.tier]]];
       /* Seconds, not parts. The line crawls while you read, so almost
          nothing slips the press — what reading costs is the clock. */
-      if (rec.readSecs > 0) {
-        own.push([C.SUMMARY_ROWS.readSecs, String(Math.round(rec.readSecs))]);
-      }
       if (rec.marksPassed > 0) own.push([C.SUMMARY_ROWS.marksPassed, String(rec.marksPassed)]);
       if (rec.pulled > 0) own.push([C.SUMMARY_ROWS.pulled, String(rec.pulled)]);
       /* Good stock taken off in error. Nobody upstairs will ever know, and

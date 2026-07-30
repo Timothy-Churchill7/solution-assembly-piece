@@ -263,13 +263,13 @@ test.describe('what the kit actually does', () => {
       expect(moved.sort()).toEqual(['feeder', 'pedal']);
     });
 
-  /* One purchase per rung, from the third shift on. The pedal takes 3 and
-     4, the feeder takes 5, and 6 needs both — which is what makes the
-     stores a sequence of decisions rather than one decision repeated. */
-  test('each of the last four shifts needs one more thing on the bench',
+  /* Two rungs, not four. Every quota came down by three, which handed the
+     pedal shifts 3, 4 and 5 — it used to stop at 4 — and left the sixth as
+     the only one it cannot reach. The feeder answers that on its own. */
+  test('the pedal carries three shifts and the sixth needs the feeder',
     async ({ page }) => {
       await boot(page);
-      for (const n of [3, 4]) {
+      for (const n of [3, 4, 5]) {
         const bare = await playShift(page, n, 'both');
         const pedal = await playShift(page, n, 'both', ['pedal']);
         expect(bare.rec.stamped, `bare ${n}`).toBeLessThan(bare.target);
@@ -277,17 +277,11 @@ test.describe('what the kit actually does', () => {
           .toBeGreaterThanOrEqual(pedal.target);
       }
 
-      // the fifth outruns the pedal, and the feeder is what answers it
-      const p5 = await playShift(page, 5, 'both', ['pedal']);
-      const f5 = await playShift(page, 5, 'both', ['feeder']);
-      expect(p5.rec.stamped).toBeLessThan(p5.target);
-      expect(f5.rec.stamped).toBeGreaterThanOrEqual(f5.target);
-
-      // and the sixth outruns either one on its own
+      // and the sixth outruns the pedal, which is what the feeder is for
+      const p6 = await playShift(page, 6, 'both', ['pedal']);
       const f6 = await playShift(page, 6, 'both', ['feeder']);
-      const both6 = await playShift(page, 6, 'both', ['pedal', 'feeder']);
-      expect(f6.rec.stamped).toBeLessThan(f6.target);
-      expect(both6.rec.stamped).toBeGreaterThanOrEqual(both6.target);
+      expect(p6.rec.stamped).toBeLessThan(p6.target);
+      expect(f6.rec.stamped).toBeGreaterThanOrEqual(f6.target);
     });
 
 });

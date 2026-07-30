@@ -92,26 +92,33 @@ every fault taken off. `*` is a shift the number was not made.
 
 | bench | 1 | 2 | 3 | 4 | 5 | 6 |
 | --- | --- | --- | --- | --- | --- | --- |
-| nothing | 29/27 | 33/32 | 38/42 \* | 39/45 \* | 41/50 \* | 42/56 \* |
-| sorting arm (40) | 29/27 | 33/32 | 38/42 \* | 39/45 \* | 41/50 \* | 42/56 \* |
-| foot pedal (110) | 29/27 | 33/32 | 42/42 | 45/45 | 48/50 \* | 49/56 \* |
-| auto-feeder (240) | 29/27 | 33/32 | 42/42 | 45/45 | 51/50 | 54/56 \* |
-| both (350) | 29/27 | 33/32 | 42/42 | 45/45 | 51/50 | 57/56 |
+| nothing | 29/24 | 33/29 | 38/41 \* | 39/42 \* | 41/47 \* | 42/53 \* |
+| sorting arm (40) | 29/24 | 33/29 | 38/41 \* | 39/42 \* | 41/47 \* | 42/53 \* |
+| foot pedal (110) | 29/24 | 33/29 | 42/41 | 45/42 | 48/47 | 49/53 \* |
+| auto-feeder (240) | 29/24 | 33/29 | 42/41 | 45/42 | 51/47 | 54/53 |
+| both (350) | 29/24 | 33/29 | 42/41 | 45/42 | 51/47 | 57/53 |
 
-**One purchase per rung, from the third shift on.** Arrivals are slower
-than the press cooldown for two shifts and faster from the third:
+**Two shifts of keeping up, then four of falling behind.** Arrivals are
+slower than the press cooldown for two shifts and faster from the third:
 
 | | 1 | 2 | 3 | 4 | 5 | 6 |
 | --- | --- | --- | --- | --- | --- | --- |
 | stock arriving | 31 | 36 | 45 | 48 | 54 | 60 |
-| target | 27 | 32 | 42 | 45 | 50 | 56 |
-| a bare press can strike | 36 | 38 | 40 | 41 | 43 | 44 |
+| target | 24 | 29 | **41** | 42 | 47 | 53 |
+| a bare press can strike | 36 | 38 | **40** | 41 | 43 | 44 |
 
 So an unaided operator keeps up for two shifts — genuinely keeps up, with
 stock to spare — and from the third watches it go past however well they
-play. The pedal buys back 3 and 4, the feeder buys 5, and 6 needs both.
-The pedal is affordable out of the first two shifts' pay: **152 banked
-against a cost of 110.**
+play. The pedal buys back 3, 4 and 5; the sixth needs the feeder. The
+pedal is affordable out of the first two shifts' pay: **140 banked against
+a cost of 110.**
+
+**Shift 3 is the one target that is not simply "three lower".** Every quota
+came down by three; this one came down by one, and the bolded row says why.
+A bare press can strike 40 parts in 70 seconds, so a target of 39 would
+have made the third shift winnable by hand again — which is the one thing
+this schedule is not allowed to be. 41 keeps the wall. It is a tie at 40
+and a wall at 41, and the difference is the whole shape of the run.
 
 This is a deliberate reshape. The schedule used to hold until the fifth
 shift, which made four of the six a formality and left the stores as one
@@ -133,12 +140,15 @@ doing — but the deductions are ruinous:
 
 | | 1 | 2 | 3 | 4 | 5 | 6 |
 | --- | --- | --- | --- | --- | --- | --- |
-| pay, doing the whole job | 74 | 78 | 58 | 79 | 61 | 62 |
-| pay, line 5 left to run | 68 | 72 | 49 | 64 | 40 | 35 |
+| pay, doing the whole job | 74 | 78 | 58 | 79 | 82 | 83 |
+| pay, line 5 left to run | 68 | 72 | 49 | 64 | 61 | 56 |
 
-Cumulative: **412** against **328**. Eighty-four scrip is three-quarters
-of a foot pedal, which is the thing that would have bought back shifts 3
-and 4. The sorting arm at 40 is priced just under what it saves.
+Cumulative: **454** against **370**. Eighty-four scrip is three-quarters
+of a foot pedal, which is the thing that would have bought back shifts 3,
+4 and 5. The sorting arm at 40 is priced just under what it saves.
+
+The dip at shift 3 in both rows is the wall arriving: it is the first shift
+whose bonus cannot be earned by hand.
 
 ## Line 5, per shift
 
@@ -245,29 +255,29 @@ four foot pedals, free, which would have made the 110-scrip pedal
 pointless and the stores a formality. 20/20/20 is about one good purchase,
 which is what a trade needs to be.
 
-### What reading costs
+### Reading costs nothing, and there is no clock on it
 
 **Opening an item throttles the line to 12%**, eased in and out over about
-a fifth of a second — and the shift clock now goes down at the same rate.
-So reading costs **no output at all**: no parts pass, no seconds burn.
+a fifth of a second, and the shift clock goes down at the same rate. So
+reading costs no output: no parts pass, no seconds burn.
 
-That is a reversal and it gives something up. For most of this build's life
-the clock ran at full speed while the line crawled, and that was the cost of
-looking — a minute reading was a minute of parts you never got to stamp.
-The free channels are now free in every sense.
+The seconds-spent-reading feature is **gone entirely** — the live readout in
+the corner of every card, the `SECONDS SPENT READING` row on the sheet, the
+`PASSED WHILE YOU WERE READING` row, and the `readSecs` and `lostToInquiry`
+counters behind them. Once the clock went onto the belt's rate those
+seconds cost nothing, so a running total of them was a bill for nothing,
+printed on every document in the game.
 
-What they still cost is **attention**, and the things that do not wait for
-the line rate:
+What the free channels still cost is **attention**, and the things that do
+not wait for the line rate:
 
 - a lorry is at the dock for 40 seconds and then is not
-- an aeroplane crosses the window band once, in 22 seconds
+- an aeroplane crosses the window band once, right to left, in 22 seconds
 - a piece on line 5 reaches the end of the line and goes out with what was
   behind it
 - the basket is twenty drags with the hooter still coming
 
-The card still shows the seconds spent, and the summary still carries
-`SECONDS SPENT READING`. They are now a record of where your eyes were
-rather than a bill.
+The circular's own pair is the exception and is meant to be: it waits.
 
 ## Run length
 

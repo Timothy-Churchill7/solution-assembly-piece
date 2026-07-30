@@ -23,12 +23,16 @@
        an item could only ride in on a fault again, one fault could carry
        only one of the shift's two part-borne tips and the other could
        never appear. 0.16 is two. */
-    { n: 1, duration: 62, spawn: 1.94, speed: 96,  target: 27, mood: 1.00, ret: 3.6, flaw: 0.16 },
-    { n: 2, duration: 66, spawn: 1.83, speed: 106, target: 32, mood: 0.90, ret: 3.4, flaw: 0.18 },
-    { n: 3, duration: 70, spawn: 1.55, speed: 116, target: 42, mood: 0.78, ret: 3.2, flaw: 0.22 },
-    { n: 4, duration: 72, spawn: 1.50, speed: 126, target: 45, mood: 0.64, ret: 2.9, flaw: 0.28 },
-    { n: 5, duration: 74, spawn: 1.36, speed: 136, target: 50, mood: 0.50, ret: 2.7, flaw: 0.32 },
-    { n: 6, duration: 76, spawn: 1.26, speed: 146, target: 56, mood: 0.36, ret: 2.5, flaw: 0.36 }
+    { n: 1, duration: 62, spawn: 1.94, speed: 96,  target: 24, mood: 1.00, ret: 3.6, flaw: 0.16 },
+    { n: 2, duration: 66, spawn: 1.83, speed: 106, target: 29, mood: 0.90, ret: 3.4, flaw: 0.18 },
+    /* Every quota came down by three, except this one, which came down by
+       one. A bare press can strike 40 in 70 seconds; at a target of 39 the
+       third shift became winnable by hand again, which is the one thing the
+       schedule is not allowed to be. 41 keeps the wall. */
+    { n: 3, duration: 70, spawn: 1.55, speed: 116, target: 41, mood: 0.78, ret: 3.2, flaw: 0.22 },
+    { n: 4, duration: 72, spawn: 1.50, speed: 126, target: 42, mood: 0.64, ret: 2.9, flaw: 0.28 },
+    { n: 5, duration: 74, spawn: 1.36, speed: 136, target: 47, mood: 0.50, ret: 2.7, flaw: 0.32 },
+    { n: 6, duration: 76, spawn: 1.26, speed: 146, target: 53, mood: 0.36, ret: 2.5, flaw: 0.36 }
   ];
 
   L.SHIFT_COUNT = L.SHIFTS.length;
@@ -471,8 +475,6 @@
       scrapped: 0,
       spawned: 0,
       opened: [],        // clue ids read to the end during this shift
-      lostToInquiry: 0,  // parts that passed unfinished while an item was open
-      readSecs: 0,       // seconds of the shift spent with something open
       marksSeen: 0,      // items this shift put within reach, on any channel
       marksPassed: 0,    // of those, the ones that went by unfound
       looked: 0,         // pieces turned over on line 5, finding or not
@@ -562,8 +564,6 @@
       target: shift.cfg.target,
       rating: L.rateShift(shift),
       opened: shift.opened.slice(),
-      lostToInquiry: shift.lostToInquiry,
-      readSecs: shift.readSecs,
       marksSeen: shift.marksSeen,
       marksPassed: shift.marksPassed,
       looked: shift.looked,

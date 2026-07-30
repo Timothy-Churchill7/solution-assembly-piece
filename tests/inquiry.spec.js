@@ -344,7 +344,6 @@ test.describe('looking closely at line 5', () => {
         clock: sc.shift.timeLeft,
         stamped: sc.shift.stamped,
         spawned: sc.shift.spawned,
-        readSecs: sc.shift.readSecs,
         rate: sc.lineRate
       };
       sc.closeInquiry();
@@ -359,8 +358,11 @@ test.describe('looking closely at line 5', () => {
        while your eyes are on a card. */
     expect(r.before.clock - r.during.clock).toBeLessThan(6 * 0.4);
     expect(r.before.clock - r.during.clock).toBeGreaterThan(0);
-    // the seconds you spent reading are still counted, and counted in full
-    expect(r.during.readSecs).toBeCloseTo(6, 0);
+    /* And nothing anywhere counts the seconds. The whole
+       seconds-spent-reading feature is gone: once the clock went on the
+       belt's rate those seconds cost nothing, so a running total of them
+       was a bill for nothing printed in the corner of every document. */
+    expect(r.during.readSecs).toBeUndefined();
     // the line very nearly stops
     expect(r.during.rate).toBeCloseTo(r.slow, 2);
     // nothing stamped in those six seconds, and barely anything arrived

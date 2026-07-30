@@ -185,18 +185,15 @@ test.describe('the ceiling on a pair of hands', () => {
       expect(s.kit, `shift ${s.n}`).toBeGreaterThanOrEqual(s.bare);
     }
     // shifts 3 and 4 are the two it rescues, and it rescues them outright
-    for (const s of r.slice(0, 4)) {
+    // shifts 3, 4 and 5 are the ones it rescues
+    for (const s of r.slice(0, 5)) {
       expect(s.kit, `shift ${s.n}`).toBeGreaterThanOrEqual(s.target);
     }
-    expect(r[2].bare).toBeLessThan(r[2].target);
-    expect(r[3].bare).toBeLessThan(r[3].target);
-    /* And the last two outrun the pedal as well, which is what the
-       auto-feeder is for and why the catalogue is not affordable whole.
-       Shift 5's upper bound ties its target exactly — no slack at all —
-       and `capacity` assumes a part is in the zone the instant the
-       cooldown ends, which no real run manages. returns.spec.js measures
-       48 against 50 on the running screen. */
-    expect(r[4].kit).toBeLessThanOrEqual(r[4].target);
+    for (const s of r.slice(2, 5)) {
+      expect(s.bare, `bare ${s.n}`).toBeLessThan(s.target);
+    }
+    /* And the sixth outruns the pedal as well, which is what the
+       auto-feeder is for and why the catalogue is not affordable whole. */
     expect(r[5].kit).toBeLessThan(r[5].target);
   });
 });

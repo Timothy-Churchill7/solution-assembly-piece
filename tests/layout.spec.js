@@ -88,7 +88,7 @@ test.describe('posted notices fit between the rails', () => {
       L.resetRun(g.run);
       const sh = L.newShift(6);
       sh.stamped = 44; sh.missed = 9; sh.scrapped = 4;
-      sh.rejects = 5; sh.late = true; sh.readSecs = 41; sh.marksPassed = 2;
+      sh.rejects = 5; sh.late = true; sh.marksPassed = 2;
       sh.pulled = 11; sh.pulledFaulty = 8; sh.pulledSound = 3; sh.autoStamped = 19;
       L.closeShift(g.run, sh);
       g.go('summary');
@@ -105,7 +105,9 @@ test.describe('posted notices fit between the rails', () => {
     // the case really is the full one, or the test is proving nothing
     expect(r.usable).toBe(39);
     expect(r.cols.sheet.length).toBe(6);
-    expect(r.cols.own.length).toBe(7);
+    /* Six, not seven: the seconds-spent-reading row is gone with the rest
+       of that feature. */
+    expect(r.cols.own.length).toBe(6);
     fits(r.card, 'summary');
     expect(r.button.y + r.button.h).toBeLessThanOrEqual(r.card.y + r.card.h);
   });

@@ -385,11 +385,14 @@ test.describe('what is actually at stake', () => {
       expect(r.brief).toMatch(/bonus/i);
       expect(r.brief).toMatch(/no penalty|nothing worse|only thing/i);
 
-      // and the office itself, on every letter, at the end
+      /* And the office itself, at the end. The footer is printed on all
+         three branches, which is what carries this for the letter — the
+         bodies used to each mention the bonus or the notation and two of
+         them no longer do, so the footer is now the only place the letter
+         says it. Three places across the build rather than four; goal.md
+         asks for "more than once" and this still is. */
       expect(r.footer).toMatch(/no proceedings/i);
-      for (const body of r.letters) {
-        expect(body).toMatch(/bonus|notation/i);
-      }
+      expect(r.footer).toMatch(/records are not retained|interest/i);
     });
 
   /* Nothing anywhere may threaten the player with anything else. If a line
