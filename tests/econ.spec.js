@@ -129,12 +129,23 @@ test.describe('the ceiling on a pair of hands', () => {
         shortfall: E.shortfall(cfg, bare)
       }));
     });
-    // the first two are winnable by hand, and only the first two
+    // the first two are winnable by hand with stock to spare
     for (const s of r.slice(0, 2)) {
-      expect(s.capacity, `shift ${s.n}`).toBeGreaterThanOrEqual(s.target);
+      expect(s.capacity, `shift ${s.n}`).toBeGreaterThan(s.target);
     }
-    // the other four are not, however well they are played
-    for (const s of r.slice(2)) {
+
+    /* The third is the soft one. `capacity` is an upper bound that assumes
+       a part is in the zone at the instant the cooldown ends, every time,
+       for seventy seconds — so it exceeds the target by exactly one part
+       and a flawless operator could in principle make it unaided. Nobody
+       plays like that: returns.spec.js measures 38 against 39 on the
+       running screen. It was set one part higher for a revision, which made
+       it arithmetically impossible, and this is the deliberate softer
+       version of the same wall. */
+    expect(r[2].capacity - r[2].target).toBeLessThanOrEqual(1);
+
+    // the last three are impossible however well they are played
+    for (const s of r.slice(3)) {
       expect(s.capacity, `shift ${s.n}`).toBeLessThan(s.target);
       expect(s.shortfall, `shift ${s.n}`).toBeGreaterThan(0);
     }
@@ -189,7 +200,11 @@ test.describe('the ceiling on a pair of hands', () => {
     for (const s of r.slice(0, 5)) {
       expect(s.kit, `shift ${s.n}`).toBeGreaterThanOrEqual(s.target);
     }
-    for (const s of r.slice(2, 5)) {
+    /* Shifts 4 and 5 are beyond a bare press outright. The third is within
+       one part of its upper bound, which is a wall only a flawless run gets
+       over; the measured figure is in returns.spec.js. */
+    expect(r[2].bare - r[2].target).toBeLessThanOrEqual(1);
+    for (const s of r.slice(3, 5)) {
       expect(s.bare, `bare ${s.n}`).toBeLessThan(s.target);
     }
     /* And the sixth outruns the pedal as well, which is what the

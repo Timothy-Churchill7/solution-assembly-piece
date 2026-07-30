@@ -25,11 +25,15 @@
        never appear. 0.16 is two. */
     { n: 1, duration: 62, spawn: 1.94, speed: 96,  target: 24, mood: 1.00, ret: 3.6, flaw: 0.16 },
     { n: 2, duration: 66, spawn: 1.83, speed: 106, target: 29, mood: 0.90, ret: 3.4, flaw: 0.18 },
-    /* Every quota came down by three, except this one, which came down by
-       one. A bare press can strike 40 in 70 seconds; at a target of 39 the
-       third shift became winnable by hand again, which is the one thing the
-       schedule is not allowed to be. 41 keeps the wall. */
-    { n: 3, duration: 70, spawn: 1.55, speed: 116, target: 41, mood: 0.78, ret: 3.2, flaw: 0.22 },
+    /* Three off this one too, on instruction, and it makes the third shift's
+       wall a soft one. A bare press can strike 40 parts in 70 seconds
+       against a target of 39, so a flawless operator can in principle make
+       it unaided — a part in the zone at the instant the cooldown ends,
+       every time, for seventy seconds. A real run measures 38 and fails.
+       It was 41 for one revision, which made it arithmetically impossible;
+       39 makes it merely very hard, and the difference only exists for a
+       player good enough to find it. */
+    { n: 3, duration: 70, spawn: 1.55, speed: 116, target: 39, mood: 0.78, ret: 3.2, flaw: 0.22 },
     { n: 4, duration: 72, spawn: 1.50, speed: 126, target: 42, mood: 0.64, ret: 2.9, flaw: 0.28 },
     { n: 5, duration: 74, spawn: 1.36, speed: 136, target: 47, mood: 0.50, ret: 2.7, flaw: 0.32 },
     { n: 6, duration: 76, spawn: 1.26, speed: 146, target: 53, mood: 0.36, ret: 2.5, flaw: 0.36 }

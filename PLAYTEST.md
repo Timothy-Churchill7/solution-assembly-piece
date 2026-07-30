@@ -92,11 +92,11 @@ every fault taken off. `*` is a shift the number was not made.
 
 | bench | 1 | 2 | 3 | 4 | 5 | 6 |
 | --- | --- | --- | --- | --- | --- | --- |
-| nothing | 29/24 | 33/29 | 38/41 \* | 39/42 \* | 41/47 \* | 42/53 \* |
-| sorting arm (40) | 29/24 | 33/29 | 38/41 \* | 39/42 \* | 41/47 \* | 42/53 \* |
-| foot pedal (110) | 29/24 | 33/29 | 42/41 | 45/42 | 48/47 | 49/53 \* |
-| auto-feeder (240) | 29/24 | 33/29 | 42/41 | 45/42 | 51/47 | 54/53 |
-| both (350) | 29/24 | 33/29 | 42/41 | 45/42 | 51/47 | 57/53 |
+| nothing | 29/24 | 33/29 | 38/39 \* | 39/42 \* | 41/47 \* | 42/53 \* |
+| sorting arm (40) | 29/24 | 33/29 | 38/39 \* | 39/42 \* | 41/47 \* | 42/53 \* |
+| foot pedal (110) | 29/24 | 33/29 | 42/39 | 45/42 | 48/47 | 49/53 \* |
+| auto-feeder (240) | 29/24 | 33/29 | 42/39 | 45/42 | 51/47 | 54/53 |
+| both (350) | 29/24 | 33/29 | 42/39 | 45/42 | 51/47 | 57/53 |
 
 **Two shifts of keeping up, then four of falling behind.** Arrivals are
 slower than the press cooldown for two shifts and faster from the third:
@@ -104,21 +104,24 @@ slower than the press cooldown for two shifts and faster from the third:
 | | 1 | 2 | 3 | 4 | 5 | 6 |
 | --- | --- | --- | --- | --- | --- | --- |
 | stock arriving | 31 | 36 | 45 | 48 | 54 | 60 |
-| target | 24 | 29 | **41** | 42 | 47 | 53 |
+| target | 24 | 29 | **39** | 42 | 47 | 53 |
 | a bare press can strike | 36 | 38 | **40** | 41 | 43 | 44 |
 
 So an unaided operator keeps up for two shifts — genuinely keeps up, with
-stock to spare — and from the third watches it go past however well they
-play. The pedal buys back 3, 4 and 5; the sixth needs the feeder. The
-pedal is affordable out of the first two shifts' pay: **140 banked against
-a cost of 110.**
+stock to spare — and from the third falls behind. The pedal buys back 3, 4
+and 5; the sixth needs the feeder. The pedal is affordable out of the first
+two shifts' pay: **140 banked against a cost of 110.**
 
-**Shift 3 is the one target that is not simply "three lower".** Every quota
-came down by three; this one came down by one, and the bolded row says why.
-A bare press can strike 40 parts in 70 seconds, so a target of 39 would
-have made the third shift winnable by hand again — which is the one thing
-this schedule is not allowed to be. 41 keeps the wall. It is a tie at 40
-and a wall at 41, and the difference is the whole shape of the run.
+**The third shift's wall is a soft one, and deliberately so.** The bolded
+row is the whole of it: a bare press can strike 40 parts in 70 seconds
+against a target of 39, so a flawless operator could in principle make it
+unaided — a part in the zone at the instant the cooldown ends, every time,
+for seventy seconds. No measured run comes close; the figure on the running
+screen is **38**. It was set to 41 for one revision, which made it
+arithmetically impossible, and 39 is the chosen softer version: very hard
+rather than barred, and the difference only exists for a player good enough
+to find it. Whether anyone ever does is the kind of thing the suite cannot
+answer.
 
 This is a deliberate reshape. The schedule used to hold until the fifth
 shift, which made four of the six a formality and left the stores as one

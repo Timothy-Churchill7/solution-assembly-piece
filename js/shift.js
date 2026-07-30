@@ -2290,36 +2290,40 @@
       ctx.fillRect(px, y, nw - 108, 1);
       y += 12;
 
-      var lastTop = y, lastW = 0;
+      /* One row per factory. Where each one lands is recorded as it is
+         drawn, so the pencil ring can be hung off the right row rather than
+         off whichever happened to be last. */
+      var rowAt = [];
       for (var i = 0; i < clue.lines.length; i++) {
         if (i >= o.shown) break;
         var age = o.t - (L.CLUE_LEAD + i * L.CLUE_LINE);
         var a = D.clamp(age / 0.55, 0, 1);
-        lastTop = y + 12;
-        lastW = D.measure(ctx, clue.lines[i], {
-          size: lineOpt.size, family: 'mono'
-        });
-        y = D.para(ctx, clue.lines[i], px, lastTop, nw - 108, {
+        var top = y + 10;
+        rowAt[i] = {
+          top: top,
+          w: D.measure(ctx, clue.lines[i], { size: lineOpt.size, family: 'mono' })
+        };
+        y = D.para(ctx, clue.lines[i], px, top, nw - 108, {
           size: lineOpt.size, lineHeight: lineOpt.lineHeight,
           family: 'mono', color: INK, alpha: 0.2 + 0.8 * a
-        }) + 2;
+        }) + 1;
       }
 
       /* Somebody has been round the seventh row twice in pencil. Drawn
          rather than written about, because a circle in a table is a gesture
-         and not a sentence — and anchored to where that row actually
-         landed, because it was placed by arithmetic first and sat between
-         two lines catching the descenders of the wrong one. */
-      if (o.shown >= clue.lines.length) {
-        var cx0 = px - 8, cx1 = px + lastW + 8;
+         and not a sentence. It was anchored to the last row for a revision,
+         which is why the table used to be out of order. */
+      var ring = clue.circled != null ? rowAt[clue.circled] : null;
+      if (ring) {
+        var cx0 = px - 8, cx1 = px + ring.w + 8;
         var ccx = (cx0 + cx1) / 2, crx = (cx1 - cx0) / 2;
         ctx.save();
         ctx.strokeStyle = 'rgba(58,54,48,0.5)';
         ctx.lineWidth = 1.4;
         for (var pass = 0; pass < 2; pass++) {
           ctx.beginPath();
-          ctx.ellipse(ccx + pass * 2, lastTop - 4 + pass,
-            crx - pass * 3, 15 - pass, 0.015 * pass, 0, 6.3);
+          ctx.ellipse(ccx + pass * 2, ring.top - 4 + pass,
+            crx - pass * 3, 13 - pass, 0.015 * pass, 0, 6.3);
           ctx.stroke();
         }
         ctx.restore();

@@ -522,16 +522,22 @@
     kind: 'FACTORY DESTINATIONS',
     source: null,
     seal: true,
-    /* Three lines and no narration. It used to open by saying there was a
-       table under a printed device at the head of the sheet, which is a
-       game describing a picture it is already drawing. The device is
-       struck at the head of the card and the table is the card. The
-       seventh row is last because it is the one that is circled, and the
-       circle is drawn rather than written about. */
+    /* One row per factory, in the order a clerk would have typed them, and
+       no narration. It used to open by saying there was a table under a
+       printed device at the head of the sheet, which is a game describing a
+       picture it is already drawing — the device is struck at the head of
+       the card and the table is the card.
+
+       The seventh row used to be moved to the bottom so the pencil circle
+       could be anchored to whatever came last. `circled` names the row
+       instead, so the table can be in numerical order and the ring still
+       lands on the right one. */
+    circled: 2,
     lines: [
-      "FACTORY 5 — THE EASTERN FRONT.   FACTORY 6 — THE WESTERN FRONT.",
-      "FACTORY 8 — ALGERIA.",
-      "FACTORY 7 — THE FINAL SOLUTION."
+      "FACTORY 5 — THE EASTERN FRONT.",
+      "FACTORY 6 — THE WESTERN FRONT.",
+      "FACTORY 7 — THE FINAL SOLUTION.",
+      "FACTORY 8 — ALGERIA."
     ]
   };
 
