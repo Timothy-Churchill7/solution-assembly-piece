@@ -63,7 +63,13 @@ These are the things the suite cannot judge.
    because six was over before it registered as one. Twenty *drags* with
    the line throttled to 12% is about the right amount of tedium; thirty
    would be punishment.
-7. **Can you tell paper from swarf without labels?** Nothing in the basket
+7. **Is the circular's pair too obvious?** It is the one thing in the build
+   allowed to be conspicuous: bigger, lighter, with a faint halo, and two
+   of them. Everything else is dropped paper you have to be looking for.
+   The argument for it is that by the time it is on the floor the player has
+   read ten points' worth and earned being told plainly — but it is a
+   deliberate break in the rule the other twenty-eight items keep.
+8. **Can you tell paper from swarf without labels?** Nothing in the basket
    is named any more — the label used to read BATCH CARD or SWARF under
    each one, which turned the sort into reading twenty words rather than
    looking at twenty things. A ball of creased paper and a curl of swarf
@@ -167,46 +173,41 @@ Weight tops out at 43 and the circular needs **10**.
 the camera 2, or 3 if you click the black lorry rather than only watching
 it. Measured, driving the real screens:
 
-| what the run did | circular |
+| what the run bought | circular |
 | --- | --- |
-| line 5's pieces only, nothing else | **never** — and awareness stays at **0** |
-| everything free, bought nothing | shift 5 |
-| the bench set | shift 4 |
-| set and camera, lorry clicked, basket done late | shift 4 |
-| set and camera, lorry clicked, basket done **first thing** | **shift 3** |
+| nothing | shift 5 |
+| the bench set (60) | shift 4 |
+| set and camera, lorry clicked | shift 3 |
 
-Two of those rows are worth dwelling on.
+**One purchase, one shift.** That is the shape the weights were set for, and
+it was briefly not true — see below.
 
-**Line 5's pieces carry four items across the whole quarter and every one
-is a playing tip.** An operator who works the return line diligently and
-touches nothing else finishes a better worker and no wiser at all. That is
-the sharpest thing the weight table says and it is said in arithmetic
-rather than in prose.
+### How the circular actually arrives
 
-**The last two rows differ only in when you empty the basket.** The
-circular replaces the next piece of paper after the count crosses ten.
-Empty the basket late and its points land after shift 3's last slip has
-gone by, so there is nothing left to carry it and it waits a shift. Empty
-it first thing and the shift's own aeroplane takes it. Same purchases,
-same reading, one shift apart, entirely on when you did the chore. That
-was not designed; it fell out of the rule and it is worth keeping.
+The moment the count reaches ten, the game puts out **a pair of slips of
+its own**: one on a machine casing down the hall and one riding line 5,
+both half again the size of an ordinary slip and lit rather than dull.
+Whichever the player reaches for first is the one they read, and the other
+goes with it. Neither can be missed by bad luck — the one on the belt is
+released again behind itself if it reaches the end of the line, and the one
+on the casing does not go anywhere at all. It is on the floor from the
+moment it is earned until it is taken.
 
-An earlier build had an explicit rule that the free path could never reach
-the circular at all. It is gone. It turned a difference of degree into a
-wall, and the table above says the same thing more honestly.
+This replaced two earlier designs, and the second failed in a way worth
+recording. The circular used to live at the bottom of the basket, which
+meant a player who read everything on the floor and never did the chore
+could pass the threshold and never be told. So it was changed to take the
+place of the next ordinary slip instead — and that needed one to exist. The
+notes telling you to buy a radio are most of what the `slip` channel
+carries, and they stop turning up once there is a radio on the bench, so a
+radio owner had **no eligible slip at all** in shift 4 and buying the set
+could actually *delay* the reveal. The ladder went flat: 3 if you bought
+everything and emptied the basket first thing, 5 otherwise, with nothing in
+between.
 
-### The yard camera is a picture, not a card
-
-The only channel that never opens anything over the hall. Four lorries at
-the dock: three of the company's own, pale and marked, and one that is
-not — unmarked, unlit, black end to end. Clicking the monitor reads the
-picture. Clicking the **black one** is the second look, worth a third
-point, and puts three crates on the apron with a cross chalked on each.
-
-It costs no cycle and no clock. What ninety-five scrip buys is having to
-be looking in a third direction while the press runs, and the seconds your
-eyes were in the wrong corner — not a card that stops the shift to read
-three sentences at you, which is what it used to be.
+A pair of its own cannot be crowded out, cannot be eaten by another item,
+and does not care when you did the chore. The ladder above is graded again
+and basket timing no longer moves it.
 
 ### The basket is a drag, not a click
 
@@ -370,7 +371,7 @@ is the only acknowledgement the piece ever offers.
 
 ## What the suite covers
 
-181 tests. The load-bearing ones, if you only read a few:
+184 tests. The load-bearing ones, if you only read a few:
 
 - `econ.spec.js` — the schedule outruns a pair of unaided hands
 - `returns.spec.js` — nothing but a stamp touches the cooldown, and exactly

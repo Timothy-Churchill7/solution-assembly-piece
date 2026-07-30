@@ -131,12 +131,20 @@
   /* The four that are a piece of paper you can see and click. */
   L.PAPER_CHANNELS = ['part', 'slip', 'bgslip', 'plane'];
 
-  /* And the three the circular is allowed to arrive on. Not the aeroplane
-     — a banner behind an aircraft is not somewhere a torn office letter
-     could plausibly be — and not the basket, which is where it used to
-     live and which made a player who never did the chore unable to reach
-     it however much they read. */
-  L.REVEAL_CHANNELS = ['part', 'slip', 'bgslip'];
+  /* The circular does not arrive on a channel at all. Once the count is
+     there it is put out as a pair of its own — one slip on a machine casing
+     and one riding line 5, both drawn larger and lighter than an ordinary
+     one — and whichever the player reaches for first is the one they read.
+     The other goes with it.
+
+     It used to take the place of the next ordinary slip, which had two
+     faults. It ate whatever that slip was going to say, and it depended on
+     there being one: a player who owned a radio had no eligible slip at all
+     in the fourth shift, because the notes telling you to buy a radio are
+     most of what that channel carries and they stop once you own one. So
+     buying the set could actually delay the circular. A pair of its own
+     cannot be crowded out by anything. */
+  L.REVEAL_CHANNELS = ['slip', 'bgslip'];
 
   /* Tips are weight 0 and carry no story at all — they are how to work the
      press, what a fault looks like, which thing in the stores is worth the
@@ -283,8 +291,14 @@
      meant a player who read everything on the floor and never emptied the
      bin could pass the threshold and never be told. Any hand that reaches
      for paper now finds it. */
-  L.revealTakesOver = function (run, shift) {
-    return L.canReveal(run, shift);
+  /* Whether the pair should be on the floor right now. `revealTaken` is
+     set the moment a hand closes on either half, which is a frame or two
+     before `revealed` — that is only true once the last line has surfaced.
+     Without it the pair was put straight back out while the letter was
+     still open, and a second copy was lying on the casing behind the card
+     the player was reading. */
+  L.revealDue = function (run, shift) {
+    return !run.revealTaken && L.canReveal(run, shift);
   };
 
   /* ---------- the basket at the station ----------
@@ -417,6 +431,7 @@
       scrapped: 0,       // parts deliberately destroyed
       cluesSeen: [],     // ids of inquiry items opened, in order
       awareness: 0,      // points accumulated from those items
+      revealTaken: false, // a hand has closed on one half of the pair
       sawAd: false,      // an aeroplane banner has been read, so F works
       upgraded: false,   // the officer's heavier line was taken
       officerAnswered: false,  // he has been answered, one way or the other

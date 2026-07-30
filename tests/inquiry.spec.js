@@ -912,46 +912,99 @@ test.describe('the reveal', () => {
       expect(r.on).toBe(5);
     });
 
-  /* The earliest the game will give it up, and it is a narrow door: both
-     purchases on the bench from the first stores visit, the black lorry
-     clicked rather than only watched, and the basket emptied at the START
-     of shift 3 rather than the end of it.
-
-     The circular replaces the next piece of paper after the count crosses
-     ten, and it will only take the place of a slip behind a piece, a slip
-     on the belt, or one on a machine casing — not the basket it used to
-     live in, and not a banner behind an aeroplane. Empty the basket late
-     and its two points land after shift 3's last eligible slip has gone
-     by; empty it first thing and the shift's own machine-casing slip
-     carries it. */
-  test('everything bought and the basket done early reaches it on shift 3',
+  /* The earliest the game will give it up: both purchases on the bench from
+     the first stores visit and the black lorry clicked rather than only
+     watched. */
+  test('both bought and the lorry clicked reaches it on shift 3',
     async ({ page }) => {
       await boot(page);
-      const early = await runFor(page, ['radio', 'camera'], { binEarly: true });
-      expect(early.revealed).toBe(true);
-      expect(early.on).toBe(3);
-      expect(early.awareness).toBeGreaterThanOrEqual(early.min);
-
-      // the same run with the basket left until the end of each shift
-      const late = await runFor(page, ['radio', 'camera']);
-      expect(late.revealed).toBe(true);
-      expect(late.on).toBe(5);
+      const r = await runFor(page, ['radio', 'camera']);
+      expect(r.revealed).toBe(true);
+      expect(r.on).toBe(3);
+      expect(r.awareness).toBeGreaterThanOrEqual(r.min);
     });
 
-  /* Buying the set alone does not move it, and the reason is worth having
-     written down: the notes telling you to buy a radio are most of what
-     the `slip` channel carries, and they stop turning up once there is a
-     radio on the bench. So a radio owner has no eligible carrier at all in
-     shift 4 and waits for the machine-casing slip in shift 5. The set buys
-     three points of awareness and a wider margin, not an earlier reveal. */
-  test('the bench set on its own buys awareness, not an earlier circular',
-    async ({ page }) => {
-      await boot(page);
-      const bare = await runFor(page, []);
-      const set = await runFor(page, ['radio']);
-      expect(set.awareness).toBeGreaterThan(bare.awareness);
-      expect(set.on).toBe(bare.on);
-    });
+  /* One purchase is worth one shift, which is the whole point of the
+     weights and was briefly not true. When the circular took the place of
+     the next ordinary slip it needed one to exist, and the notes telling
+     you to buy a radio are most of what that channel carries — so a radio
+     owner had no eligible slip at all in shift 4 and buying the set could
+     actually delay the reveal. The pair cannot be crowded out. */
+  test('the bench set is worth exactly one shift', async ({ page }) => {
+    await boot(page);
+    const bare = await runFor(page, []);
+    const set = await runFor(page, ['radio']);
+    expect(set.awareness).toBeGreaterThan(bare.awareness);
+    expect(bare.on).toBe(5);
+    expect(set.on).toBe(4);
+  });
+
+  /* And it no longer matters when the basket gets done. It used to: the
+     circular replaced the next slip after the count crossed ten, so a
+     basket emptied late landed its points after the shift's last slip had
+     gone by and the reveal waited for the next shift. Its own pair waits
+     for the player instead. */
+  test('when the basket gets emptied no longer moves it', async ({ page }) => {
+    await boot(page);
+    const late = await runFor(page, ['radio', 'camera']);
+    const early = await runFor(page, ['radio', 'camera'], { binEarly: true });
+    expect(late.on).toBe(early.on);
+  });
+
+  /* Neither half can be missed by bad luck. The one on the belt is
+     released again behind itself if it reaches the end of the line, and
+     the one on the casing does not go anywhere at all — so the pair is on
+     the floor from the moment it is earned until it is taken. */
+  test('the pair waits, and either half opens it', async ({ page }) => {
+    await boot(page);
+    for (const half of ['belt', 'casing']) {
+      const r = await page.evaluate((half) => {
+        const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+        L.resetRun(g.run);
+        g.run.awareness = L.REVEAL_MIN_AWARENESS;
+        g.run.shift = 3;
+        g.go('shift');
+        // let the one on the belt run the whole length of line 5 twice over
+        let releases = 0, seen = false;
+        for (let i = 0; i < 60 * 120 && g.screen === 'shift'; i++) {
+          g.tick(1 / 60);
+          const onBelt = sc.returns.filter((r) => r.reveal).length;
+          if (onBelt && !seen) { releases++; seen = true; }
+          if (!onBelt) seen = false;
+          sc.stamp(null);
+          if (releases >= 2 && sc.returns.some((r) => r.reveal)) break;
+        }
+        const bothUp = sc.revealBg && sc.returns.some((r) => r.reveal);
+        if (half === 'belt') {
+          // it is read in the inspection bay like anything else on line 5
+          let wait = 0;
+          while (wait++ < 60 * 120 && g.screen === 'shift') {
+            const it = sc.returns.find((r) => r.reveal && sc.inRetZone(r));
+            if (it) { sc.look(it.x); break; }
+            g.tick(1 / 60);
+            sc.stamp(null);
+          }
+        } else {
+          sc.lookBg();
+        }
+        return {
+          releases, bothUp,
+          opened: !!sc.open,
+          isReveal: !!(sc.open && sc.open.clue.reveal),
+          // and the other half went with it
+          bgLeft: sc.revealBg,
+          beltLeft: sc.returns.some((r) => r.reveal),
+          passed: sc.shift.marksPassed
+        };
+      }, half);
+      expect(r.bothUp, half).toBe(true);
+      expect(r.releases, half).toBeGreaterThanOrEqual(2);
+      expect(r.opened, half).toBe(true);
+      expect(r.isReveal, half).toBe(true);
+      expect(r.bgLeft, half).toBe(false);
+      expect(r.beltLeft, half).toBe(false);
+    }
+  });
 });
 
 test.describe('awareness bands', () => {

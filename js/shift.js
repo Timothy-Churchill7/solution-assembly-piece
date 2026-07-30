@@ -221,8 +221,10 @@
     if (r.clue && !r.bare) drawSlip(ctx, r.x + 10, y - 6, 15, 11, 0.22, false);
 
     if (r.bare) {
-      // no part at all: the slip is the whole of what is on the belt
-      drawSlip(ctx, r.x, y, 20, 15, -0.12, false);
+      // no part at all: the slip is the whole of what is on the belt, and
+      // the circular's own is half again as big and lit
+      if (r.reveal) drawSlip(ctx, r.x, y, 32, 24, -0.10, false, true);
+      else drawSlip(ctx, r.x, y, 20, 15, -0.12, false);
       return;
     }
 
@@ -322,13 +324,25 @@
      Paper is neither: it is an object that belongs in a factory, it is
      legible at a glance because nothing else in the hall is that colour,
      and it does not claim the piece it is behind is special. */
-  function drawSlip(ctx, x, y, w, h, rot, hot) {
+  function drawSlip(ctx, x, y, w, h, rot, hot, lit) {
     ctx.save();
     ctx.translate(x, y);
     if (rot) ctx.rotate(rot);
+    /* The circular's pair carries a little of the hall's light off its
+       edge, which is the only halo anywhere in the build. */
+    if (lit) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      var hg = ctx.createRadialGradient(0, 0, w * 0.4, 0, 0, w * 1.5);
+      hg.addColorStop(0, 'rgba(226,216,184,0.22)');
+      hg.addColorStop(1, 'rgba(226,216,184,0)');
+      ctx.fillStyle = hg;
+      ctx.beginPath(); ctx.arc(0, 0, w * 1.5, 0, 6.3); ctx.fill();
+      ctx.restore();
+    }
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
     ctx.fillRect(-w / 2 + 1.5, -h / 2 + 2, w, h);
-    ctx.fillStyle = hot ? P.paperHi : P.paper;
+    ctx.fillStyle = lit ? P.paperLit : (hot ? P.paperHi : P.paper);
     ctx.fillRect(-w / 2, -h / 2, w, h);
     // a fold and two lines of something written on it, at this size just texture
     ctx.fillStyle = 'rgba(58,52,42,0.5)';
@@ -742,6 +756,8 @@
     slipQ: [],       // slips that ride line 5 with no part under them
     bgQ: [],         // slips left on a machine casing down the hall
     bgUp: null,      // the one currently lying there, if any
+    revealBg: false, // the circular's own slip, on the machine casing
+    revealSlip: null,// and its twin, riding line 5
     planeQ: [],      // banners behind an aeroplane
     planeUp: null,   // the one currently crossing the window band
     dockQ: [],       // yard-camera items, in schedule order
@@ -833,6 +849,8 @@
       this.dockRead = false;
       this.dockCloser = false;
       this.bgUp = null;
+      this.revealBg = false;
+      this.revealSlip = null;
       this.planeUp = null;
       this.ambient = null;
       this.filler = n * 3;
@@ -938,6 +956,21 @@
         }
       }
 
+      /* The circular, once the count is there. A slip on the machine
+         casing and a slip on the belt, both of them larger and lighter
+         than an ordinary one, and neither of them going anywhere: if the
+         one on the belt reaches the end of the line another is released
+         behind it. Nothing about this can be missed by bad luck, only by
+         not looking up, which is the one thing the whole piece is about. */
+      if (!this.run.revealed && L.revealDue(this.run, sh)) {
+        this.revealBg = true;
+        var onBelt = this.returns.some(function (r) { return r.reveal; });
+        if (!onBelt) {
+          this.releaseSlip(L.REVEAL);
+          this.returns[this.returns.length - 1].reveal = true;
+        }
+      }
+
       /* A thing dropped in the wrong chute, shaking itself off and going
          back to where it was lying. */
       if (this.bin) {
@@ -1008,8 +1041,10 @@
             this.flashes.push({ t: 1.4, x: LAY.retZoneX0 - 24, y: LAY.retPartY, kind: 'reject' });
           }
           /* Whatever was on it goes out of the building on it. There is no
-             second chance and no notice that there was a first one. */
-          if (r.clue) { sh.marksPassed++; r.clue = null; }
+             second chance and no notice that there was a first one — except
+             for the circular, which is released again behind this one and
+             is not counted as gone by. */
+          if (r.clue && !r.reveal) { sh.marksPassed++; r.clue = null; }
         }
         if (r.x > LAY.retExitX) rkeep.push(r);
       }
@@ -1263,14 +1298,6 @@
        taken off it, so whatever this cost, it is still costing. */
     read_: function (clue) {
       if (!clue || this.open) return false;
-      /* Once the count is there, the circular is simply the next piece of
-         paper the player picks up, and it takes that slip's place rather
-         than arriving beside it. Only paper does this: the bench set and
-         the yard camera are not things you can find a letter in. */
-      if (L.REVEAL_CHANNELS.indexOf(clue.via) >= 0 &&
-          L.revealTakesOver(this.run, this.shift)) {
-        clue = L.REVEAL;
-      }
       this.open = { clue: clue, t: 0, shown: 0, read: false };
       this.lastAction = 'open';
       SOL.audio.paper && SOL.audio.paper();
@@ -1501,6 +1528,7 @@
     look: function (atX) {
       if (this.open) { this.lastAction = 'reading'; return false; }
       var r = atX == null ? this.nearestCarrier() : this.returnAt(atX);
+      if (r && r.reveal) return this.takeReveal();
       /* Only a piece with a slip behind it can be read. There is nothing
          to turn over on an ordinary one — the paper is the whole signal,
          and a look that found nothing would just be a worse way of
@@ -1543,12 +1571,26 @@
        collect it, so unlike everything else in the game it waits. */
     lookBg: function () {
       if (this.open) { this.lastAction = 'reading'; return false; }
+      // the circular's own slip sits in the same place and comes first
+      if (this.revealBg) return this.takeReveal();
       if (!this.bgUp) { this.lastAction = 'nobg'; return false; }
       var clue = this.bgUp;
       this.bgUp = null;
       this.shift.looked++;
       this.lastAction = 'found';
       return this.read_(clue);
+    },
+
+    /* Either half of the pair, and both go with it. There is only one
+       circular and it does not matter which hand found it. */
+    takeReveal: function () {
+      if (this.open || this.run.revealed) return false;
+      this.run.revealTaken = true;
+      this.revealBg = false;
+      this.returns = this.returns.filter(function (r) { return !r.reveal; });
+      this.shift.looked++;
+      this.lastAction = 'found';
+      return this.read_(L.REVEAL);
     },
 
     /* The banner behind the aeroplane. It crosses the window band once. */
@@ -1805,7 +1847,15 @@
       /* A slip left on a machine casing down the hall, behind line 5 and
          well away from anything the player has to hit in a hurry. It does
          not move and nothing takes it away. */
-      if (this.bgUp) {
+      if (this.revealBg) {
+        // the circular's own, on the same casing and impossible to take for
+        // one of the ordinary ones
+        drawSlip(ctx, BGSLIP.x, BGSLIP.y - 4, 40, 29, -0.05,
+          g.hoverId === 'bgslip', true);
+        this.hits.push({
+          x: BGSLIP.x - 34, y: BGSLIP.y - 34, w: 68, h: 62, id: 'bgslip'
+        });
+      } else if (this.bgUp) {
         drawSlip(ctx, BGSLIP.x, BGSLIP.y, BGSLIP.w, BGSLIP.h, -0.06,
           g.hoverId === 'bgslip');
         this.hits.push({

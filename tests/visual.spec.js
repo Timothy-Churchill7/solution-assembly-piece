@@ -812,21 +812,40 @@ test('shots: the yard camera, with a second look in it', async ({ page }) => {
   await shot(page, '46-the-second-look');
 });
 
-/* The circular, on the customer's own letterhead six shifts early. */
+/* The pair the circular is put out as, once the count is there: one on the
+   machine casing and one on the belt, both larger and lighter than any
+   ordinary slip, and neither of them going anywhere. */
+test('shots: the pair the circular arrives as', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => {
+    const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+    L.resetRun(g.run);
+    g.run.awareness = L.REVEAL_MIN_AWARENESS;
+    g.run.shift = 4;
+    g.go('shift');
+    for (let i = 0; i < 60 * 400 && g.screen === 'shift'; i++) {
+      g.tick(1 / 60);
+      const it = sc.returns.find((r) => r.reveal && sc.inRetZone(r));
+      if (it && sc.revealBg) break;
+      sc.stamp(null);
+    }
+  });
+  await still(page);
+  await shot(page, '47-the-pair');
+});
+
+/* And the circular itself, on the customer's own letterhead. */
 test('shots: the circular', async ({ page }) => {
   await boot(page);
   await page.evaluate(() => {
     const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
     L.resetRun(g.run);
-    g.run.awareness = L.REVEAL_MIN_AWARENESS + 2;
+    g.run.awareness = L.REVEAL_MIN_AWARENESS;
     g.run.shift = 4;
     g.go('shift');
-    // wait for something on a channel the circular is allowed to take over
     for (let i = 0; i < 60 * 400 && g.screen === 'shift'; i++) {
       g.tick(1 / 60);
-      const s = sc.returns.find((r) => r.clue && sc.inRetZone(r));
-      if (s) { sc.look(s.x); break; }
-      if (sc.bgUp) { sc.lookBg(); break; }
+      if (sc.revealBg) { sc.lookBg(); break; }
       sc.stamp(null);
     }
     for (let i = 0; i < Math.ceil((L.readTime(sc.open.clue) + 0.4) * 60); i++) {
@@ -834,5 +853,5 @@ test('shots: the circular', async ({ page }) => {
     }
   });
   await still(page);
-  await shot(page, '47-the-circular');
+  await shot(page, '48-the-circular');
 });

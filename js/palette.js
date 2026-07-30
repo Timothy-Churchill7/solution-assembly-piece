@@ -68,6 +68,12 @@
        have to be looking at the belt to catch it. */
     paper:    '#a1957a',
     paperHi:  '#c6b995',
+    /* The circular's own pair, and the one thing in the build that is
+       allowed to be conspicuous. Everything else is dropped paper you have
+       to be looking for; this is a letter somebody left where it would be
+       found, and by the time it is on the floor the player has earned being
+       told plainly. */
+    paperLit: '#e8dfc2',
     /* The centre of the glint. Brighter than `mark` on purpose: once the
        mark came down to two pixels by nine it stopped being paint on a
        part and became light catching one, and light is the one thing that
