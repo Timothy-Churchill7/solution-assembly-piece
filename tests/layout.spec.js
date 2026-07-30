@@ -211,3 +211,28 @@ test.describe('the letter', () => {
     }
   });
 });
+
+/* The notice board grew past a hardcoded height once and ran its last two
+   paragraphs off the bottom of the screen, with BACK printed over one of
+   them. It is measured from its own copy now, and this is what keeps it
+   honest when the copy changes again. */
+test('the notice board fits between the rails, and BACK is clear of the copy',
+  async ({ page }) => {
+    await boot(page);
+    const r = await page.evaluate(() => {
+      const g = window.SOL.game;
+      g.go('credits');
+      g.redraw();
+      const sc = window.SOL.screens.credits;
+      const back = sc.hits.find((h) => h.id === 'back');
+      return { card: sc.card, back, textEnd: sc.textEnd };
+    });
+    expect(r.card).toBeTruthy();
+    expect(r.card.y, 'notice board top').toBeGreaterThanOrEqual(34);
+    expect(r.card.y + r.card.h, 'notice board bottom').toBeLessThanOrEqual(719);
+    // and the button is inside its own card, not over the footer rail
+    expect(r.back.y + r.back.h).toBeLessThanOrEqual(r.card.y + r.card.h);
+    expect(r.back.y + r.back.h).toBeLessThanOrEqual(719);
+    // and the copy stops above it rather than running underneath
+    expect(r.textEnd).toBeLessThanOrEqual(r.back.y);
+  });

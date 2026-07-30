@@ -237,53 +237,88 @@
 
       headerRail(ctx, C.PLANT_NAME, 'NOTICE BOARD');
 
-      var nx = 128, ny = 66, nw = W - 256, nh = 560;
+      /* Measured, not guessed, and measured by running the layout rather
+         than by adding up estimates of it.
+
+         `nh` was a hardcoded 560 and the copy grew past it: the last two
+         paragraphs ran outside the card and off the bottom of the screen,
+         and BACK — placed at a fixed offset from the foot — sat on top of
+         one of them. Replacing the constant with a sum of estimates got it
+         closer and still missed by fourteen pixels, because the sum and the
+         drawing were two descriptions of the same thing kept in step by
+         hand. So the body is a function now, run once off-canvas to find
+         out how tall it is and once in place to draw it. The two cannot
+         disagree. */
+      var nx = 128, nw = W - 256, px = nx + 40, pw = nw - 80;
+      var HEAD = 66, BACK_H = 42, FOOT = 22;
+
+      function body(y0, draw) {
+        var y = y0;
+        if (draw) {
+          D.txt(ctx, 'ORIGIN AND ATTRIBUTION', px, y,
+            { size: 13, weight: 600, track: 3.4, color: P.bright });
+        }
+        y += 14;
+        if (draw) D.seam(ctx, px, y, 220);
+        y += 30;
+
+        /* The required paragraph, in its own recessed panel so it reads as
+           a fixed plate rather than as editable body copy. */
+        var boxTop = y - 26;
+        var boxH = D.wrap(ctx, C.ATTRIBUTION, pw,
+          { size: 14.5, lineHeight: 25 }).length * 25 + 26;
+        if (draw) {
+          ctx.save();
+          D.rrect(ctx, px - 16, boxTop, pw + 32, boxH, 2);
+          ctx.fillStyle = 'rgba(3,4,5,0.72)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(70,80,88,0.35)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.restore();
+          // neutral rule — the amber accent is reserved for inquiry only
+          ctx.fillStyle = P.dim;
+          ctx.fillRect(px - 16, boxTop, 2, boxH);
+          D.paraRuns(ctx, C.ATTRIBUTION_RUNS, px, y, pw, {
+            size: 14.5, color: P.text, lineHeight: 25
+          });
+        }
+        y = boxTop + boxH + 18;
+
+        if (draw) {
+          D.txt(ctx, 'WHERE THE MECHANIC COMES FROM', px, y,
+            { size: 13, weight: 600, track: 3.4, color: P.bright });
+        }
+        y += 14;
+        if (draw) D.seam(ctx, px, y, 300);
+        y += 28;
+        y = D.para(ctx, C.LINEAGE, px, y, pw,
+          { size: 13.5, color: draw ? P.dim : 'rgba(0,0,0,0)', lineHeight: 23 });
+
+        y += 16;
+        if (draw) {
+          D.txt(ctx, 'CONTENT', px, y,
+            { size: 13, weight: 600, track: 3.4, color: P.bright });
+        }
+        y += 14;
+        if (draw) D.seam(ctx, px, y, 120);
+        y += 28;
+        y = D.para(ctx, C.CRAFT_NOTE, px, y, pw,
+          { size: 13.5, color: draw ? P.dim : 'rgba(0,0,0,0)', lineHeight: 23 });
+        return y;
+      }
+
+      // off-canvas, so nothing of it lands on the screen
+      var bodyH = body(-4000, false) + 4000;
+      var nh = HEAD + bodyH + 18 + BACK_H + FOOT;
+      var ny = Math.max(44, Math.round((H - nh) / 2));
+      this.card = { x: nx, y: ny, w: nw, h: nh };
       notice(ctx, nx, ny, nw, nh, 'ABOUT THIS PIECE');
+      this.textEnd = body(ny + HEAD, true);
 
-      var px = nx + 40, pw = nw - 80;
-      var y = ny + 76;
-
-      D.txt(ctx, 'ORIGIN AND ATTRIBUTION', px, y,
-        { size: 13, weight: 600, track: 3.4, color: P.bright });
-      y += 14;
-      D.seam(ctx, px, y, 220);
-      y += 30;
-
-      // The required paragraph. Rendered inside its own recessed panel so
-      // it reads as a fixed plate rather than editable body copy.
-      var boxH = 100;
-      ctx.save();
-      D.rrect(ctx, px - 16, y - 26, pw + 32, boxH, 2);
-      ctx.fillStyle = 'rgba(3,4,5,0.72)';
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(70,80,88,0.35)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.restore();
-      // neutral rule — the amber accent is reserved for inquiry only
-      ctx.fillStyle = P.dim;
-      ctx.fillRect(px - 16, y - 26, 2, boxH);
-
-      D.paraRuns(ctx, C.ATTRIBUTION_RUNS, px, y, pw, {
-        size: 14.5, color: P.text, lineHeight: 25
-      });
-      y += boxH + 8;
-
-      D.txt(ctx, 'WHERE THE MECHANIC COMES FROM', px, y,
-        { size: 13, weight: 600, track: 3.4, color: P.bright });
-      y += 14;
-      D.seam(ctx, px, y, 300);
-      y += 28;
-      y = D.para(ctx, C.LINEAGE, px, y, pw, { size: 13.5, color: P.dim, lineHeight: 23 });
-
-      y += 16;
-      D.txt(ctx, 'CONTENT', px, y, { size: 13, weight: 600, track: 3.4, color: P.bright });
-      y += 14;
-      D.seam(ctx, px, y, 120);
-      y += 28;
-      D.para(ctx, C.CRAFT_NOTE, px, y, pw, { size: 13.5, color: P.dim, lineHeight: 23 });
-
-      var back = { x: nx + 40, y: ny + nh - 62, w: 190, h: 42, id: 'back' };
+      var back = {
+        x: nx + 40, y: ny + nh - BACK_H - FOOT, w: 190, h: BACK_H, id: 'back'
+      };
       control(ctx, back, 'BACK', g.hoverId === 'back' ? 'hover' : 'idle', { size: 12 });
       this.hits.push(back);
 

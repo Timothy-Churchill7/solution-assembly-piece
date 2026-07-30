@@ -112,7 +112,12 @@ test.describe('the book', () => {
 });
 
 test.describe('the ceiling on a pair of hands', () => {
-  test('the schedule outruns unaided hands before the run is over', async ({ page }) => {
+  /* The shape the whole run hangs on, and it changed: the press used to
+     keep up until the fifth shift, which made four shifts of the six a
+     formality. Arrivals are now slower than the cooldown for two shifts
+     and faster from the third, so an unaided operator keeps up twice and
+     then watches stock go by for the rest of the quarter. */
+  test('the schedule outruns unaided hands from the third shift', async ({ page }) => {
     await boot(page);
     const r = await page.evaluate(() => {
       const L = window.SOL.logic, E = window.SOL.econ;
@@ -124,12 +129,12 @@ test.describe('the ceiling on a pair of hands', () => {
         shortfall: E.shortfall(cfg, bare)
       }));
     });
-    // the early shifts are winnable by hand
-    for (const s of r.slice(0, 4)) {
+    // the first two are winnable by hand, and only the first two
+    for (const s of r.slice(0, 2)) {
       expect(s.capacity, `shift ${s.n}`).toBeGreaterThanOrEqual(s.target);
     }
-    // the last two are not, however well they are played
-    for (const s of r.slice(4)) {
+    // the other four are not, however well they are played
+    for (const s of r.slice(2)) {
       expect(s.capacity, `shift ${s.n}`).toBeLessThan(s.target);
       expect(s.shortfall, `shift ${s.n}`).toBeGreaterThan(0);
     }
@@ -162,7 +167,10 @@ test.describe('the ceiling on a pair of hands', () => {
       expect(r.cut).toBe(15);
     });
 
-  test('the pedal buys back the shifts the schedule had taken', async ({ page }) => {
+  /* The pedal buys back the middle of the run and no more than that. It
+     used to carry every shift, which made it the only purchase that
+     mattered; the schedule now outruns it too, from the fifth. */
+  test('the pedal buys back the middle of the run', async ({ page }) => {
     await boot(page);
     const r = await page.evaluate(() => {
       const L = window.SOL.logic, E = window.SOL.econ;
@@ -175,11 +183,21 @@ test.describe('the ceiling on a pair of hands', () => {
     });
     for (const s of r) {
       expect(s.kit, `shift ${s.n}`).toBeGreaterThanOrEqual(s.bare);
+    }
+    // shifts 3 and 4 are the two it rescues, and it rescues them outright
+    for (const s of r.slice(0, 4)) {
       expect(s.kit, `shift ${s.n}`).toBeGreaterThanOrEqual(s.target);
     }
-    // and it is the last two shifts it actually rescues
-    expect(r[4].bare).toBeLessThan(r[4].target);
-    expect(r[5].bare).toBeLessThan(r[5].target);
+    expect(r[2].bare).toBeLessThan(r[2].target);
+    expect(r[3].bare).toBeLessThan(r[3].target);
+    /* And the last two outrun the pedal as well, which is what the
+       auto-feeder is for and why the catalogue is not affordable whole.
+       Shift 5's upper bound ties its target exactly — no slack at all —
+       and `capacity` assumes a part is in the zone the instant the
+       cooldown ends, which no real run manages. returns.spec.js measures
+       48 against 50 on the running screen. */
+    expect(r[4].kit).toBeLessThanOrEqual(r[4].target);
+    expect(r[5].kit).toBeLessThan(r[5].target);
   });
 });
 

@@ -412,7 +412,13 @@ test.describe('the letter from the customer', () => {
           if (g.screen === 'summary') { window.SOL.screens.summary.advance(g); continue; }
           if (g.screen === 'officer') { window.__clearOfficer(); continue; }
           if (g.screen === 'officer') { window.__clearOfficer(); continue; }
-        if (g.screen === 'stores') { window.SOL.screens.stores.leave_(g); continue; }
+        if (g.screen === 'stores') {
+            /* The kit, because the schedule now outruns unaided hands from
+               the third shift and this test is about what the letter says
+               to somebody who delivered, not about the balance. */
+            g.run.ledger.owned = ['pedal', 'feeder'];
+            window.SOL.screens.stores.leave_(g); continue;
+          }
                     if (g.screen !== 'shift') break;
           g.tick(1 / 60);
           if (g.screen === 'shift' && sc.candidate()) sc.stamp(null);

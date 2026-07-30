@@ -135,7 +135,14 @@ test.describe('navigation', () => {
     await boot(page);
     await clickAt(page, 200, 446);           // ABOUT
     expect(await screenName(page)).toBe('credits');
-    await clickAt(page, 230, 585);           // BACK
+    /* Found rather than hardcoded: the notice board is laid out from its own
+       copy now, so BACK moves whenever the copy does. */
+    const back = await page.evaluate(() => {
+      window.SOL.game.redraw();
+      const b = window.SOL.screens.credits.hits.find((h) => h.id === 'back');
+      return { x: b.x + b.w / 2, y: b.y + b.h / 2 };
+    });
+    await clickAt(page, back.x, back.y);
     expect(await screenName(page)).toBe('menu');
   });
 

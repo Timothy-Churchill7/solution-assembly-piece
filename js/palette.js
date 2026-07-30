@@ -59,9 +59,15 @@
 
     /* Paper. The one warm colour on a working screen and the only thing
        that says an item can be read. It is not a signal colour, it is the
-       colour of a docket in a building where everything else is steel. */
-    paper:    '#d8cfb4',
-    paperHi:  '#efe7cd',
+       colour of a docket in a building where everything else is steel.
+
+       Darkened once already. The first cut was #d8cfb4, which is nearly
+       the value of the brightest metal in the hall and read as a lit panel
+       rather than as something dropped and left. This is old paper in a
+       badly lit building: still the only warm thing on the screen, but you
+       have to be looking at the belt to catch it. */
+    paper:    '#a1957a',
+    paperHi:  '#c6b995',
     /* The centre of the glint. Brighter than `mark` on purpose: once the
        mark came down to two pixels by nine it stopped being paint on a
        part and became light catching one, and light is the one thing that

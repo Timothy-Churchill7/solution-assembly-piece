@@ -40,7 +40,7 @@ The buy radio/camera hints should not appear if the user has already bought the 
 
 | id | tier | channel | wt | what it says |
 | --- | --- | --- | --- | --- |
-| `c1-fault` | TIP | part | 0 | This piece has a fault. Great job catching it, and keep an eye our for similar looking flaws in the future to keep the factory moving smoothly. |
+| `c1-fault` | TIP | part | 0 | *(only put this clue on a piece with a fault)* This piece has a fault. Great job catching it, and keep an eye our for similar looking flaws in the future to keep the factory moving smoothly. When you close this window, hit X to scrap it. |
 | `c1-pedal` | TIP | trash | 0 | The foot pedal gives the best return on investment. Without it, you won't be able to hit your quota by turn 4. |
 | `c1-bonus` | TIP | slip | 0 | Make sure you hit the quota, because there's a 25 scrip bonus if you make it. |
 
@@ -60,12 +60,12 @@ The buy radio/camera hints should not appear if the user has already bought the 
 | id | tier | channel | wt | what it says |
 | --- | --- | --- | --- | --- |
 | `c3-reading` | TIP | part | 0 | The line slows down while you read. Take your time! |
-| `c3-buyradio` | ODD | belt slip | 0 | If you want to find out more about The Company, you should buy a radio and listen in.|
+| `c3-buyradio` | ODD | belt slip | 1 | If you want to find out more about The Company, you should buy a radio and listen in.|
 | `c3-tape` | ODD | trash | 2 |  *(A crumpled up piece of paper with inspection results: Last week's inspection results: clean, efficient, and industrial. Below, an acceptance stamp, a date, a serial, and a signature with an office after it. **Officer Eicke.** )*|
 | `c3-plane` | TIP | plane | 0 | Buy Spielmann's electronics! Press F in the shop to get 20% off! |
-| `c3-feeder` | TIP | background slip | 1 | The auto-feeder stamps almost half of line 4 on its own. It's expensive but you won't be able to do your part to help The Company without it. |
+| `c3-feeder` | TIP | background slip | 0 | The auto-feeder stamps almost half of line 4 on its own. It's expensive but you won't be able to do your part to help The Company without it. |
 | `c3-buycamera` | ODD | part | 0 | If you want to find out more about operations, you should buy the dock camera and take a loot at the loading dock.|
-| `c3-dock` | ODD | dock | 2 or 3 if clicks | *(render this as a visual on the dock camera, not an interruption)* Alongside the normal white company trucks a fully black one comes in. *(If user clicks on it)* Darker boxes marked with Xs can be seen loading on. |
+| `c3-dock` | ODD | dock | 2 or 3 if clicks | *(render this as a visual on the dock camera, not an interruption)* Wow, that truck looks weird *(If user clicks on it)* Those boxes have Xs on them. |
 | `c3-priority` | ODD | radio | 1 | Plant 7 is now highest priority. It is the bottleneck of The Company's solution. |
 
 ## Shift 4 — DOWNSTREAM · the officer, and the paperwork stops pretending
@@ -73,9 +73,10 @@ The buy radio/camera hints should not appear if the user has already bought the 
 | id | tier | channel | wt | what it says |
 | --- | --- | --- | --- | --- |
 | `c4-officer` | DAMNING | officer | 3 | *(only if you take the information branch — see below)* I can't tell you that. Do your part and stamp the widgets, or you'll sabatoge the whole operation. If you really want to know, buy a radio. |
-| `c4-dock` | ODD | dock | 2 or 3 | *(render this as a visual on the dock camera, not an interruption)* Alongside the normal white company trucks a fully black one comes in. *(If user clicks on it)* Darker boxes marked with Xs can be seen loading on. |
+| `c4-dock` | ODD | dock | 2 or 3 | *(render this as a visual on the dock camera, not an interruption)* Something's happening in the loading dock. |
 | `c4-buyradio` | ODD | belt slip | 0 | If you want to find out more about The Company, you should buy a radio and listen in.|
 | `c4-radio` | ODD | radio | 2 | *(talk show)* Shall we discuss the state of things? What's there to discuss? Churchill is being a real pain in the ass, that's for sure. |
+| `c4-part` | ODD | part | 1 | Keep your eyes on the stamp! Don't let them wander. |
 | `c4-plane` | TIP | plane | 1 | Buy Fischer's electronics! Press F in the shop to get 20% off! |
 | `c4-prefix` | ODD | trash | 2 | *(an informal note between supervisors)* Leadership said not to question the prices, but at this rate we'll be bankrupt in a month.  |
 
@@ -86,21 +87,21 @@ The buy radio/camera hints should not appear if the user has already bought the 
 | `c5-facilites` | ODD | background slip | 2 | *(ledger of where the products went last month)* Facility 1: 0. Facility 2: 0. Facility 3: 0. [Redacted]: 12749|
 | `c5-buyradio` | ODD | belt slip | 1 | If you want to find out more about The Company, you should buy a radio and listen in.|
 | `c5-handling` | DAMNING | radio | 3 | Consignments to the fourth destination are not to be discussed outside the premises. |
-| `c5-dock` | ODD | dock | 2 or 3 | *(render this as a visual on the dock camera, not an interruption)* Alongside the normal white company trucks a fully black one comes in. *(If user clicks on it)* Darker boxes marked with Xs can be seen loading on. |
+| `c5-dock` | ODD | dock | 2 or 3 | *(render this as a visual on the dock camera, not an interruption)* Alongside the normal white company trucks a fully black one comes in. *(If user clicks on it)* Darker boxes marked with Xs can be seen loading on.|
 
 ## Shift 6 — CONTINUITY
 
 | id | tier | channel | wt | what it says |
 | --- | --- | --- | --- | --- |
 | `c6-withdrawal` | DAMNING | trash | 5 | All quarterly records to be consolidated and the originals destroyed. The list is attached: routing schedule, acceptance forms, every piece of paper saying where any of this went. Production figures retained in full. |
-| `c6-dock` | ODD | dock | 2 or 3 | *(render this as a visual on the dock camera, not an interruption)* Alongside the normal white company trucks a fully black one comes in. *(If user clicks on it)* Darker boxes marked with Xs can be seen loading on. |
+| `c6-dock` | ODD | dock | 2 or 3 | *(render this as a visual on the dock camera, not an interruption)* Those trucks are back. *(If user clicks on it)* I wonder what's in those boxes... |
 | `c6-radio` | ODD | radio | 2 | *(talk show)* Shall we discuss the state of things? Why, it just keeps getting worse! Russia was a disaster and now the Americans are joining. Don't speak of the Führer like that! |
 
 ## The circular
 
 | id | tier | channel | wt | what it says |
 | --- | --- | --- | --- | --- |
-| `reveal-circular` | REVEAL | belt slip or trash | 6 |  (type: ripped letter showing a table with factory assignments, with the Nazi symbol SVG at the top) Factory 5: The Eastern Front. Factory 6: The Western Front. Factory 7 (circled): **The Final Solution**. Factory 8: Algeria. |
+| `reveal-circular` | REVEAL | dynamic | 6 |  (type: ripped letter showing a table with factory assignments, with the Nazi symbol SVG at the top) Factory 5: The Eastern Front. Factory 6: The Western Front. Factory 7 (circled): **The Final Solution**. Factory 8: Algeria. |
 
 ---
 

@@ -781,7 +781,12 @@ test('shots: the basket, twenty things in it', async ({ page }) => {
     L.resetRun(g.run); g.run.shift = 3; g.go('shift');
     for (let i = 0; i < 60 * 30; i++) g.tick(1 / 60);
     sc.openBin(g);
-    for (let k = 0; k < 4; k++) sc.sortItem(k, g);
+    // a few away and one in the hand, half way to the right-hand chute
+    for (let k = 0; k < 3; k++) sc.sortItem(k, g);
+    g.redraw();
+    const idx = sc.bin.items.findIndex((it) => it.kind === 'paper' && !it.gone && !it.clue);
+    sc.grabItem(idx, sc.card.x + sc.card.w * 0.62, 330, g);
+    g.hoverId = 'sort:' + idx;
   });
   await still(page);
   await shot(page, '45-the-basket-of-twenty');
@@ -805,4 +810,29 @@ test('shots: the yard camera, with a second look in it', async ({ page }) => {
   });
   await still(page);
   await shot(page, '46-the-second-look');
+});
+
+/* The circular, on the customer's own letterhead six shifts early. */
+test('shots: the circular', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => {
+    const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+    L.resetRun(g.run);
+    g.run.awareness = L.REVEAL_MIN_AWARENESS + 2;
+    g.run.shift = 4;
+    g.go('shift');
+    // wait for something on a channel the circular is allowed to take over
+    for (let i = 0; i < 60 * 400 && g.screen === 'shift'; i++) {
+      g.tick(1 / 60);
+      const s = sc.returns.find((r) => r.clue && sc.inRetZone(r));
+      if (s) { sc.look(s.x); break; }
+      if (sc.bgUp) { sc.lookBg(); break; }
+      sc.stamp(null);
+    }
+    for (let i = 0; i < Math.ceil((L.readTime(sc.open.clue) + 0.4) * 60); i++) {
+      g.tick(1 / 60);
+    }
+  });
+  await still(page);
+  await shot(page, '47-the-circular');
 });

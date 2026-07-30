@@ -45,12 +45,15 @@ test.describe('clue data', () => {
         perShift: L.SHIFTS.map((s) => L.cluesFor(s.n).length),
         ids: L.CLUES.map((c) => c.id),
         max: L.MAX_AWARENESS,
-        weights: L.CLUES.map((c) => c.weight)
+        weights: L.CLUES.map((c) => c.weight),
+        // the camera pays a point for going over rather than glancing
+        bonuses: L.CLUES.map((c) => c.clickWeight || 0)
       };
     });
     expect(info.perShift.every((n) => n >= 1)).toBe(true);
     expect(new Set(info.ids).size).toBe(info.ids.length);
-    expect(info.max).toBe(info.weights.reduce((a, b) => a + b, 0));
+    expect(info.max).toBe(
+      info.weights.concat(info.bonuses).reduce((a, b) => a + b, 0));
     expect(info.max).toBeGreaterThan(0);
   });
 
@@ -314,7 +317,8 @@ test.describe('looking closely at line 5', () => {
      slips the press any more. What reading costs is the clock: the shift
      burns at full speed while the line is barely turning, and the parts you
      never got the chance to make are the bill. */
-  test('the clock runs at full speed while the line does not', async ({ page }) => {
+  test('the clock goes down with the belt, so reading costs no output',
+    async ({ page }) => {
     await boot(page);
     // shift 3, which is one of the shifts that still puts a slip behind a
     // piece; shift 4's items are all slip, plane, set, camera and basket
@@ -348,8 +352,14 @@ test.describe('looking closely at line 5', () => {
       return { before, during, after: sc.lineRate, slow: L.READ_SLOWDOWN };
     });
 
-    // the clock does not care that you are reading
-    expect(r.before.clock - r.during.clock).toBeCloseTo(6, 0);
+    /* Six seconds of wall time, and the shift clock moves by six times the
+       line rate — which is what "the clock slows with the belt" means. It
+       ran at full speed for a long time and that was where the cost of
+       looking lived; the cost is attention now, and the things that expire
+       while your eyes are on a card. */
+    expect(r.before.clock - r.during.clock).toBeLessThan(6 * 0.4);
+    expect(r.before.clock - r.during.clock).toBeGreaterThan(0);
+    // the seconds you spent reading are still counted, and counted in full
     expect(r.during.readSecs).toBeCloseTo(6, 0);
     // the line very nearly stops
     expect(r.during.rate).toBeCloseTo(r.slow, 2);
@@ -775,7 +785,7 @@ test.describe('the reveal', () => {
     expect(r.offered).toBeGreaterThan(10);
   });
 
-  test('a player using every channel reaches it on shift 4', async ({ page }) => {
+  test('a player using every channel reaches it, and not before shift 3', async ({ page }) => {
     await boot(page);
     const r = await page.evaluate(() => {
       const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
@@ -783,14 +793,17 @@ test.describe('the reveal', () => {
       // the curious player has bought the set and the camera, and sorts the bin
       g.run.ledger.owned = ['radio', 'camera'];
             const seenPerShift = [];
-      for (let n = 1; n <= 4; n++) {
+      for (let n = 1; n <= L.SHIFT_COUNT; n++) {
         g.run.shift = n;
         g.go('shift');
-        for (let i = 0; i < 60 * 200 && g.screen === 'shift'; i++) {
-          if (!sc.binDone && !sc.bin && !sc.open) window.__emptyBin();
-          const r = sc.nearestReturn();
-          if (r && r.clue && !sc.open) sc.look(r.x);
-          if (sc.dockUp && !sc.open) sc.lookDock();
+        for (let i = 0; i < 60 * 400 && g.screen === 'shift'; i++) {
+          // first thing, which is what brings it forward
+          if (!sc.binDone && !sc.bin && !sc.open) window.__emptyBin(true);
+          const r = sc.returns.find((q) => q.clue && sc.inRetZone(q));
+          if (r && !sc.open) sc.look(r.x);
+          if (sc.bgUp && !sc.open) sc.lookBg();
+          if (sc.planeUp && !sc.open) sc.lookPlane();
+          if (sc.dockUp && !sc.open) { sc.lookDock(); sc.lookLorry(); }
           g.tick(1 / 60);
           if (sc.open && sc.open.read) sc.closeInquiry();
           if (g.screen === 'shift' && !sc.open) sc.stamp(null);
@@ -800,19 +813,21 @@ test.describe('the reveal', () => {
             return {
         revealed: g.run.revealed,
         on: g.run.revealedOn,
-        beforeShift4: seenPerShift[2].indexOf(L.REVEAL.id) >= 0,
-        ids: seenPerShift[3],
+        beforeShift3: seenPerShift[1].indexOf(L.REVEAL.id) >= 0,
+        ids: seenPerShift[seenPerShift.length - 1],
         awareness: g.run.awareness,
         min: L.REVEAL_MIN_AWARENESS,
         tier: L.awarenessTier(g.run)
       };
     });
-    expect(r.beforeShift4).toBe(false);    // never earlier than the fourth
+    /* Never in the first two shifts, because the most anybody can have by
+       the end of the second is four and the threshold is ten. */
+    expect(r.beforeShift3).toBe(false);
     expect(r.awareness).toBeGreaterThanOrEqual(r.min);
     expect(r.revealed).toBe(true);
-    expect(r.on).toBe(4);
+    expect(r.on).toBe(3);
     expect(r.ids).toContain('reveal-circular');
-    expect(r.tier).toBe('know');
+    expect(r.tier).toBe('sure');
   });
 
   /* What actually stands between an operator and the circular is ten
@@ -897,27 +912,19 @@ test.describe('the reveal', () => {
       expect(r.on).toBe(5);
     });
 
-  test('the bench set brings it forward to shift 4', async ({ page }) => {
-    await boot(page);
-    const r = await runFor(page, ['radio']);
-    expect(r.revealed).toBe(true);
-    expect(r.on).toBe(4);
-  });
-
   /* The earliest the game will give it up, and it is a narrow door: both
      purchases on the bench from the first stores visit, the black lorry
      clicked rather than only watched, and the basket emptied at the START
      of shift 3 rather than the end of it.
 
-     That last one surprised me and it is worth writing down. The circular
-     replaces the next piece of paper after the count crosses ten. Empty
-     the basket late and its two points land after the last slip of shift 3
-     has already gone by, so there is nothing left for the circular to
-     arrive on and it waits for shift 4. Empty it first thing and the same
-     two points land early enough that the shift's own aeroplane can carry
-     it. Same purchases, same reading, one shift apart, entirely on when
-     you did the chore. */
-  test('everything bought, the lorry clicked and the basket done early',
+     The circular replaces the next piece of paper after the count crosses
+     ten, and it will only take the place of a slip behind a piece, a slip
+     on the belt, or one on a machine casing — not the basket it used to
+     live in, and not a banner behind an aeroplane. Empty the basket late
+     and its two points land after shift 3's last eligible slip has gone
+     by; empty it first thing and the shift's own machine-casing slip
+     carries it. */
+  test('everything bought and the basket done early reaches it on shift 3',
     async ({ page }) => {
       await boot(page);
       const early = await runFor(page, ['radio', 'camera'], { binEarly: true });
@@ -928,7 +935,22 @@ test.describe('the reveal', () => {
       // the same run with the basket left until the end of each shift
       const late = await runFor(page, ['radio', 'camera']);
       expect(late.revealed).toBe(true);
-      expect(late.on).toBe(4);
+      expect(late.on).toBe(5);
+    });
+
+  /* Buying the set alone does not move it, and the reason is worth having
+     written down: the notes telling you to buy a radio are most of what
+     the `slip` channel carries, and they stop turning up once there is a
+     radio on the bench. So a radio owner has no eligible carrier at all in
+     shift 4 and waits for the machine-casing slip in shift 5. The set buys
+     three points of awareness and a wider margin, not an earlier reveal. */
+  test('the bench set on its own buys awareness, not an earlier circular',
+    async ({ page }) => {
+      await boot(page);
+      const bare = await runFor(page, []);
+      const set = await runFor(page, ['radio']);
+      expect(set.awareness).toBeGreaterThan(bare.awareness);
+      expect(set.on).toBe(bare.on);
     });
 });
 
@@ -961,8 +983,20 @@ test.describe('awareness bands', () => {
       const L = window.SOL.logic;
       const run = L.newRun();
       L.CLUES.forEach((c) => L.recordClue(run, null, c));
-      return { awareness: run.awareness, tier: L.awarenessTier(run), max: L.MAX_AWARENESS };
+      const readOnly = run.awareness;
+      /* And the four points the yard camera pays for going over to the
+         monitor rather than glancing at it from the press. Reading every
+         item is not the ceiling; reading every item and walking over four
+         times is. */
+      L.CLUES.forEach((c) => {
+        if (c.clickLines) L.lookCloser(run, { clue: c });
+      });
+      return {
+        readOnly, awareness: run.awareness,
+        tier: L.awarenessTier(run), max: L.MAX_AWARENESS
+      };
     });
+    expect(r.readOnly).toBeLessThan(r.max);
     expect(r.awareness).toBe(r.max);
     expect(r.tier).toBe('sure');
   });

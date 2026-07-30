@@ -23,12 +23,12 @@
        an item could only ride in on a fault again, one fault could carry
        only one of the shift's two part-borne tips and the other could
        never appear. 0.16 is two. */
-    { n: 1, duration: 62, spawn: 1.70, speed: 96,  target: 24, mood: 1.00, ret: 3.6, flaw: 0.16 },
-    { n: 2, duration: 66, spawn: 1.58, speed: 106, target: 28, mood: 0.90, ret: 3.4, flaw: 0.18 },
-    { n: 3, duration: 70, spawn: 1.46, speed: 116, target: 33, mood: 0.78, ret: 3.2, flaw: 0.22 },
-    { n: 4, duration: 72, spawn: 1.34, speed: 126, target: 38, mood: 0.64, ret: 2.9, flaw: 0.28 },
-    { n: 5, duration: 74, spawn: 1.24, speed: 136, target: 44, mood: 0.50, ret: 2.7, flaw: 0.32 },
-    { n: 6, duration: 76, spawn: 1.16, speed: 146, target: 48, mood: 0.36, ret: 2.5, flaw: 0.36 }
+    { n: 1, duration: 62, spawn: 1.94, speed: 96,  target: 27, mood: 1.00, ret: 3.6, flaw: 0.16 },
+    { n: 2, duration: 66, spawn: 1.83, speed: 106, target: 32, mood: 0.90, ret: 3.4, flaw: 0.18 },
+    { n: 3, duration: 70, spawn: 1.55, speed: 116, target: 42, mood: 0.78, ret: 3.2, flaw: 0.22 },
+    { n: 4, duration: 72, spawn: 1.50, speed: 126, target: 45, mood: 0.64, ret: 2.9, flaw: 0.28 },
+    { n: 5, duration: 74, spawn: 1.36, speed: 136, target: 50, mood: 0.50, ret: 2.7, flaw: 0.32 },
+    { n: 6, duration: 76, spawn: 1.26, speed: 146, target: 56, mood: 0.36, ret: 2.5, flaw: 0.36 }
   ];
 
   L.SHIFT_COUNT = L.SHIFTS.length;
@@ -130,6 +130,13 @@
 
   /* The four that are a piece of paper you can see and click. */
   L.PAPER_CHANNELS = ['part', 'slip', 'bgslip', 'plane'];
+
+  /* And the three the circular is allowed to arrive on. Not the aeroplane
+     — a banner behind an aircraft is not somewhere a torn office letter
+     could plausibly be — and not the basket, which is where it used to
+     live and which made a player who never did the chore unable to reach
+     it however much they read. */
+  L.REVEAL_CHANNELS = ['part', 'slip', 'bgslip'];
 
   /* Tips are weight 0 and carry no story at all — they are how to work the
      press, what a fault looks like, which thing in the stores is worth the
@@ -289,13 +296,18 @@
      handing over only the first made the second unreachable for the whole
      run. */
   L.trashFor = function (run, shift) {
-    if (L.canReveal(run, shift)) return [L.REVEAL];
     return L.cluesVia(shift.n, 'trash', run.ledger).filter(function (c) {
       return run.cluesSeen.indexOf(c.id) < 0;
     });
   };
 
-  L.MAX_AWARENESS = L.CLUES.reduce(function (a, c) { return a + c.weight; }, 0);
+  /* Everything there is to know, including the point the yard camera pays
+     for going over to the monitor rather than glancing at it. Those were
+     left out at first, which let a diligent run finish above the number
+     that was supposed to be the ceiling. */
+  L.MAX_AWARENESS = L.CLUES.reduce(function (a, c) {
+    return a + c.weight + (c.clickWeight || 0);
+  }, 0);
 
   L.clue = function (id) {
     for (var i = 0; i < L.CLUES.length; i++) if (L.CLUES[i].id === id) return L.CLUES[i];

@@ -226,6 +226,23 @@
     o.start(t0); o.stop(t0 + 0.13);
   };
 
+  /* A refusal. Two low knocks, close together: something that would not go
+     where it was put. The basket's wrong chute is the only thing that asks
+     for it, and it wanted a sound of its own — reusing the paper turn made
+     a rejected drop feel exactly like an accepted one. */
+  A.deny = function () {
+    if (!ready()) return;
+    var t0 = ac.currentTime;
+    [0, 0.085].forEach(function (d) {
+      var o = ac.createOscillator();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(132, t0 + d);
+      o.frequency.exponentialRampToValueAtTime(72, t0 + d + 0.06);
+      env(o, t0 + d, 0.003, 0.07, 0.12).connect(master);
+      o.start(t0 + d); o.stop(t0 + d + 0.12);
+    });
+  };
+
   /* There is no room tone. The line ran under the whole shift as a 47 Hz
      sawtooth and filtered noise, which was the loudest sustained thing in
      the build and never changed — it did not quieten when the belt was

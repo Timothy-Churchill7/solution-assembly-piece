@@ -218,11 +218,11 @@
     /* Tucked in behind the piece, so it shows past the edge of it — drawn
        first, and deliberately not centred, because a slip somebody has
        pushed in behind a part does not sit square. */
-    if (r.clue && !r.bare) drawSlip(ctx, r.x + 11, y - 7, 20, 15, 0.22, false);
+    if (r.clue && !r.bare) drawSlip(ctx, r.x + 10, y - 6, 15, 11, 0.22, false);
 
     if (r.bare) {
       // no part at all: the slip is the whole of what is on the belt
-      drawSlip(ctx, r.x, y, 26, 19, -0.12, false);
+      drawSlip(ctx, r.x, y, 20, 15, -0.12, false);
       return;
     }
 
@@ -303,14 +303,14 @@
 
   /* Where a slip left on the plant sits: on the casing of the machine row
      behind line 5, clear of the press and of both belts. */
-  var BGSLIP = { x: 168, y: LAY.floorY - 44, w: 34, h: 24 };
+  var BGSLIP = { x: 168, y: LAY.floorY - 44, w: 25, h: 18 };
 
   /* The aeroplane crosses the clerestory itself — the glazed band high on
      the far wall — not the strip of console underneath it. Drawn inside
      the band and then glazed back over, so it is unmistakably outside the
      building, which is the only time this game ever shows you that there
      is an outside. */
-  var PLANE = { y: 122 + 74 / 2, w: 46, h: 14 };
+  var PLANE = { y: 122 + 74 / 2, w: 38, h: 11 };
 
   /* A slip of cream paper. The only warm thing on any working screen, and
      the only signal the game gives that something can be read: no icon, no
@@ -331,9 +331,11 @@
     ctx.fillStyle = hot ? P.paperHi : P.paper;
     ctx.fillRect(-w / 2, -h / 2, w, h);
     // a fold and two lines of something written on it, at this size just texture
-    ctx.fillStyle = 'rgba(96,88,72,0.42)';
-    for (var i = 0; i < 3; i++) {
-      ctx.fillRect(-w / 2 + 3, -h / 2 + 4 + i * 4, w - 6 - (i === 2 ? 5 : 0), 1);
+    ctx.fillStyle = 'rgba(58,52,42,0.5)';
+    var rows = h >= 15 ? 3 : 2, step = Math.max(3, (h - 6) / rows);
+    for (var i = 0; i < rows; i++) {
+      ctx.fillRect(-w / 2 + 2.5, -h / 2 + 3 + i * step,
+        w - 5 - (i === rows - 1 ? 4 : 0), 0.9);
     }
     ctx.strokeStyle = 'rgba(58,52,42,0.45)';
     ctx.lineWidth = 1;
@@ -399,7 +401,12 @@
   /* Twenty things rather than six, on five columns. It is a chore, and a
      chore with six items in it was over before the player had registered
      that it was one. */
-  var SORT = { x: 132, w: W - 264, top: 96, row: 96, cols: 5 };
+  /* The basket, tipped out on the bench. Twenty things scattered across
+     the middle of the card, a chute down each side, and you drag them: the
+     paper right, everything else left. There is no label on any of them —
+     you have to look at the thing itself, which is the only reason the
+     chore is a chore and the only reason a clue is worth finding in it. */
+  var SORT = { x: 132, w: W - 264, top: 78, bodyH: 372 };
 
   /* The operator's own station: the foreground band you stand behind. */
   function drawApron(ctx, sh) {
@@ -856,23 +863,28 @@
       var cfg = sh.cfg;
       var reading = !!this.open || !!this.bin;
 
-      /* Reading throttles the line down to a crawl. It is not a fiction —
-         no factory slows for a man reading a docket — it is the game giving
-         you room, and it is eased in and out rather than snapped so it
-         reads as deliberate rather than as a stall.
+      /* Reading throttles the line down to a crawl, eased in and out
+         rather than snapped so it reads as deliberate rather than as a
+         stall. It is not a fiction — no factory slows for a man reading a
+         docket — it is the game giving you room.
 
-         The clock is deliberately *not* slowed, and that is where the cost
-         of looking now lives: the shift burns at full speed while the line
-         is barely moving, so a minute spent reading is a minute of parts
-         you never got the chance to stamp. Before this the belt ran at
-         full speed and the text was genuinely hard to read; the cost was
-         real but it was being charged for the wrong thing. */
+         The clock goes down with it. For a long time it did not: the shift
+         burned at full speed while the line barely moved, and that was
+         where the cost of looking lived — a minute spent reading was a
+         minute of parts you never got the chance to stamp. It is on the
+         same rate as the belt now, so reading costs no output at all.
+
+         What that gives up is worth stating plainly: the free channels are
+         free in every sense now. What they still cost is attention, and
+         the things that expire while your eyes are on a card — a lorry
+         leaves the dock, an aeroplane crosses, a piece reaches the end of
+         line 5 — because none of those wait for the rate either. */
       var want = reading ? L.READ_SLOWDOWN : 1;
       this.lineRate += (want - this.lineRate) * Math.min(1, dt / 0.22);
       var rate = this.lineRate;
       var ldt = dt * rate;
 
-      sh.timeLeft -= dt;
+      sh.timeLeft -= ldt;
       if (this.open) sh.readSecs += dt;
       if (sh.timeLeft <= 0) {
         sh.timeLeft = 0;
@@ -924,6 +936,14 @@
           if (!this.open || this.open.clue !== this.planeUp) sh.marksPassed++;
           this.planeUp = null;
         }
+      }
+
+      /* A thing dropped in the wrong chute, shaking itself off and going
+         back to where it was lying. */
+      if (this.bin) {
+        this.bin.items.forEach(function (it) {
+          if (it.wrong > 0) it.wrong = Math.max(0, it.wrong - dt);
+        });
       }
 
       /* The man from the works office, four fifths of the way through the
@@ -1247,7 +1267,7 @@
          paper the player picks up, and it takes that slip's place rather
          than arriving beside it. Only paper does this: the bench set and
          the yard camera are not things you can find a letter in. */
-      if (L.PAPER_CHANNELS.indexOf(clue.via) >= 0 &&
+      if (L.REVEAL_CHANNELS.indexOf(clue.via) >= 0 &&
           L.revealTakesOver(this.run, this.shift)) {
         clue = L.REVEAL;
       }
@@ -1279,9 +1299,11 @@
 
     /* ----- the bin ----- */
 
-    /* Six things, in the order they are lying in the basket. Which one has
-       the mark on it is settled here rather than on the click, so it cannot
-       depend on where the player happened to reach first. */
+    /* Twenty things, tipped out on the bench in a scatter. Which one has
+       the mark on it is settled here rather than on the grab, so it cannot
+       depend on where the player happened to reach first. Positions are
+       fixed per shift too — a basket that reshuffled itself under the hand
+       would be a different game and a worse one. */
     openBin: function (g) {
       if (this.bin || this.binDone || this.open) return false;
       /* Everything the basket has for this shift, not just the first thing
@@ -1291,14 +1313,21 @@
       var found = L.trashFor(g.run, this.shift);
       var n = C.BIN_ITEMS.length;
       var items = [];
+      var seed = this.shift.n * 17;
       for (var i = 0; i < n; i++) {
+        /* Scattered across the middle third, clear of both chutes, in a
+           spread that is deterministic per shift so the same basket looks
+           the same to a player who leaves it and comes back. */
         items.push({
           i: i,
           kind: C.BIN_ITEMS[i].kind,
-          label: C.BIN_ITEMS[i].label,
+          x: 0.26 + D.rnd(seed + i * 3.1) * 0.48,
+          y: 0.10 + D.rnd(seed + i * 5.7 + 91) * 0.78,
+          rot: (D.rnd(seed + i * 2.3) - 0.5) * 1.1,
           marked: false,
           clue: null,
-          gone: false
+          gone: false,
+          wrong: 0        // seconds left on a bounce-back
         });
       }
       // spread the marks over the paper, starting from a per-shift offset
@@ -1309,16 +1338,17 @@
         slot.marked = true;
         slot.clue = clue;
       }, this);
-      this.bin = { items: items, found: found.slice(), left: n };
+      this.bin = { items: items, found: found.slice(), left: n, drag: null };
       SOL.audio.paper && SOL.audio.paper();
       return true;
     },
 
-    /* One item into one of the two bins. Both are the same skip and the
-       game never says which was right, because there is no right. */
-    sortItem: function (idx, g) {
+    /* Picking a thing up. If it has something written on it, that is when
+       you notice — the item opens in your hand, before you have decided
+       which chute it was going in. */
+    grabItem: function (idx, x, y, g) {
       var b = this.bin;
-      if (!b) return false;
+      if (!b || b.drag) return false;
       var it = b.items[idx];
       if (!it || it.gone) return false;
       if (it.clue) {
@@ -1332,11 +1362,58 @@
         if (b.left <= 0) this.closeBin(g);
         return true;
       }
+      b.drag = { idx: idx, x: x, y: y };
+      it.wrong = 0;
+      SOL.audio.turn && SOL.audio.turn();
+      return true;
+    },
+
+    dragItem: function (x, y) {
+      if (!this.bin || !this.bin.drag) return false;
+      this.bin.drag.x = x;
+      this.bin.drag.y = y;
+      return true;
+    },
+
+    /* Letting go. Paper belongs in the chute on the right and everything
+       else in the one on the left, and a thing dropped in the wrong one
+       comes straight back at you — which is the only way the sides can
+       mean anything, given the note at the foot of the card says both
+       chutes go in the same skip. That contradiction is the joke and it is
+       load-bearing: the office does not care, and you still have to. */
+    dropItem: function (g) {
+      var b = this.bin;
+      if (!b || !b.drag) return false;
+      var it = b.items[b.drag.idx];
+      var mid = SORT.x + SORT.w / 2;
+      var side = b.drag.x < mid ? 'swarf' : 'paper';
+      b.drag = null;
+      if (!it || it.gone) return false;
+      if (side !== it.kind) {
+        it.wrong = 1.1;
+        SOL.audio.deny && SOL.audio.deny();
+        return false;
+      }
       it.gone = true;
       b.left--;
-      SOL.audio.turn && SOL.audio.turn();
+      SOL.audio.lift && SOL.audio.lift();
       if (b.left <= 0) this.closeBin(g);
       return true;
+    },
+
+    /* The old click-to-sort, kept as the programmatic path. Nothing in the
+       game calls it any more; the harnesses do, because driving a drag from
+       the outside proves nothing about the drag. */
+    sortItem: function (idx, g) {
+      var b = this.bin;
+      if (!b) return false;
+      var it = b.items[idx];
+      if (!it || it.gone) return false;
+      if (!this.grabItem(idx, 0, 0, g)) return false;
+      if (!b.drag) return true;          // it was a clue and it opened
+      var mid = SORT.x + SORT.w / 2;
+      b.drag.x = it.kind === 'paper' ? mid + 10 : mid - 10;
+      return this.dropItem(g);
     },
 
     closeBin: function (g) {
@@ -1641,17 +1718,22 @@
         if (D.inRect(x, y, this.hits[i])) { hit = this.hits[i]; break; }
       }
       g.hoverId = hit ? hit.id : null;
-      if (type !== 'down') return;
+      // the basket needs move and up; nothing else does
+      if (type !== 'down' && !this.bin) return;
 
       if (this.open) {
         if (hit && hit.id === 'close') this.closeInquiry();
         if (hit && hit.id === 'closer') this.lookCloser(g);
         return;
       }
+      /* The basket is a drag, so it is the only screen in the build that
+         cares about anything other than 'down'. */
       if (this.bin) {
+        if (type === 'move') { this.dragItem(x, y); return; }
+        if (type === 'up') { this.dropItem(g); return; }
         if (hit && hit.id === 'binclose') { this.closeBin(g); return; }
         if (hit && hit.id.indexOf('sort:') === 0) {
-          this.sortItem(parseInt(hit.id.slice(5), 10), g);
+          this.grabItem(parseInt(hit.id.slice(5), 10), x, y, g);
         }
         return;
       }
@@ -1695,7 +1777,8 @@
          only thing in the game that happens outside the building. */
       if (this.planeUp) {
         var pt = D.clamp(this.planeT / PLANE_WINDOW, 0, 1);
-        var px = -80 + pt * (W + 160);
+        // right to left, with the banner trailing behind it
+        var px = W + 80 - pt * (W + 160);
         ctx.save();
         ctx.globalAlpha = 0.85;
         // the aircraft: a dark speck, no detail at this distance
@@ -1820,26 +1903,27 @@
           });
         }
       }
-      if (this.open) this.drawInquiry(ctx, t, g);
+      if (this.open && this.open.clue.reveal) this.drawRevealLetter(ctx, t, g);
+      else if (this.open) this.drawInquiry(ctx, t, g);
       else if (this.bin) this.drawSort(ctx, t, g);
       else this.drawRadio(ctx, t);
       Screens._footerRail(ctx, this.footerHint());
       D.crt(ctx, W, H, t);
     },
 
-    /* The sorting window. Two labelled bins and the things in the basket
-       between them; click a thing and it goes. Which bin you send it to is
-       not asked, because both of them are the same skip and the game is not
-       going to pretend otherwise by scoring it.
+    /* The basket, tipped out. Two chutes, one down each side of the card,
+       and twenty things scattered between them: drag the paper right and
+       everything else left. None of them is labelled — the label used to
+       say BATCH CARD or SWARF under each one, which meant the sort was
+       reading twenty words rather than looking at twenty things.
 
-       One of the six has red tape on it. That is the only thing on this
-       screen that is not grey, and it is the whole reason the chore is in
-       the game. */
+       One of them has something written on it. Picking that one up opens
+       it in your hand before you have decided which chute it was for,
+       which is the only reason to touch any of this. */
     drawSort: function (ctx, t, g) {
       var b = this.bin;
       var nx = SORT.x, nw = SORT.w, px = nx + 44, pw = nw - 88;
-      var rows = Math.ceil(b.items.length / SORT.cols);
-      var nh = SORT.top + rows * SORT.row + 26 + 46 + 26;
+      var nh = SORT.top + SORT.bodyH + 26 + 46 + 26;
       var ny = Math.round((H - nh) / 2) + 8;
       this.card = { x: nx, y: ny, w: nw, h: nh };
 
@@ -1847,69 +1931,94 @@
       ctx.fillRect(0, 0, W, H);
       Screens._notice(ctx, nx, ny, nw, nh, C.BIN_HEADING);
 
-      /* The title and the reminder used to share a line, which fitted the
-         wide card this started as and ran straight through it once the card
-         was narrowed. The reminder sits under the title now, where it can
-         be as long as it needs to be. */
-      var y = ny + 58;
+      var y = ny + 42;
       D.txt(ctx, C.BIN_TITLE, px, y,
         { size: 20, weight: 600, family: 'sans', color: P.bright, track: 3.4 });
       y += 20;
-      D.stencil(ctx, C.BIN_SUB, px, y,
-        { size: 9.5, track: 2.2, color: P.faint });
+      D.stencil(ctx, C.BIN_SUB, px, y, { size: 9.5, track: 2.2, color: P.faint });
       y += 12;
       D.seam(ctx, px, y, pw);
 
-      var cw = Math.floor(pw / SORT.cols);
+      /* The two chutes. Drawn as the mouths of things rather than as
+         buttons, because they are not buttons: you cannot click them, only
+         let go over them. */
+      var bodyY = ny + SORT.top, bodyH = SORT.bodyH;
+      var mid = nx + nw / 2;
+      var chuteW = 132;
+      [[nx + 18, C.BIN_CHUTE_LEFT], [nx + nw - 18 - chuteW, C.BIN_CHUTE_RIGHT]]
+        .forEach(function (c, k) {
+          var over = b.drag &&
+            ((k === 0) === (b.drag.x < mid));
+          D.plate(ctx, c[0], bodyY, chuteW, bodyH, over
+            ? { top: '#454b50', bot: '#2a2e32', r: 3 }
+            : { top: '#252a2d', bot: '#171a1c', r: 3 });
+          ctx.strokeStyle = over ? 'rgba(226,238,246,0.7)' : 'rgba(0,0,0,0.6)';
+          ctx.lineWidth = over ? 2 : 1;
+          ctx.strokeRect(c[0] + 0.5, bodyY + 0.5, chuteW - 1, bodyH - 1);
+          D.stencil(ctx, c[1], c[0] + chuteW / 2, bodyY + bodyH / 2,
+            { size: over ? 11 : 10, track: 2.6, align: 'center',
+              color: over ? P.bright : P.dim });
+        });
+
+      // the dividing line the sort is actually about
+      ctx.fillStyle = 'rgba(120,132,142,0.16)';
+      ctx.fillRect(mid - 0.5, bodyY + 8, 1, bodyH - 16);
+
       b.items.forEach(function (it, i) {
         if (it.gone) return;
-        var cx = px + (i % SORT.cols) * cw + cw / 2;
-        var cy = ny + SORT.top + Math.floor(i / SORT.cols) * SORT.row + 30;
-        var hot = g.hoverId === 'sort:' + i;
+        var held = b.drag && b.drag.idx === i;
+        var cx = held ? b.drag.x : nx + it.x * nw;
+        var cy = held ? b.drag.y : bodyY + it.y * bodyH;
+        if (it.wrong > 0) {
+          // shaken off, on its way back to where it was lying
+          cx += Math.sin(it.wrong * 42) * 5 * it.wrong;
+        }
+        var hot = held || g.hoverId === 'sort:' + i;
 
-        // the thing itself: a ball of paper, or a curl of swarf
         ctx.save();
         ctx.translate(cx, cy);
-        ctx.rotate((D.rnd(i * 3.7) - 0.5) * 0.5);
+        ctx.rotate(it.rot);
+        if (held) {
+          ctx.shadowColor = 'rgba(0,0,0,0.6)';
+          ctx.shadowBlur = 8;
+          ctx.shadowOffsetY = 4;
+        }
         if (it.kind === 'paper') {
-          /* The one with something on it is the same tenth of the way to
-             red as the split on the line is — a warm sheet among cold
-             ones, and no other mark. */
+          /* A ball of paper. The one with something on it is the same warm
+             cast as a slip on the line — nothing else marks it. */
           ctx.fillStyle = it.marked
-            ? (hot ? 'rgba(201,183,175,0.66)' : 'rgba(174,157,150,0.52)')
-            : (hot ? 'rgba(196,190,178,0.62)' : 'rgba(168,163,152,0.48)');
+            ? (hot ? 'rgba(201,183,175,0.7)' : 'rgba(174,157,150,0.56)')
+            : (hot ? 'rgba(196,190,178,0.66)' : 'rgba(168,163,152,0.5)');
           ctx.beginPath();
           for (var k = 0; k < 9; k++) {
             var a = (k / 9) * 6.28;
-            var rr = 17 + D.rnd(i * 5.1 + k) * 6;
+            var rr = 15 + D.rnd(i * 5.1 + k) * 5;
             ctx[k ? 'lineTo' : 'moveTo'](Math.cos(a) * rr, Math.sin(a) * rr);
           }
           ctx.closePath(); ctx.fill();
-          // the creases
           ctx.strokeStyle = 'rgba(90,86,78,0.45)';
           ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.moveTo(-14, -6); ctx.lineTo(4, 3); ctx.lineTo(-6, 14);
-          ctx.moveTo(10, -12); ctx.lineTo(2, 2);
+          ctx.moveTo(-9, -4); ctx.lineTo(3, 2); ctx.lineTo(-4, 9);
+          ctx.moveTo(7, -8); ctx.lineTo(1, 1);
           ctx.stroke();
         } else {
-          ctx.strokeStyle = hot ? 'rgba(176,186,194,0.7)' : 'rgba(140,150,158,0.5)';
-          ctx.lineWidth = 2.4;
+          ctx.strokeStyle = hot ? 'rgba(176,186,194,0.74)' : 'rgba(140,150,158,0.54)';
+          ctx.lineWidth = 2.2;
           ctx.beginPath();
-          for (var q = 0; q < 30; q++) {
-            var aa = q * 0.42, rr2 = 3 + q * 0.56;
+          for (var q = 0; q < 26; q++) {
+            var aa = q * 0.42, rr2 = 3 + q * 0.5;
             ctx[q ? 'lineTo' : 'moveTo'](Math.cos(aa) * rr2, Math.sin(aa) * rr2 * 0.7);
           }
           ctx.stroke();
         }
-
         ctx.restore();
 
-        D.stencil(ctx, it.label, cx, cy + 32,
-          { size: 7.5, track: 1.2, align: 'center',
-            color: hot ? P.text : 'rgba(112,120,127,0.95)' });
-
-        this.hits.push({ x: cx - 34, y: cy - 28, w: 68, h: 66, id: 'sort:' + i });
+        /* Unshifted, not pushed. Items are drawn in index order so a later
+           one lies on top of an earlier one, and `pointer` takes the first
+           region it matches — pushing meant a click on an overlap grabbed
+           the thing underneath the thing you were looking at. */
+        this.hits.unshift({ x: cx - 20, y: cy - 20, w: 40, h: 40, id: 'sort:' + i });
       }, this);
 
       var b2 = { x: px - 14, y: ny + nh - 46 - 26, w: 250, h: 46, id: 'binclose' };
@@ -1918,12 +2027,10 @@
       this.hits.push(b2);
       D.stencil(ctx, C.BIN_NOTE, px + pw, ny + nh - 46,
         { size: 9, track: 1.6, color: 'rgba(112,120,127,0.95)', align: 'right' });
+      D.stencil(ctx, b.left + ' ' + C.BIN_LEFT, px + pw, ny + nh - 28,
+        { size: 9, track: 1.6, color: P.faint, align: 'right' });
     },
 
-    /* The bench set. One line, low on the screen, in the plant's own grey
-       and at the plant's own size — the same strip whether it is reading
-       out the weather or the thing you bought it for. Nothing marks the
-       difference, which is the entire point of the sixty scrip. */
     drawRadio: function (ctx, t) {
       var text = this.radioText();
       if (!text) return;
@@ -2068,6 +2175,120 @@
         D.stencil(ctx, C.INQUIRY_UNREAD, px - 14, by + 58,
           { size: 8.5, track: 1.8, color: 'rgba(116,124,131,0.95)' });
       }
+    },
+
+    /* The circular, and the only item in the build that is not read on the
+       station's own grey card. It is a torn-off piece of the customer's
+       letterhead, so it is drawn as one: cream stock, the office's device
+       struck at the head of it, and a table of factory assignments set out
+       the way a clerk would set it out. The same sheet the last screen of
+       the run is written on, six shifts early and torn in half.
+
+       Reusing the letter screen's paper and its seal is the point. When the
+       closing letter arrives the player has seen this stock once before,
+       and knows what it means before they have read a word of it. */
+    drawRevealLetter: function (ctx, t, g) {
+      var o = this.open, clue = o.clue;
+      var PAPER = '#cfccc4', PAPER_LO = '#b6b3ab', INK = '#2b2a25';
+
+      ctx.fillStyle = 'rgba(11,14,16,0.78)';
+      ctx.fillRect(0, 0, W, H);
+
+      var nw = 640, nx = Math.round((W - nw) / 2);
+      var lineOpt = { size: 13, lineHeight: 21, color: INK, family: 'mono' };
+      var rows = clue.lines.map(function (str) {
+        return D.wrap(ctx, str, nw - 108, lineOpt).length;
+      });
+      var bodyH = rows.reduce(function (a, n) { return a + n * 21 + 14; }, 0);
+      var nh = 120 + bodyH + 30 + 44 + 26;
+      var ny = Math.round((H - nh) / 2) + 6;
+      this.card = { x: nx, y: ny, w: nw, h: nh };
+
+      // the sheet, and the tear along the foot of it
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(nx, ny);
+      ctx.lineTo(nx + nw, ny);
+      ctx.lineTo(nx + nw, ny + nh - 12);
+      for (var tx = nw; tx >= 0; tx -= 16) {
+        ctx.lineTo(nx + tx, ny + nh - 12 + (D.rnd(tx * 0.7) - 0.5) * 11);
+      }
+      ctx.closePath();
+      ctx.clip();
+      D.vgrad(ctx, nx, ny, nw, nh, PAPER, PAPER_LO);
+      // the tooth of the stock
+      ctx.fillStyle = 'rgba(120,114,100,0.05)';
+      for (var fy = ny; fy < ny + nh; fy += 3) ctx.fillRect(nx, fy, nw, 1);
+      ctx.restore();
+
+      var px = nx + 54, y = ny + 44;
+
+      /* The device, struck small and off square at the head of the sheet.
+         It is the one thing in the build that carries the symbol before the
+         last screen, and it is here because this is the item that names the
+         thing — it is the object of the reveal, not decoration on it. */
+      Screens.letter && Screens.letter.drawSeal &&
+        Screens.letter.drawSeal(ctx, nx + nw - 92, ny + 46, 116);
+
+      D.txt(ctx, clue.kind, px, y,
+        { size: 15, weight: 600, family: 'sans', color: INK, track: 3.2 });
+      y += 18;
+      D.stencil(ctx, clue.source, px, y,
+        { size: 9, track: 1.5, color: 'rgba(70,66,58,0.85)' });
+      y += 22;
+      ctx.fillStyle = 'rgba(70,66,58,0.35)';
+      ctx.fillRect(px, y, nw - 108, 1);
+      y += 12;
+
+      var lastTop = y, lastW = 0;
+      for (var i = 0; i < clue.lines.length; i++) {
+        if (i >= o.shown) break;
+        var age = o.t - (L.CLUE_LEAD + i * L.CLUE_LINE);
+        var a = D.clamp(age / 0.55, 0, 1);
+        lastTop = y + 12;
+        lastW = D.measure(ctx, clue.lines[i], {
+          size: lineOpt.size, family: 'mono'
+        });
+        y = D.para(ctx, clue.lines[i], px, lastTop, nw - 108, {
+          size: lineOpt.size, lineHeight: lineOpt.lineHeight,
+          family: 'mono', color: INK, alpha: 0.2 + 0.8 * a
+        }) + 2;
+      }
+
+      /* Somebody has been round the seventh row twice in pencil. Drawn
+         rather than written about, because a circle in a table is a gesture
+         and not a sentence — and anchored to where that row actually
+         landed, because it was placed by arithmetic first and sat between
+         two lines catching the descenders of the wrong one. */
+      if (o.shown >= clue.lines.length) {
+        var cx0 = px - 8, cx1 = px + lastW + 8;
+        var ccx = (cx0 + cx1) / 2, crx = (cx1 - cx0) / 2;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(58,54,48,0.5)';
+        ctx.lineWidth = 1.4;
+        for (var pass = 0; pass < 2; pass++) {
+          ctx.beginPath();
+          ctx.ellipse(ccx + pass * 2, lastTop - 4 + pass,
+            crx - pass * 3, 15 - pass, 0.015 * pass, 0, 6.3);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      var b = { x: px - 10, y: ny + nh - 72, w: 264, h: 42, id: 'close' };
+      D.plate(ctx, b.x, b.y, b.w, b.h, g.hoverId === 'close'
+        ? { top: '#c2beb4', bot: '#a9a59c', r: 2 }
+        : { top: '#b8b4aa', bot: '#a19d94', r: 2 });
+      D.txt(ctx, o.read ? C.INQUIRY_CLOSE_DONE : C.INQUIRY_CLOSE_EARLY,
+        b.x + 22, b.y + 27,
+        { size: 12, weight: 600, family: 'sans', color: INK, track: 2.6 });
+      this.hits.push(b);
+
+      D.stencil(ctx, C.INQUIRY_COST, nx + nw - 54, ny + nh - 62,
+        { size: 9, track: 2.2, color: 'rgba(70,66,58,0.8)', align: 'right' });
+      D.txt(ctx, Math.floor(this.shift.readSecs) + 's', nx + nw - 54,
+        ny + nh - 40,
+        { size: 18, weight: 600, color: INK, align: 'right' });
     },
 
     drawHud: function (ctx, t, g) {

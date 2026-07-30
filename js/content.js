@@ -28,26 +28,28 @@
     { t: " (2022). This is an independent, non-commercial fan project. It is not affiliated with, endorsed by, or reviewed by the author or publisher." }
   ];
 
+  /* Kept to three lines: the notice board has to fit between the rails and
+     this section and the content note were together a card and a half. */
   C.LINEAGE =
-    "The mechanic this piece runs on — complicity produced by an efficiency " +
-    "score rather than by a story beat — has a lineage in serious games " +
-    "discourse, notably Brenda Romero's mechanics-driven work on historical " +
-    "atrocity. That is context for where the idea sits in design history, " +
-    "not a claim of involvement or endorsement by anyone named here.";
+    "Complicity produced by an efficiency score rather than by a story beat " +
+    "has a lineage in serious games discourse, notably Brenda Romero's work " +
+    "on historical atrocity. Context, not a claim of endorsement by anyone " +
+    "named here.";
 
+  /* Shortened and corrected. It used to say the closing letter was the
+     only place in the build with the symbol on it, which stopped being
+     true when the circular became a torn-off piece of the same office's
+     letterhead. Two documents carry it now, and both are documents. */
   C.CRAFT_NOTE =
-    "Nothing here depicts violence. There are no photographs and no " +
-    "reconstructions; for six shifts the factory is a set of " +
-    "shapes on a belt and a quota you are asked to meet.\n\n" +
-    "The last screen is a letter from the office the parts were going to. " +
-    "It carries that office's seal, it is signed by the man who ran the " +
-    "programme, and it says plainly what the work was for. That is the " +
-    "only place in the build with a swastika in it, the only place with a " +
-    "real name in it, and the only colour in the whole piece.\n\n" +
-    "All of it is deliberate. Six shifts withhold the name of the thing so " +
-    "that the moment it is said carries what it should. Nothing here " +
-    "celebrates or endorses any of it: the seal appears as the object of " +
-    "your horror, and the letter exists to tell you what you were part of.";
+    "Nothing here depicts violence. No photographs, no reconstructions; " +
+    "for six shifts the factory is shapes on a belt and a quota.\n\n" +
+    "Two screens carry the office's seal and its one red mark: the torn " +
+    "circular that names the work, and the letter that closes the " +
+    "contract. The letter is the only place a real name appears.\n\n" +
+    "Six shifts withhold the name so that saying it carries what it " +
+    "should. Nothing here celebrates any of it: the seal is the object of " +
+    "your horror, and the letter is there to tell you what you were part " +
+    "of.";
 
   /* ---------- shell copy ---------- */
 
@@ -67,15 +69,15 @@
     { k: 'THE COOLDOWN', v: 'A stamp puts the press out for 1.7 seconds. The target rises every shift; your hands do not.' },
     { k: 'X', v: 'Takes a piece off the return line. Every faulty one you leave on costs you 3 scrip.' },
     { k: 'SPOTTING A FAULT', v: 'A faulty piece sits crooked, with a bright split across it. Every one, every time.' },
-    { k: 'CLICK a piece on line 5', v: 'Looks at it. It stays on the belt. Most splits are cold white; a few run warm.' },
-    { k: 'A WARM SPLIT', v: 'Those are the pieces with something on them. Nothing else is marked.' },
+    { k: 'CLICK ANY PAPER', v: 'Reads it. A slip behind a piece, one on the belt, one on a machine, one behind an aeroplane.' },
+    { k: 'CREAM PAPER', v: 'The only thing in the building that colour, and the only thing worth reading. Nothing else is marked.' },
     { k: 'S', v: 'Scraps the part in the press zone. It counts as a miss. Available from shift 3.' },
-    { k: 'ESC', v: 'Puts down whatever you are reading. Nothing stops while you read it.' }
+    { k: 'ESC', v: 'Puts down whatever you are reading. The line and the clock both crawl while you do.' }
   ];
 
   C.HOWTO_BUY =
     'Buy the foot pedal first. It cuts the press cooldown, and without it ' +
-    'the target on the fifth shift cannot be met however well you play.';
+    'from the third shift on the belt outruns the press however well you play.';
 
   /* Said here, in the handbook, before any of it matters — and said again
      on the last screen by the people it mattered to. A player has to know
@@ -517,14 +519,20 @@
     weight: 6,
     tier: 'reveal',
     kind: 'RIPPED LETTER',
-    source: 'Torn off something larger, with a device printed at the head of it.',
+    /* Short on purpose: the device is struck over the right-hand end of
+       the head of the sheet, and a longer line ran straight under it. */
+    source: 'Torn across once. Half a table.',
     seal: true,
+    /* Three lines and no narration. It used to open by saying there was a
+       table under a printed device at the head of the sheet, which is a
+       game describing a picture it is already drawing. The device is
+       struck at the head of the card and the table is the card. The
+       seventh row is last because it is the one that is circled, and the
+       circle is drawn rather than written about. */
     lines: [
-      "A table of factory assignments, under a printed device at the head of " +
-      "the sheet.",
-      "FACTORY 5 — THE EASTERN FRONT.   FACTORY 6 — THE WESTERN FRONT.   " +
+      "FACTORY 5 — THE EASTERN FRONT.   FACTORY 6 — THE WESTERN FRONT.",
       "FACTORY 8 — ALGERIA.",
-      "FACTORY 7, circled: THE FINAL SOLUTION."
+      "FACTORY 7 — THE FINAL SOLUTION."
     ]
   };
 
@@ -556,10 +564,12 @@
 
   C.INQUIRY_HEADING = 'ITEM OPENED';
   C.INQUIRY_COST = 'SHIFT SPENT READING';
-  /* It used to read THE LINE DOES NOT STOP FOR THIS, which stopped being
-     true the day the line started crawling while you read. The clock never
-     did and never will, and that is where the cost of looking now sits. */
-  C.INQUIRY_RUNNING = 'THE CLOCK DOES NOT STOP FOR THIS';
+  /* It read THE LINE DOES NOT STOP FOR THIS, and then THE CLOCK DOES NOT
+     STOP FOR THIS, and each stopped being true in turn — first when the
+     line started crawling while you read, then when the clock was put on
+     the same rate as the line. Nothing about reading costs output now.
+     What it costs is the things that expire while you are not watching. */
+  C.INQUIRY_RUNNING = 'THE LINE AND THE CLOCK ARE BOTH CRAWLING';
   C.INQUIRY_CLOSE_EARLY = 'PUT IT BACK';
   C.INQUIRY_CLOSE_DONE = 'RETURN TO THE PRESS';
   /* The one card in the game with a second look in it. */
@@ -720,7 +730,7 @@
     pedal: {
       name: 'FOOT PEDAL',
       note: 'Cuts the press cooldown by 15%.',
-      blurb: 'The single most useful thing on this list. Unaided, the target on the fifth shift cannot be met at all.'
+      blurb: 'The single most useful thing on this list. Unaided, the target cannot be met from the third shift on.'
     },
     feeder: {
       name: 'AUTO-FEEDER',
@@ -753,14 +763,17 @@
   C.BIN_LABEL = 'WASTE';
   C.BIN_DONE = 'EMPTIED';
   C.BIN_HEADING = 'THE BASKET';
-  C.BIN_TITLE = 'PAPER IN ONE, SWARF IN THE OTHER';
+  C.BIN_TITLE = 'PAPER TO THE RIGHT, THE REST TO THE LEFT';
   C.BIN_SUB = 'THE LINE IS STILL RUNNING';
   C.BIN_LEAVE = 'LEAVE IT';
   C.BIN_DONE_BTN = 'BACK TO THE LINE';
   /* The basket has no keyboard shortcut, so the card lists it in the
      only terms that apply to it. */
   C.BIN_HINT = 'CLICK THE BASKET';
-  C.BIN_FOOTER = 'CLICK EACH THING TO SORT IT  ·  ESC TO LEAVE IT';
+  C.BIN_FOOTER = 'DRAG THE PAPER RIGHT, THE REST LEFT  ·  ESC TO LEAVE IT';
+  C.BIN_CHUTE_LEFT = 'WASTE';
+  C.BIN_CHUTE_RIGHT = 'PAPER';
+  C.BIN_LEFT = 'STILL IN THE BASKET';
   C.BIN_NOTE = 'BOTH BINS GO IN THE SAME SKIP.';
 
   /* Six things. The labels are flat and none of them is a hint — the one

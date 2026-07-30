@@ -161,14 +161,22 @@ test.describe('doing the whole job', () => {
     expect(heedless.rec.pay.total).toBeLessThan(attentive.rec.pay.total);
   });
 
-  test('shifts one to four are winnable while doing the whole job',
+  /* Two shifts, not four. Arrivals are slower than the cooldown for the
+     first two and faster from the third, so an unaided operator keeps up
+     twice and then falls behind for the rest of the quarter however well
+     they play. That is the whole shape of the run. */
+  test('the first two shifts are winnable while doing the whole job',
     async ({ page }) => {
       await boot(page);
-      for (const n of [1, 2, 3, 4]) {
+      for (const n of [1, 2]) {
         const r = await playShift(page, n, 'both');
         expect(r.rec.rejects, `shift ${n}`).toBe(0);
         expect(r.rec.stamped, `shift ${n}`).toBeGreaterThanOrEqual(r.target);
       }
+      // and the third is not, with nothing on the bench
+      const third = await playShift(page, 3, 'both');
+      expect(third.rec.rejects).toBe(0);
+      expect(third.rec.stamped).toBeLessThan(third.target);
     });
 
   /* What ignoring line 5 actually costs, over a whole run: the deductions
@@ -255,20 +263,31 @@ test.describe('what the kit actually does', () => {
       expect(moved.sort()).toEqual(['feeder', 'pedal']);
     });
 
-  test('the pedal carries the last two shifts and the run is lost without it',
+  /* One purchase per rung, from the third shift on. The pedal takes 3 and
+     4, the feeder takes 5, and 6 needs both — which is what makes the
+     stores a sequence of decisions rather than one decision repeated. */
+  test('each of the last four shifts needs one more thing on the bench',
     async ({ page }) => {
       await boot(page);
-      for (const n of [5, 6]) {
+      for (const n of [3, 4]) {
         const bare = await playShift(page, n, 'both');
         const pedal = await playShift(page, n, 'both', ['pedal']);
-        const feeder = await playShift(page, n, 'both', ['feeder']);
         expect(bare.rec.stamped, `bare ${n}`).toBeLessThan(bare.target);
-        expect(pedal.rec.stamped, `pedal ${n}`).toBeGreaterThanOrEqual(pedal.target);
-        expect(feeder.rec.stamped, `feeder ${n}`).toBeGreaterThanOrEqual(feeder.target);
-        // and the dearer of the two really is the stronger of the two
-        expect(feeder.rec.stamped, `feeder vs pedal ${n}`)
-          .toBeGreaterThan(pedal.rec.stamped);
+        expect(pedal.rec.stamped, `pedal ${n}`)
+          .toBeGreaterThanOrEqual(pedal.target);
       }
+
+      // the fifth outruns the pedal, and the feeder is what answers it
+      const p5 = await playShift(page, 5, 'both', ['pedal']);
+      const f5 = await playShift(page, 5, 'both', ['feeder']);
+      expect(p5.rec.stamped).toBeLessThan(p5.target);
+      expect(f5.rec.stamped).toBeGreaterThanOrEqual(f5.target);
+
+      // and the sixth outruns either one on its own
+      const f6 = await playShift(page, 6, 'both', ['feeder']);
+      const both6 = await playShift(page, 6, 'both', ['pedal', 'feeder']);
+      expect(f6.rec.stamped).toBeLessThan(f6.target);
+      expect(both6.rec.stamped).toBeGreaterThanOrEqual(both6.target);
     });
 
 });

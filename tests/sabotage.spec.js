@@ -20,6 +20,7 @@ const { boot } = require('./helpers');
 const playShift = (page, n, opts = {}) =>
   page.evaluate(({ n, opts }) => {
     const g = window.SOL.game, sc = window.SOL.screens.shift;
+    if (opts.kit) g.run.ledger.owned = opts.kit.slice();
     if (opts.awareness != null) g.run.awareness = opts.awareness;
     if (opts.revealed) g.run.revealed = true;
     g.run.shift = n;
@@ -105,7 +106,10 @@ test.describe('what a station can withhold', () => {
     async ({ page }) => {
       await boot(page);
       await fresh(page);
-      const worked = await playShift(page, 4, { revealed: true });
+      /* With the pedal on the bench, because shift 4 is past the point
+         where unaided hands can make the number at all and this test is
+         about the bonus, not about the ceiling. */
+      const worked = await playShift(page, 4, { revealed: true, kit: ['pedal'] });
       await fresh(page);
       const idle = await playShift(page, 4, { revealed: true, idle: true });
 
@@ -290,10 +294,14 @@ test.describe('the run', () => {
           if (g.screen === 'officer') { window.__clearOfficer(); continue; }
           if (g.screen === 'stores') { window.SOL.screens.stores.leave_(g); continue; }
           if (g.screen !== 'shift') break;
-          if (!sc.binDone && !sc.bin && !sc.open) window.__emptyBin();
-          const car = sc.nearestCarrier();
+          // first thing, which is what brings the circular forward
+          if (!sc.binDone && !sc.bin && !sc.open) window.__emptyBin(true);
+          const car = sc.returns.find((q) => q.clue && sc.inRetZone(q));
           if (car && !sc.open) sc.look(car.x);
-          if (sc.dockUp && !sc.open) sc.lookDock();
+          if (sc.bgUp && !sc.open) sc.lookBg();
+          if (sc.planeUp && !sc.open) sc.lookPlane();
+          // the second look at the black one is the camera's third point
+          if (sc.dockUp && !sc.open) { sc.lookDock(); sc.lookLorry(); }
           g.tick(1 / 60);
           if (sc.open && sc.open.read) sc.closeInquiry();
           if (g.screen === 'shift' && !sc.open && sc.candidate()) sc.stamp(null);
@@ -323,7 +331,7 @@ test.describe('the run', () => {
         expect(asked.log[i].target).toBeGreaterThan(asked.log[i - 1].target);
         expect(asked.log[i].aw).toBeGreaterThanOrEqual(asked.log[i - 1].aw);
       }
-      expect(asked.revealedOn).toBe(4);
+      expect(asked.revealedOn).toBe(3);
       expect(asked.tier).toBe('sure');
 
       /* The officer's answer is worth exactly its weight and nothing else,
@@ -342,8 +350,8 @@ test.describe('the run', () => {
       expect(took.earned - asked.earned).toBeGreaterThan(50);
 
       /* Neither run reaches the whole registry, and neither can: the
-         circular takes the basket on the night it turns up, so whatever
-         that basket held goes to the skip with it. */
+         circular takes the place of the next slip on the night it turns
+         up, so whatever that slip was going to say is never said. */
       expect(asked.awareness).toBeLessThan(asked.max);
     });
 
@@ -390,10 +398,13 @@ test.describe('the run', () => {
     expect(r.told).toBe(false);
 
     /* Perfect attention, nothing bought, nothing looked at — and the run
-       still comes apart at the end, because the schedule was never written
-       for a person working alone. This is the trap stated as an assertion. */
-    expect(r.madeTarget.slice(0, 3)).toEqual([true, true, true]);
-    expect(r.madeTarget[r.madeTarget.length - 1]).toBe(false);
+       comes apart from the third shift, because the schedule was never
+       written for a person working alone. This is the trap stated as an
+       assertion, and it used to bite at the fifth: arrivals now overtake
+       the cooldown two shifts in, so two thirds of the quarter is spent
+       watching stock go past. */
+    expect(r.madeTarget.slice(0, 2)).toEqual([true, true]);
+    expect(r.madeTarget.slice(2)).toEqual([false, false, false, false]);
     expect(r.earned).toBeGreaterThan(0);
   });
 });

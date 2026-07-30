@@ -168,3 +168,107 @@ test.describe('the slips', () => {
       expect(r.kitted).toBe(r.bare - r.gated.length);
     });
 });
+
+test.describe('the basket, dragged', () => {
+  /* The sort is a drag now: paper to the right of the middle, everything
+     else to the left, and nothing is labelled. Driving `sortItem` from a
+     harness proves nothing about that, so this one goes through the real
+     pointer with real coordinates. */
+  test('paper goes right, swarf goes left, and the wrong side bounces',
+    async ({ page }) => {
+      await boot(page);
+      const r = await page.evaluate(() => {
+        const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+        L.resetRun(g.run);
+        g.run.shift = 1;
+        g.go('shift');
+        for (let i = 0; i < 60 * 8; i++) g.tick(1 / 60);
+        sc.openBin(g);
+        g.redraw();
+
+        const card = sc.card, mid = card.x + card.w / 2;
+        const items = sc.bin.items;
+
+        /* Grab whatever is actually on top at that spot and report which
+           one it turned out to be — the heap overlaps, and the topmost
+           thing wins, so an index is not a handle. */
+        const dragKind = (kind, toX) => {
+          g.redraw();
+          for (const h of sc.hits) {
+            if (h.id.indexOf('sort:') !== 0) continue;
+            const k = parseInt(h.id.slice(5), 10);
+            const it = items[k];
+            if (it.gone || it.clue || it.kind !== kind || it.wrong > 0) continue;
+            const cx = h.x + h.w / 2, cy = h.y + h.h / 2;
+            sc.pointer(cx, cy, 'down', g);
+            if (!sc.bin.drag) continue;        // it was something else on top
+            const held = sc.bin.drag.idx;
+            sc.pointer(toX, cy, 'move', g);
+            sc.pointer(toX, cy, 'up', g);
+            return { idx: held, gone: items[held].gone,
+                     wrong: items[held].wrong > 0, kind: items[held].kind };
+          }
+          return null;
+        };
+
+        const before = sc.bin.left;
+        const paperRight = dragKind('paper', mid + 120);
+        const wrongPaper = dragKind('paper', mid - 120);
+        const swarfLeft = dragKind('swarf', mid - 120);
+        const wrongSwarf = dragKind('swarf', mid + 120);
+
+        return {
+          paperRight, wrongPaper, swarfLeft, wrongSwarf,
+          before, left: sc.bin.left,
+          labelled: items.some((it) => it.label != null)
+        };
+      });
+      expect(r.before).toBe(20);
+
+      // the right-hand chute takes paper and refuses swarf
+      expect(r.paperRight.kind).toBe('paper');
+      expect(r.paperRight.gone).toBe(true);
+      expect(r.wrongSwarf.kind).toBe('swarf');
+      expect(r.wrongSwarf.gone).toBe(false);
+      expect(r.wrongSwarf.wrong).toBe(true);
+
+      // and the left-hand one the other way about
+      expect(r.swarfLeft.kind).toBe('swarf');
+      expect(r.swarfLeft.gone).toBe(true);
+      expect(r.wrongPaper.kind).toBe('paper');
+      expect(r.wrongPaper.gone).toBe(false);
+      expect(r.wrongPaper.wrong).toBe(true);
+
+      // two accepted out of twenty, and the two refusals are still in it
+      expect(r.left).toBe(18);
+      // nothing in the basket is labelled: you have to look at the thing
+      expect(r.labelled).toBe(false);
+    });
+
+  test('picking up the marked one opens it before it is sorted anywhere',
+    async ({ page }) => {
+      await boot(page);
+      const r = await page.evaluate(() => {
+        const g = window.SOL.game, sc = window.SOL.screens.shift, L = window.SOL.logic;
+        L.resetRun(g.run);
+        g.run.shift = 1;
+        g.go('shift');
+        for (let i = 0; i < 60 * 8; i++) g.tick(1 / 60);
+        sc.openBin(g);
+        g.redraw();
+        const idx = sc.bin.items.findIndex((it) => it.marked);
+        const h = sc.hits.find((x) => x.id === 'sort:' + idx);
+        sc.pointer(h.x + h.w / 2, h.y + h.h / 2, 'down', g);
+        return {
+          idx, opened: !!sc.open,
+          kind: sc.open ? sc.open.clue.kind : null,
+          // it never became a drag: it went straight into your hand
+          dragging: !!(sc.bin && sc.bin.drag)
+        };
+      });
+      expect(r.idx).toBeGreaterThanOrEqual(0);
+      expect(r.opened).toBe(true);
+      expect(r.kind).toBeTruthy();
+      expect(r.dragging).toBe(false);
+    });
+});

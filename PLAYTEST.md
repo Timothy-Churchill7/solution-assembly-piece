@@ -15,7 +15,7 @@ host unchanged.
 | `X` | take a piece off the return line |
 | click a piece on line 5 | look at it; it stays on the belt either way |
 | click a slip on the belt, a machine, or an aeroplane | read it |
-| click the basket | empty it, and sort what is in it |
+| click the basket | tip it out; drag the paper right and the rest left |
 | `D` | look at the yard camera (only if you bought one) |
 | `F` in the stores | the advertiser's code, if you have read one of the banners |
 | `S` | scrap a part (from shift 3) |
@@ -41,10 +41,12 @@ These are the things the suite cannot judge.
    too — and nothing else. The pencilled welcome that used to sit under the
    first brief is gone; check the shift still lands without it.
 3. **Is the basket genuinely tempting to skip?** It is a chore, mid-shift,
-   while the line is running and the clock is not slowed for it. It pays 2
-   scrip and the foreman mentions it once. If emptying it ever feels
-   automatic rather than like a decision to stop working, the channel has
-   stopped working.
+   while the line is running and the clock is not slowed for it: twenty
+   things to drag, one at a time, paper to the right and everything else to
+   the left, with a thing dropped in the wrong chute coming straight back
+   at you. It pays 2 scrip and the foreman mentions it once. If it ever
+   feels automatic rather than like a decision to stop working, the channel
+   has stopped working.
 4. **Is the paper findable without being a quest icon?** Cream at
    `#d8cfb4` against a hall that runs `#1a1c1e` to `#8e9397`. It is the
    only warm thing on a working screen and it stays under the threshold
@@ -58,9 +60,15 @@ These are the things the suite cannot judge.
    glass. It is the only time in six shifts the game shows you there is an
    outside, and it is carrying an advertisement.
 6. **Is twenty things in the basket a chore or a slog?** Twenty was chosen
-   because six was over before it registered as one. Twenty clicks with
+   because six was over before it registered as one. Twenty *drags* with
    the line throttled to 12% is about the right amount of tedium; thirty
    would be punishment.
+7. **Can you tell paper from swarf without labels?** Nothing in the basket
+   is named any more — the label used to read BATCH CARD or SWARF under
+   each one, which turned the sort into reading twenty words rather than
+   looking at twenty things. A ball of creased paper and a curl of swarf
+   are different shapes; whether they are different *enough* at that size
+   is the open question.
 5. **Read the eight endings back to back.** None may read as praise or as a
    scolding.
 6. **Read a clue with the shift running.** The line should slow enough to
@@ -78,25 +86,39 @@ every fault taken off. `*` is a shift the number was not made.
 
 | bench | 1 | 2 | 3 | 4 | 5 | 6 |
 | --- | --- | --- | --- | --- | --- | --- |
-| nothing | 33/24 | 35/28 | 38/33 | 39/38 | 41/44 \* | 42/48 \* |
-| sorting arm (40) | 33/24 | 35/28 | 38/33 | 39/38 | 41/44 \* | 42/48 \* |
-| foot pedal (110) | 33/24 | 39/28 | 45/33 | 46/38 | 48/44 | 49/48 |
-| auto-feeder (240) | 33/24 | 39/28 | 45/33 | 50/38 | 53/44 | 60/48 |
+| nothing | 29/27 | 33/32 | 38/42 \* | 39/45 \* | 41/50 \* | 42/56 \* |
+| sorting arm (40) | 29/27 | 33/32 | 38/42 \* | 39/45 \* | 41/50 \* | 42/56 \* |
+| foot pedal (110) | 29/27 | 33/32 | 42/42 | 45/45 | 48/50 \* | 49/56 \* |
+| auto-feeder (240) | 29/27 | 33/32 | 42/42 | 45/45 | 51/50 | 54/56 \* |
+| both (350) | 29/27 | 33/32 | 42/42 | 45/45 | 51/50 | 57/56 |
 
-**Exactly two of the seven items change the count** — the foot pedal, which
-cuts the cooldown by 15%, and the auto-feeder, which stamps 45% of line 4
-without you. A test drives all seven and asserts that no other one moves
-the number by a single part. The price list says so in plain words.
+**One purchase per rung, from the third shift on.** Arrivals are slower
+than the press cooldown for two shifts and faster from the third:
+
+| | 1 | 2 | 3 | 4 | 5 | 6 |
+| --- | --- | --- | --- | --- | --- | --- |
+| stock arriving | 31 | 36 | 45 | 48 | 54 | 60 |
+| target | 27 | 32 | 42 | 45 | 50 | 56 |
+| a bare press can strike | 36 | 38 | 40 | 41 | 43 | 44 |
+
+So an unaided operator keeps up for two shifts — genuinely keeps up, with
+stock to spare — and from the third watches it go past however well they
+play. The pedal buys back 3 and 4, the feeder buys 5, and 6 needs both.
+The pedal is affordable out of the first two shifts' pay: **152 banked
+against a cost of 110.**
+
+This is a deliberate reshape. The schedule used to hold until the fifth
+shift, which made four of the six a formality and left the stores as one
+decision made once. Falling behind at the third means two thirds of the
+quarter is spent short, and every visit to the stores is a real one.
+
+**Exactly two of the seven items change the count** — the foot pedal,
+which cuts the cooldown by 15%, and the auto-feeder, which stamps 45% of
+line 4 without you. A test drives all seven and asserts that no other one
+moves the number by a single part.
 
 The sorting arm, the lamp, the gauge, the radio and the monitor buy sight,
-sound, fewer deductions and fewer clicks. None of them buys output, and the
-game no longer implies otherwise.
-
-**The shape this is meant to have.** Buy nothing and the schedule beats you
-on the fifth shift and again on the sixth. The pedal is the answer, the
-handbook says so outright, and the tips in the basket say so again in
-figures — the pedal's 15% on the second shift, the feeder's 45% on the
-third. Everything after that is what you do with the money you have left.
+sound, fewer deductions and fewer clicks. None of them buys output.
 
 ## Ignoring line 5
 
@@ -105,12 +127,12 @@ doing — but the deductions are ruinous:
 
 | | 1 | 2 | 3 | 4 | 5 | 6 |
 | --- | --- | --- | --- | --- | --- | --- |
-| pay, doing the whole job | 78 | 80 | 83 | 84 | 61 | 62 |
-| pay, line 5 left to run | 75 | 74 | 74 | 69 | 40 | 35 |
+| pay, doing the whole job | 74 | 78 | 58 | 79 | 61 | 62 |
+| pay, line 5 left to run | 68 | 72 | 49 | 64 | 40 | 35 |
 
-Cumulative: **448** against **367**. Eighty-one scrip is three-quarters of a
-foot pedal, which is the thing that would have got the last two shifts
-back. The sorting arm at 40 is priced just under the ~42 it saves you.
+Cumulative: **412** against **328**. Eighty-four scrip is three-quarters
+of a foot pedal, which is the thing that would have bought back shifts 3
+and 4. The sorting arm at 40 is priced just under what it saves.
 
 ## Line 5, per shift
 
@@ -133,7 +155,7 @@ Weight tops out at 43 and the circular needs **10**.
 | `part` | a slip tucked in behind a piece on line 5 | free |
 | `slip` | a slip riding line 5 with no part under it | free |
 | `bgslip` | a slip left on a machine casing down the hall | free |
-| `plane` | a banner behind an aeroplane, across the clerestory | free |
+| `plane` | a banner behind an aeroplane, right to left across the clerestory | free |
 | `trash` | the basket at the station, emptied mid-shift | free, +2 scrip |
 | `radio` | the bench set, reading it out over the noise | 60 |
 | `dock` | the yard camera; 2 for watching, 3 if you go over | 95 |
@@ -186,6 +208,19 @@ be looking in a third direction while the press runs, and the seconds your
 eyes were in the wrong corner — not a card that stops the shift to read
 three sentences at you, which is what it used to be.
 
+### The basket is a drag, not a click
+
+Tipped out on the bench: twenty things scattered between two chutes, and
+you drag the paper into the one on the right and everything else into the
+one on the left. Nothing is labelled. Picking up the one with something
+written on it opens it in your hand, before you have decided which chute it
+was for.
+
+A thing dropped in the wrong chute shakes itself off and goes back where it
+was lying. The note at the foot of the card still says both chutes go in
+the same skip, which is the joke and is load-bearing: the office does not
+care which is which, and you still have to get it right.
+
 ### The advertiser's code
 
 A light aircraft crosses the clerestory once or twice a quarter dragging a
@@ -211,22 +246,27 @@ which is what a trade needs to be.
 
 ### What reading costs
 
-**Opening an item throttles the line to 12%** so the text can actually be
-read. It eases in and out over about a fifth of a second rather than
-snapping. This is not a fiction — no factory slows for a man reading a
-docket — it is the game giving you room.
+**Opening an item throttles the line to 12%**, eased in and out over about
+a fifth of a second — and the shift clock now goes down at the same rate.
+So reading costs **no output at all**: no parts pass, no seconds burn.
 
-The shift clock is deliberately *not* slowed, and that is where the cost
-now lives: the clock burns at full speed while the line is barely turning,
-so a minute spent reading is a minute of parts you never got the chance to
-stamp. The card shows it live in seconds, and the summary carries it as
-`SECONDS SPENT READING`.
+That is a reversal and it gives something up. For most of this build's life
+the clock ran at full speed while the line crawled, and that was the cost of
+looking — a minute reading was a minute of parts you never got to stamp.
+The free channels are now free in every sense.
 
-Before this the belt ran at full speed behind the card and the text was
-genuinely hard to read. The cost was real, but the player was being charged
-for legibility rather than for choosing to look. One consequence worth
-knowing: a faulty piece you read is still in the bay when you look up, so
-reading a carrier no longer forfeits the fault it rode in on.
+What they still cost is **attention**, and the things that do not wait for
+the line rate:
+
+- a lorry is at the dock for 40 seconds and then is not
+- an aeroplane crosses the window band once, in 22 seconds
+- a piece on line 5 reaches the end of the line and goes out with what was
+  behind it
+- the basket is twenty drags with the hooter still coming
+
+The card still shows the seconds spent, and the summary still carries
+`SECONDS SPENT READING`. They are now a record of where your eyes were
+rather than a bill.
 
 ## Run length
 
@@ -330,7 +370,7 @@ is the only acknowledgement the piece ever offers.
 
 ## What the suite covers
 
-177 tests. The load-bearing ones, if you only read a few:
+181 tests. The load-bearing ones, if you only read a few:
 
 - `econ.spec.js` — the schedule outruns a pair of unaided hands
 - `returns.spec.js` — nothing but a stamp touches the cooldown, and exactly
@@ -338,9 +378,11 @@ is the only acknowledgement the piece ever offers.
 - `inquiry.spec.js` — all eight channels are reachable, cost something,
   and can be missed; and the four rows of the reveal ladder above
 - `stores-code.spec.js` — the advertiser's code, the lorry's second look,
-  and the buy-a-radio notes going quiet once you own a radio
+  the buy-a-radio notes going quiet once you own a radio, and the basket
+  drag driven through the real pointer at real coordinates
 - `ending.spec.js` — the count, the bonus and the book decide nothing
-- `layout.spec.js` — every posted notice fits between the rails
+- `layout.spec.js` — every posted notice fits between the rails, including
+  the notice board, whose card is measured by running its own layout
 - `shell.spec.js` — no amber on a running line, and the paper marker stays
   under that threshold; the seal and the real name appear on exactly one
   screen; nothing from the novel
